@@ -24,9 +24,9 @@ namespace TsiU
 	public:
 		virtual Bool MessageBump() = 0;
 
-		static void RegisterMsgListener(RenderWindowMsgListener* p_poMsgCallBack)
+		static void RegisterMsgListener(RenderWindowMsgListener* _poMsgCallBack)
 		{
-			s_poMsgCallBack.PushBack(p_poMsgCallBack);;
+			s_poMsgCallBack.PushBack(_poMsgCallBack);;
 		}
 		static Array<RenderWindowMsgListener*> s_poMsgCallBack;
 	};

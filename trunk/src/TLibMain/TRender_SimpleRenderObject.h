@@ -32,14 +32,14 @@ namespace TsiU
 	{
 	public:
 		//for 3d
-		virtual void DrawObject(SimpleRenderObject* p_poObj){};
+		virtual void DrawObject(SimpleRenderObject* _poObj){};
 		virtual SimpleRenderObject* CreateCube(f32 width, f32 height, f32 depth, D_Color color){
 			return NULL;
 		};
-		virtual SimpleRenderObject* CreateCubeWithTex(f32 p_fWidth, f32 p_fHeight, f32 p_fDepth, D_Color p_Color, Texture* _poTex){
+		virtual SimpleRenderObject* CreateCubeWithTex(f32 _fWidth, f32 _fHeight, f32 _fDepth, D_Color _Color, Texture* _poTex){
 			return NULL;
 		};
-		virtual SimpleRenderObject* CreateSphere(f32 p_fRadius, D_Color p_Color){
+		virtual SimpleRenderObject* CreateSphere(f32 _fRadius, D_Color _Color){
 			return NULL;
 		};
 

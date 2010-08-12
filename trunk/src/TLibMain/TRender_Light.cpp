@@ -25,29 +25,29 @@ namespace TsiU
 		m_fTheta			= 0.f;
 		m_fPhi				= 0.f;
 	}
-	void Light::CreateSpotLight(const Vec3& p_vPos, const Vec3& p_vDirection, D_Color& p_Color)
+	void Light::CreateSpotLight(const Vec3& _vPos, const Vec3& _vDirection, D_Color& _Color)
 	{
 		ResetLight();
 		m_uiType			= E_LightType_Spot;
-		m_Ambient			= p_Color * 0.0f;
-		m_Diffuse			= p_Color;
-		m_Specular			= p_Color * 0.6f;
-		m_vPosition			= p_vPos;
-		m_vDirection		= p_vDirection;
+		m_Ambient			= _Color * 0.0f;
+		m_Diffuse			= _Color;
+		m_Specular			= _Color * 0.6f;
+		m_vPosition			= _vPos;
+		m_vDirection		= _vDirection;
 		m_fRange			= 1000.0f;
 		m_fFalloff			= 1.0f;
 		m_fAttenuation[0]	= 1.0f;
 		m_fTheta			= 0.4f;
 		m_fPhi				= 0.9f;
 	}
-	void Light::CreatePointLight(const Vec3& p_vPos, D_Color& p_Color)
+	void Light::CreatePointLight(const Vec3& _vPos, D_Color& _Color)
 	{
 		ResetLight();
 		m_uiType			= E_LightType_Point;
-		m_Ambient			= p_Color * 0.6f;
-		m_Diffuse			= p_Color;
-		m_Specular			= p_Color * 0.6f;
-		m_vPosition			= p_vPos;
+		m_Ambient			= _Color * 0.6f;
+		m_Diffuse			= _Color;
+		m_Specular			= _Color * 0.6f;
+		m_vPosition			= _vPos;
 		m_fRange			= 1000.0f;
 		m_fFalloff			= 1.0f;
 		m_fAttenuation[0]	= 1.0f;

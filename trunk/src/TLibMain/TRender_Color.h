@@ -14,46 +14,46 @@ namespace TsiU
 		{
 			r = g = b = a = 0;
 		}
-		inline Color32(u8 p_r, u8 p_g, u8 p_b, u8 p_a)
-			: r(p_r),g(p_g),b(p_b),a(p_a)
+		inline Color32(u8 _r, u8 _g, u8 _b, u8 _a)
+			: r(_r),g(_g),b(_b),a(_a)
 		{}
-		inline Color32(u8 p_r, u8 p_g, u8 p_b)
-			: r(p_r),g(p_g),b(p_b),a(0xff)
+		inline Color32(u8 _r, u8 _g, u8 _b)
+			: r(_r),g(_g),b(_b),a(0xff)
 		{}
-		inline Color32(u32 p_uiColor)
+		inline Color32(u32 _uiColor)
 		{
-			r = (u8)(p_uiColor & 0x000000ff);
-			g = (u8)((p_uiColor & 0x0000ff00) >> 8);
-			b = (u8)((p_uiColor & 0x00ff0000) >> 16);
-			a = (u8)((p_uiColor & 0xff000000) >> 24); 
+			r = (u8)(_uiColor & 0x000000ff);
+			g = (u8)((_uiColor & 0x0000ff00) >> 8);
+			b = (u8)((_uiColor & 0x00ff0000) >> 16);
+			a = (u8)((_uiColor & 0xff000000) >> 24); 
 		}
-		inline Color32(const Color32& p_Color)
-			:r(p_Color.r),g(p_Color.g),b(p_Color.b),a(p_Color.a)
+		inline Color32(const Color32& _Color)
+			:r(_Color.r),g(_Color.g),b(_Color.b),a(_Color.a)
 		{}
 
-		Bool operator == (const Color32& p_Color) const
+		Bool operator == (const Color32& _Color) const
 		{
-			return a == p_Color.a && g == p_Color.g && b == p_Color.b && a == p_Color.a;
+			return a == _Color.a && g == _Color.g && b == _Color.b && a == _Color.a;
 		}
-		Bool operator != (const Color32& p_Color) const
+		Bool operator != (const Color32& _Color) const
 		{
-			return !operator==(p_Color);
+			return !operator==(_Color);
 		}
-		inline Color32 operator * (const f32 fv)
+		inline Color32 operator * (const f32 _fv)
 		{
-			return Color32((u8)(r * fv), (u8)(g * fv), (u8)(b * fv), (u8)(a * fv));
+			return Color32((u8)(r * _fv), (u8)(g * _fv), (u8)(b * _fv), (u8)(a * _fv));
 		}
-		inline friend Color32 operator * (const f32 fv, const Color32& v)
+		inline friend Color32 operator * (const f32 _fv, const Color32& _v)
 		{
-			return Color32((u8)(fv * v.r), (u8)(fv * v.g), (u8)(fv * v.b), (u8)(fv * v.a));
+			return Color32((u8)(_fv * _v.r), (u8)(fv * _v.g), (u8)(_fv * _v.b), (u8)(_fv * _v.a));
 		}
-		inline Color32 operator / (const f32 fv)
+		inline Color32 operator / (const f32 _fv)
 		{
-			return Color32((u8)(r / fv), (u8)(g / fv), (u8)(b / fv), (u8)(a / fv));
+			return Color32((u8)(r / _fv), (u8)(g / _fv), (u8)(b / _fv), (u8)(a / _fv));
 		}
-		inline friend Color32 operator / (const f32 fv, const Color32& v)
+		inline friend Color32 operator / (const f32 _fv, const Color32& _v)
 		{
-			return Color32((u8)(fv / v.r), (u8)(fv / v.g), (u8)(fv / v.b), (u8)(fv / v.a));
+			return Color32((u8)(_fv / _v.r), (u8)(_fv / _v.g), (u8)(_fv / _v.b), (u8)(_fv / _v.a));
 		}
 
 	public:
