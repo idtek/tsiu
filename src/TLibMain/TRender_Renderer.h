@@ -44,8 +44,8 @@ namespace TsiU
 		Renderer();
 		virtual ~Renderer(){}
 
-		virtual void InitRender(u32 p_uiWidth, u32 p_uiHeight, const Char* p_strTitle, Bool p_bIsWindowed, void* p_poOuter) = 0;
-		virtual void Clear(const D_Color& p_Color, u32 p_uiClearFlag) = 0;
+		virtual void InitRender(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindowed, void* _poOuter) = 0;
+		virtual void Clear(const D_Color& _Color, u32 _uiClearFlag) = 0;
 		virtual Bool BeginFrame() = 0;
 		virtual void EndFrame() = 0;
 		virtual void Flip() = 0;
@@ -57,8 +57,8 @@ namespace TsiU
 
 		//virtual Viewport GetViewport() = 0;
 
-		virtual void SetLight(u32 p_uiIdx, const Light& p_Light) = 0;
-		//virtual void MakeProjectionMatrix(f32 p_fFOV, f32 p_fAspect, f32 p_fNearPlane, f32 p_fFarPlane, Mat4& p_Result) = 0;
+		virtual void SetLight(u32 _uiIdx, const Light& _Light) = 0;
+		//virtual void MakeProjectionMatrix(f32 _fFOV, f32 _fAspect, f32 _fNearPlane, f32 _fFarPlane, Mat4& _Result) = 0;
 
 		virtual Texture* CreateTexture(const Char * filename) = 0;
 

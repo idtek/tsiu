@@ -10,19 +10,19 @@ namespace TsiU
 	public:
 		virtual ~RenderWindow(){}
 
-		virtual void InitWindow(u32 p_uiWidth, u32 p_uiHeight, const Char* p_strTitle, Bool p_bIsWindowed, void* p_poOuter) = 0;
-		virtual void SetFullScreen(Bool p_bFull) = 0;
+		virtual void InitWindow(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindowed, void* _poOuter) = 0;
+		virtual void SetFullScreen(Bool _bFull) = 0;
 
 		inline u32 GetWindowWidth()	{ return m_uiWidth;		}
 		inline u32 GetWindowHeight(){ return m_uiHeight;	}
 		inline u32 IsWindowed()		{ return m_bIsWindowed;	}
-		inline void SetWindowWidth(u32 p_uiWidth)
+		inline void SetWindowWidth(u32 _uiWidth)
 		{
-			m_uiWidth = p_uiWidth;
+			m_uiWidth = _uiWidth;
 		}
-		inline void SetWindowHeight(u32 p_uiHeight)
+		inline void SetWindowHeight(u32 _uiHeight)
 		{
-			m_uiHeight = p_uiHeight;
+			m_uiHeight = _uiHeight;
 		}
 
 	protected:

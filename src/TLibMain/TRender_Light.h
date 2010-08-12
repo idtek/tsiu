@@ -26,8 +26,8 @@ namespace TsiU
 
 		void ResetLight();
 		//Helper function
-		void CreateSpotLight(const Vec3& p_vPos, const Vec3& p_vDirection, D_Color& p_Color);
-		void CreatePointLight(const Vec3& p_vPos, D_Color& p_Color);
+		void CreateSpotLight(const Vec3& _vPos, const Vec3& _vDirection, D_Color& _Color);
+		void CreatePointLight(const Vec3& _vPos, D_Color& _Color);
 
 	public:
 		u32		m_uiType;
