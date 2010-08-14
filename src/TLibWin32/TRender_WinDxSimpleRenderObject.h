@@ -5,6 +5,8 @@
 #include "TWin32_Private.h"
 #include "TRender_SimpleRenderObject.h"
 
+#ifndef TLIB_NOWINDX
+
 namespace TsiU
 {
 	class WinDxRenderer;
@@ -100,5 +102,7 @@ namespace TsiU
 		WinDxRenderer* m_poRenderer;
 	};
 }
+
+#endif
 
 #endif

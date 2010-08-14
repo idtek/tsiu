@@ -5,6 +5,7 @@
 #include "TInput_InputDevice.h"
 #include "TWin32_Private.h"
 
+#ifndef TLIB_NOWINDX
 namespace TsiU
 {
 	class WinInputManager;
@@ -43,5 +44,6 @@ namespace TsiU
 		LPDIRECTINPUTDEVICE8	m_poDXKBDevice;
 	};
 }
+#endif
 
 #endif

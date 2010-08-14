@@ -5,6 +5,7 @@
 #include "TCore_Memory.h"
 #include "TWin32_Private.h"
 
+#ifndef TLIB_NOWINDX
 namespace TsiU
 {
 	class WinDxDevice
@@ -23,5 +24,6 @@ namespace TsiU
 	};
 
 }
+#endif
 
 #endif

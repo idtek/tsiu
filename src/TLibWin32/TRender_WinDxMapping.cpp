@@ -1,6 +1,7 @@
 #include "TRender_WinDxMapping.h"
 #include "TMath_Matrix4.h"
 
+#ifndef TLIB_NOWINDX
 namespace TsiU
 {
 	u32 WinDxMapping::MappingClearFlag(u32 p_uiTFlag)
@@ -38,3 +39,4 @@ namespace TsiU
 			_DxMat4.m[3][0], _DxMat4.m[3][1], _DxMat4.m[3][2], _DxMat4.m[3][3]);
 	}
 }
+#endif

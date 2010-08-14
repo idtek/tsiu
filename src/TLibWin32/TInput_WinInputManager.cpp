@@ -16,10 +16,12 @@ namespace TsiU
 	{
 		if(!GetLibSettings()->IsDefined(E_LS_Has_GUI))
 		{
+#ifndef TLIB_NOWINDX
 			WinRenderWindow* pMainWind = (WinRenderWindow*)(poGetEngine()->GetRenderMod()->GetRenderer()->GetMainWindow());
 
 			m_DeviceList.PushBack(new WinInputDeviceMouse(pMainWind->GetHINST(), pMainWind->GetHWND(), this));
 			m_DeviceList.PushBack(new WinInputDeviceKeyBoard(pMainWind->GetHINST(), pMainWind->GetHWND(), this));
+#endif
 		}
 		//else
 		//{

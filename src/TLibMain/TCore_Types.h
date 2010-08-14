@@ -91,4 +91,8 @@ typedef void*				Udef;
 	#pragma warning(disable:4067)
 #endif
 
+#ifndef DXSDK_DIR
+#define TLIB_NOWINDX
+#endif
+
 #endif
