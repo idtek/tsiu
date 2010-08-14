@@ -15,6 +15,7 @@
 #include "TRender_WinGDIRenderer.h"
 #include "TRender_WinGDIRenderWindow.h"
 #include "TRender_WinGDISimpleRenderObject.h"
+#include "TRender_WinGDIBitmap.h"
 
 /*#include "TGui_WinGDIButton.h"
 #include "TGui_WinGDISlidingBar.h"

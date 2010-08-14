@@ -14,7 +14,7 @@ namespace TsiU
 	class RenderModule : public IModule
 	{
 	public:
-		RenderModule(u32 p_uiWidth, u32 p_uiHeight, const Char* p_strTitle, Bool p_bIsWindow);
+		RenderModule(u32 _uiWidth, u32 _uiHeight, StringPtr _strTitle, Bool _bIsWindow);
 		~RenderModule();
 
 		virtual void Init();

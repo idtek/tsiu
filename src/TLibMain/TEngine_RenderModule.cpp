@@ -6,7 +6,7 @@
 
 namespace TsiU
 {
-	RenderModule::RenderModule(u32 p_uiWidth, u32 p_uiHeight, const Char* p_strTitle, Bool p_bIsWindow)
+	RenderModule::RenderModule(u32 _uiWidth, u32 _uiHeight, StringPtr _strTitle, Bool _bIsWindow)
 		:m_poApp(NULL), 
 		 m_poMainWindow(NULL), 
 		 m_poRenderWindowMsg(NULL), 
@@ -15,10 +15,10 @@ namespace TsiU
 	{
 		if(GetLibSettings()->IsDefined(E_LS_Has_GUI))
 		{
-			m_poApp			= new FXApp(p_strTitle, p_strTitle);
+			m_poApp			= new FXApp(_strTitle, _strTitle);
 			D_CHECK(m_poApp);
 
-			m_poMainWindow	= new FXMainWindow(m_poApp, p_strTitle, NULL, NULL, DECOR_ALL, 0, 0, p_uiWidth, p_uiHeight);
+			m_poMainWindow	= new FXMainWindow(m_poApp, _strTitle, NULL, NULL, DECOR_ALL, 0, 0, _uiWidth, _uiHeight);
 			D_CHECK(m_poMainWindow);
 		}
 
@@ -26,6 +26,8 @@ namespace TsiU
 		{
 			m_poRenderer = CallCreator<Renderer>(E_CreatorType_Renderer);
 			D_CHECK(m_poRenderer);
+
+			m_poRenderer->InitRender(_uiWidth, _uiHeight, _strTitle, _bIsWindow, NULL);
 		}
 
 		m_poRenderWindowMsg = CallCreator<RenderWindowMsg>(E_CreatorType_RenderWindowMsg);
@@ -68,12 +70,12 @@ namespace TsiU
 				FXWindow* pWin = (FXWindow*)m_poRendererWin;
 				m_poRenderer->InitRender(pWin->getWidth(), pWin->getHeight(), "RendererWin", true, pWin->id());
 			}
-			else
-			{
-				//use null to let render to create a window
-				//refect here!!!
-				m_poRenderer->InitRender(800, 600, "RendererWin", true, NULL);
-			}
+			//else
+			//{
+			//	//use null to let render to create a window
+			//	//refect here!!!
+			//	m_poRenderer->InitRender(800, 600, "RendererWin", false, NULL);
+			//}
 		}
 		
 		if(m_poMainWindow)

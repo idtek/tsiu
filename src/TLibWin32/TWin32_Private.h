@@ -27,5 +27,6 @@
 #endif
 
 #pragma comment(lib, "winmm") 
+#pragma comment(lib,"msimg32") //for TransparentBlt
 
 #endif

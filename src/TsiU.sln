@@ -40,6 +40,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Guess", "Guess\Guess.vcproj
 		{BA29D8C4-A834-4C2D-9FFC-B43A13BA31F4} = {BA29D8C4-A834-4C2D-9FFC-B43A13BA31F4}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SampleApps", "SampleApps", "{8485DF12-9A6C-40E1-802B-632A27643DF0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -78,5 +80,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{056F3B6F-1173-4D86-9F6D-500D40A43B74} = {8485DF12-9A6C-40E1-802B-632A27643DF0}
+		{84B9108E-E321-464D-9CB7-30D3427A6004} = {8485DF12-9A6C-40E1-802B-632A27643DF0}
+		{75DE401A-3C13-4B87-86A9-4A080DA3306C} = {8485DF12-9A6C-40E1-802B-632A27643DF0}
+		{7FFAACED-4CCA-4D46-BFB8-14F36571E743} = {8485DF12-9A6C-40E1-802B-632A27643DF0}
 	EndGlobalSection
 EndGlobal
