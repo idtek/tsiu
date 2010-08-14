@@ -1,6 +1,7 @@
 #include "TRender_WinDxTexture.h"
 #include "TRender_WinDxRenderer.h"
 
+#ifndef TLIB_NOWINDX
 namespace TsiU
 {
 	WinDxTexture::~WinDxTexture()
@@ -19,3 +20,4 @@ namespace TsiU
 		}
 	}
 }
+#endif

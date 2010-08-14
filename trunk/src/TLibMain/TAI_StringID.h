@@ -1,6 +1,8 @@
 #ifndef __TAI_STRINGID__
 #define __TAI_STRINGID__
 
+#include "TCore_Types.h"
+
 #define STRINGID_USE_STRING 1
 
 namespace TsiU
@@ -82,11 +84,6 @@ namespace TsiU
 			bool operator < (unsigned int id) const
 			{
 				return this->m_id < id;
-			}
-
-			operator std::size_t () const
-			{
-				return m_id;
 			}
 
 		private:

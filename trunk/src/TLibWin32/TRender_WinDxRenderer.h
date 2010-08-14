@@ -6,6 +6,8 @@
 
 #include "TWin32_Private.h"
 
+#ifndef TLIB_NOWINDX
+
 namespace TsiU
 {
 #define VERTICES_FOR_QUAD 4
@@ -59,5 +61,6 @@ private:
 		HWND				m_poMainHwnd;
 	};
 }
+#endif
 
 #endif

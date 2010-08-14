@@ -4,6 +4,8 @@
 #include "TWin32_Private.h"
 #include "TRender_Texture.h"
 
+#ifndef TLIB_NOWINDX
+
 namespace TsiU
 {
 	class WinDxTexture: public Texture
@@ -36,6 +38,6 @@ namespace TsiU
 		LPDIRECT3DTEXTURE9 m_poHandler;
 	};
 }
-
+#endif
 
 #endif

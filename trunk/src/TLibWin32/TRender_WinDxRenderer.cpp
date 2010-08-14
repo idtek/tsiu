@@ -6,6 +6,7 @@
 #include "TRender_WinDxTexture.h"
 #include "TRender_WinDxDevice.h"
 
+#ifndef TLIB_NOWINDX
 namespace TsiU
 {
 	WinDxRenderer::WinDxRenderer()
@@ -201,3 +202,5 @@ namespace TsiU
 		m_poMainD3DDevice->SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED|D3DCOLORWRITEENABLE_GREEN|D3DCOLORWRITEENABLE_BLUE|D3DCOLORWRITEENABLE_ALPHA);
 	}
 }
+
+#endif

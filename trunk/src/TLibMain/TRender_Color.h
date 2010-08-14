@@ -45,7 +45,7 @@ namespace TsiU
 		}
 		inline friend Color32 operator * (const f32 _fv, const Color32& _v)
 		{
-			return Color32((u8)(_fv * _v.r), (u8)(fv * _v.g), (u8)(_fv * _v.b), (u8)(_fv * _v.a));
+			return Color32((u8)(_fv * _v.r), (u8)(_fv * _v.g), (u8)(_fv * _v.b), (u8)(_fv * _v.a));
 		}
 		inline Color32 operator / (const f32 _fv)
 		{

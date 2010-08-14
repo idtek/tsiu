@@ -5,6 +5,7 @@
 #include "TEngine_RenderModule.h"
 #include "TRender_WinDxTexture.h"
 
+#ifndef TLIB_NOWINDX
 namespace TsiU
 {
 	const u32 WinDxSimpleRenderObjectVertex::FVF = D3DFVF_XYZ | D3DFVF_NORMAL;
@@ -311,3 +312,4 @@ namespace TsiU
 		m_poMesh->DrawSubset(0);
 	}
 }
+#endif

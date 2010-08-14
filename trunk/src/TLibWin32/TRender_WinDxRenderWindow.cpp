@@ -3,6 +3,7 @@
 #include "TRender_WinMsg.h"
 #include "TRender_WinDxDevice.h"
 
+#ifndef TLIB_NOWINDX
 namespace TsiU
 {
 	WinDxRenderWindow::WinDxRenderWindow()
@@ -115,3 +116,4 @@ namespace TsiU
 		m_poDevice->SetD3DDevice(l_poD3DDevice);
 	}
 }
+#endif

@@ -1,5 +1,6 @@
 #include "TRender_WinDxDevice.h"
 
+#ifndef TLIB_NOWINDX
 namespace TsiU
 {
 	WinDxDevice::WinDxDevice()
@@ -13,3 +14,4 @@ namespace TsiU
 		D_SafeRelease(m_poD3D);
 	}
 }
+#endif

@@ -7,6 +7,7 @@
 #include "TRender_Color.h"
 #include "TWin32_Private.h"
 
+#ifndef TLIB_NOWINDX
 namespace TsiU
 {
 	class Mat4;
@@ -20,5 +21,6 @@ namespace TsiU
 		static Mat4			MappingDXMat4(const D3DXMATRIX& _DxMat4);
 	};
 }
+#endif
 
 #endif

@@ -5,6 +5,7 @@
 #include "TRender_WinRenderWindow.h"
 #include "TWin32_Private.h"
 
+#ifndef TLIB_NOWINDX
 namespace TsiU
 {
 	class WinDxDevice;
@@ -28,5 +29,6 @@ namespace TsiU
 		WinDxDevice*		m_poDevice; 
 	};
 }
+#endif
 
 #endif

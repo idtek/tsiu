@@ -157,6 +157,7 @@ namespace TsiU
 		E_KB_DELETE
 	};
 
+#ifndef TLIB_NOWINDX
 	/************************************************************************/
 	/*     WinMouse															*/
 	/************************************************************************/
@@ -342,4 +343,5 @@ namespace TsiU
 			m_poManager->PostButtonEvent(_Convert[i], buffer[i] & 0x80 ? E_KS_Down : E_KS_Up);
 		}
 	}
+#endif
 }
