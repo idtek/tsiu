@@ -43,9 +43,17 @@ namespace TsiU
 			m_uiWidth = p_uiWidth;
 			m_uiHeight = p_uiHeight;
 
+			int iWindowWidth = m_uiWidth + GetSystemMetrics(SM_CXFIXEDFRAME) * 2,
+				iWindowHeight = m_uiHeight + GetSystemMetrics(SM_CYFIXEDFRAME) * 2 +
+				GetSystemMetrics(SM_CYCAPTION);
+			if(l_Wincl.lpszMenuName != NULL)
+				iWindowHeight += GetSystemMetrics(SM_CYMENU);
+			int iXWindowPos = (GetSystemMetrics(SM_CXSCREEN) - iWindowWidth) / 2,
+				iYWindowPos = (GetSystemMetrics(SM_CYSCREEN) - iWindowHeight) / 2;
+
 			m_poHwnd = ::CreateWindowEx(0, p_strTitle, p_strTitle, WS_OVERLAPPEDWINDOW
-				/*WS_OVERLAPPED | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX*/, 0, 0,
-				m_uiWidth, m_uiHeight, NULL, NULL, m_poInst, NULL );
+				/*WS_OVERLAPPED | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX*/, iXWindowPos, iYWindowPos,
+				iWindowWidth, iWindowHeight, NULL, NULL, m_poInst, NULL );
 
 			::ShowWindow(m_poHwnd, SW_SHOW);
 			::UpdateWindow(m_poHwnd);

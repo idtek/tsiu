@@ -198,6 +198,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\TLibWin32\TRender_WinGDIBitmap.h"
+				>
+			</File>
+			<File
+				RelativePath="..\TLibWin32\TRender_WinGDIMapping.h"
+				>
+			</File>
+			<File
 				RelativePath="..\TLibWin32\TRender_WinGDIRenderer.h"
 				>
 			</File>
@@ -273,6 +281,14 @@
 			</File>
 			<File
 				RelativePath="..\TLibWin32\TRender_WinDxTexture.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\TLibWin32\TRender_WinGDIBitmap.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\TLibWin32\TRender_WinGDIMapping.cpp"
 				>
 			</File>
 			<File

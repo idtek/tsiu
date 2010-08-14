@@ -18,14 +18,14 @@ int main(int argc, char* argv[])
 	GetLibSettings()->SetCreator(new T_Creator<WinTick>, E_CreatorType_Tick);
 	GetLibSettings()->SetCreator(new T_Creator<WinGDIRenderWindow>, E_CreatorType_RenderWindow);
 	GetLibSettings()->SetCreator(new T_Creator<WinGDIRenderer>, E_CreatorType_Renderer);
-	GetLibSettings()->SetCreator(new T_Creator<WinRenderGUIWindowMsg>, E_CreatorType_RenderWindowMsg);
+	GetLibSettings()->SetCreator(new T_Creator<WinRenderWindowMsg>, E_CreatorType_RenderWindowMsg);
 	GetLibSettings()->SetCreator(new T_Creator<WinInputManager>, E_CreatorType_Input);
 	GetLibSettings()->SetCreator(new T_Creator<DefaultFile>, E_CreatorType_File);
 #endif
 	GetLibSettings()->DefineMacro(E_LS_Has_GDI);
-	GetLibSettings()->DefineMacro(E_LS_Has_GUI);
+	//GetLibSettings()->DefineMacro(E_LS_Has_GUI);
 
-	g_poEngine = new GameEngine(1024, 768, "Guess", false);
+	g_poEngine = new GameEngine(900, 675, "Guess", false);
 
 	D_CHECK(g_poEngine);
 
