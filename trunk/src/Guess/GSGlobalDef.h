@@ -11,39 +11,6 @@ using namespace TsiU;
 
 extern Engine*						g_poEngine;
 
-//class UIMainPage : public FXCanvas {
-//	FXDECLARE(UIMainPage)
-//
-//protected:
-//	UIMainPage();
-//
-//public:
-//	//Construct DX viewer widget
-//	UIMainPage(FXComposite* p,
-//		FXObject* tgt = NULL,
-//		FXSelector sel = 0,
-//		FXuint opts = 0,
-//		FXint x = 0,
-//		FXint y = 0,
-//		FXint w = 0,
-//		FXint h = 0);
-//
-//public:
-//	//enum {
-//	//	ID_STARTSTOP = FXMainWindow::ID_LAST,
-//	//};
-//	FXEGDIViewer* GetGDIViewer() { return m_GDIViewer;	}
-//
-//	//event handler
-//	long onKeyPress(FXObject* sender, FXSelector sel, void *ptr);
-//
-//private:
-//	wchar_t* _ConvertedString(const char* rawstring, int len);
-//
-//private:
-//	FXEGDIViewer*	m_GDIViewer;
-//};
-
 class GameEngine : public Engine
 {
 public:
@@ -56,14 +23,25 @@ public:
 	virtual void DoUnInit(){};
 	virtual void DoPreFrame(){};
 
-//private:
-//	UIMainPage*		m_pMainPage;
+public:
+	enum{
+		E_ET_UpdateBlock1 = E_ET_User,
+		E_ET_UpdateBlock2,
+		E_ET_UpdateBlock3,
+		E_ET_UpdateBlock4,
+		E_ET_UpdateBlock5,
+		E_ET_UpdateBlock6,
+		E_ET_UpdateBlock7,
+		E_ET_UpdateBlock8,
+		E_ET_UpdateBlock9,
+	};
 };
 
-//class GSWindowMsgCallBack : public RenderWindowMsgListener
-//{
-//public:
-//	virtual void OnWindowResize(s32 width, s32 height);
-//};
+class GSWindowMsgCallBack : public RenderWindowMsgListener
+{
+public:
+	virtual void OnWindowResize(s32 width, s32 height);
+	//virtual void OnMouseLDown(s32 x, s32 y);
+};
 
 #endif

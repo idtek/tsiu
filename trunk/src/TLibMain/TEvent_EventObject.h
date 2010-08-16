@@ -20,10 +20,10 @@ namespace TsiU
 	public:
 		void SetValue(const EventParam& _Param){ m_Param = _Param; };
 
-		virtual	operator s32()		{ return m_Param.lParam;	}
-		virtual	operator u32()		{ return m_Param.ulParam;	}
-		virtual	operator f32()		{ return m_Param.fParam;	}
-		virtual	operator void*()	{ return m_Param.poParam;	}
+		virtual	operator s32()		const { return m_Param.lParam;	}
+		virtual	operator u32()		const { return m_Param.ulParam;	}
+		virtual	operator f32()		const { return m_Param.fParam;	}
+		virtual	operator void*()	const { return m_Param.poParam;	}
 
 		EventParamObject& operator = (const EventParamObject& _epo)
 		{
@@ -68,7 +68,7 @@ namespace TsiU
 		};
 		
 		template<typename T>
-		T	GetParam(s32 idx) { return (T)m_arParamList[idx]; };
+		T	GetParam(s32 idx) const { return (T)m_arParamList[idx]; };
 
 
 		s32	CountParam() const { return (s32)m_arParamList.Size(); };

@@ -7,6 +7,8 @@ namespace TsiU
 	{
 		E_ET_Invalid = -1,
 		E_ET_Input,
+
+		E_ET_User,
 	};
 
 	enum EventSubType_t
@@ -16,7 +18,7 @@ namespace TsiU
 		E_EST_Input_Mouse,
 		E_EST_Input_KeyBoard,
 		E_EST_Input_Pad,
-		E_EST_Input_ListInfo,
+		E_EST_Input_ListInfo
 	};
 }
 
