@@ -4,6 +4,33 @@
 #include "GSGlobalDef.h"
 #include <string>
 
+class GSEffectController
+{
+public:
+	enum{
+		EEffectController_Loop,
+		EEffectController_Once,
+	};	
+
+	//void Tick(f32 _fDeltaTime);
+	
+private:
+	struct KeyFrame
+	{
+		struct FrameInfo
+		{
+			Point2<u32> m_UpperLeft;
+			u32			m_Width;
+			u32			m_Height;
+		};
+		f32			m_Time;
+		f32			m_NextTime;
+	};
+	List<KeyFrame>  m_Frames;
+	f32				m_CurTime;
+};
+
+
 class GSBlock : public DrawableObject
 {
 public:
@@ -22,6 +49,7 @@ public:
 	u32 GetBlockHeight()	const { return m_uiHeight;	}
 
 	void OpUpdateBlock(const Event* _poEvent);
+	void OpClickBlock();
 
 private:
 	u32	m_uiX, m_uiY;
@@ -33,8 +61,9 @@ private:
 		EImageState_Front,
 		EImageState_Num
 	};
-	u32				m_uiCurrentState;
-	WinGDIBitmap*	m_poImages[EImageState_Num];
+	u32					m_uiCurrentState;
+	WinGDIBitmap*		m_poImages[EImageState_Num];
+	GSEffectController	m_EffectController;
 };
 
 class GSBlockManager : public Singleton<GSBlockManager>
@@ -42,6 +71,7 @@ class GSBlockManager : public Singleton<GSBlockManager>
 	static const int kRowCount		= 3;
 	static const int kColumnCount	= 3;
 public:
+	GSBlockManager();
 	void Init(s32 _wWidth, s32 _wHeight);
 
 	void OnResizeWindow(s32 _wWidth, s32 _wHeight);
@@ -66,6 +96,8 @@ private:
 		std::string m_BackPicName;
 	};
 	GSBlock* m_BlockMap[kRowCount][kColumnCount];
+	u32		 m_BlockWidth;
+	u32		 m_BlockHeight;
 };
 
 #endif

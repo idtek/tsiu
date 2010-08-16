@@ -20,7 +20,7 @@ public:
 	GameEngine(u32 _width, u32 _height, const Char* _title, Bool _isWindowed);
 
 	virtual void DoInit();
-	virtual void DoUnInit(){};
+	virtual void DoUnInit();
 	virtual void DoPreFrame(){};
 
 public:
@@ -41,7 +41,7 @@ class GSWindowMsgCallBack : public RenderWindowMsgListener
 {
 public:
 	virtual void OnWindowResize(s32 width, s32 height);
-	//virtual void OnMouseLDown(s32 x, s32 y);
+	virtual void OnMouseLDown(s32 x, s32 y);
 };
 
 #endif

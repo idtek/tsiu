@@ -36,6 +36,13 @@ void GSBlock::OpUpdateBlock(const Event* _poEvent)
 	m_uiHeight = _poEvent->GetParam<u32>(3);
 }
 
+void GSBlock::OpClickBlock()
+{
+	m_uiCurrentState == EImageState_Front ? 
+		m_uiCurrentState = EImageState_Back :
+		m_uiCurrentState = EImageState_Front;
+}
+
 void GSBlock::InitBlock(u32 _x, u32 _y, u32 _width, u32 _height, StringPtr _backImage, StringPtr _frontImage, u32 _controlFlag)
 {
 	m_uiX = _x;
@@ -45,7 +52,7 @@ void GSBlock::InitBlock(u32 _x, u32 _y, u32 _width, u32 _height, StringPtr _back
 	m_uiHeight = _height;
 	
 	m_uiControlFlag = _controlFlag;
-	m_uiCurrentState = EImageState_Front;
+	m_uiCurrentState = EImageState_Back;
 
 	WinGDIRenderer* pRender = (WinGDIRenderer*)GameEngine::GetGameEngine()->GetRenderMod()->GetRenderer();
 
@@ -54,21 +61,25 @@ void GSBlock::InitBlock(u32 _x, u32 _y, u32 _width, u32 _height, StringPtr _back
 }
 
 //--------------------------------------------------------------------------------------------------------------
+GSBlockManager::GSBlockManager()
+{
+	memset(m_BlockMap, 0, sizeof(GSBlock*) * kColumnCount * kRowCount);
+}
 void GSBlockManager::Init(s32 _wWidth, s32 _wHeight)
 {
-	s32 blockWidth  = _wWidth / kColumnCount;
-	s32 blockHeight = _wHeight / kRowCount;
+	m_BlockWidth  = _wWidth / kColumnCount;
+	m_BlockHeight = _wHeight / kRowCount; 
 
 	static const ConstPicInfo kPicList[] = {
-		ConstPicInfo("back.bmp", "1.bmp"), 
+		ConstPicInfo("back.bmp", "2.bmp"), 
 		ConstPicInfo("back.bmp", "2.bmp"),
-		ConstPicInfo("back.bmp", "3.bmp"),
-		ConstPicInfo("back.bmp", "4.bmp"),
-		ConstPicInfo("back.bmp", "5.bmp"),
-		ConstPicInfo("back.bmp", "6.bmp"),
-		ConstPicInfo("back.bmp", "7.bmp"),
-		ConstPicInfo("back.bmp", "8.bmp"),
-		ConstPicInfo("back.bmp", "9.bmp")
+		ConstPicInfo("back.bmp", "2.bmp"),
+		ConstPicInfo("back.bmp", "2.bmp"),
+		ConstPicInfo("back.bmp", "2.bmp"),
+		ConstPicInfo("back.bmp", "2.bmp"),
+		ConstPicInfo("back.bmp", "2.bmp"),
+		ConstPicInfo("back.bmp", "2.bmp"),
+		ConstPicInfo("back.bmp", "2.bmp")
 	};
 
 	GSBlock* newBlock = NULL;
@@ -76,14 +87,14 @@ void GSBlockManager::Init(s32 _wWidth, s32 _wHeight)
 	{
 		for(s32 j = 0; j < kColumnCount; ++j)
 		{
-			Point2<u32> upperLeft = _XYToUpperLeft(blockWidth, blockHeight, i, j);
+			Point2<u32> upperLeft = _XYToUpperLeft(m_BlockWidth, m_BlockHeight, i, j);
 
 			s32 flatIndex = _XYToIndex(i, j);
 			newBlock = new GSBlock;
 			newBlock->InitBlock(upperLeft.X(), 
 								upperLeft.Y(), 
-								blockWidth, 
-								blockHeight, 
+								m_BlockWidth, 
+								m_BlockHeight, 
 								kPicList[flatIndex].m_BackPicName.c_str(), 
 								kPicList[flatIndex].m_FrontPicName.c_str(), 
 								GSBlock::EControlFlag_FreeSize);
@@ -104,22 +115,35 @@ void GSBlockManager::Init(s32 _wWidth, s32 _wHeight)
 
 void GSBlockManager::OnResizeWindow(s32 _wWidth, s32 _wHeight)
 {
-	int blockWidth  = _wWidth / kColumnCount;
-	int blockHeight = _wHeight / kRowCount; 
+	m_BlockWidth  = _wWidth / kColumnCount;
+	m_BlockHeight = _wHeight / kRowCount; 
 
 	for(int i = 0; i < kRowCount; ++i)
 	{
 		for(int j = 0; j < kColumnCount; ++j)
 		{
-			Point2<u32> upperLeft = _XYToUpperLeft(blockWidth, blockHeight, i, j);
+			Point2<u32> upperLeft = _XYToUpperLeft(m_BlockWidth, m_BlockHeight, i, j);
 
 			s32 flatIndex = _XYToIndex(i, j);
 			Event evt((EventType_t)(GameEngine::E_ET_UpdateBlock1 + flatIndex));
 			evt.AddParam(upperLeft.X())
 			   .AddParam(upperLeft.Y())
-			   .AddParam(blockWidth)
-			   .AddParam(blockHeight);
+			   .AddParam(m_BlockWidth)
+			   .AddParam(m_BlockHeight);
 			GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evt);
 		}
 	}
+}
+
+void GSBlockManager::OnClick(s32 x, s32 y)
+{
+	s32 row = y / m_BlockHeight;
+	s32 column = x / m_BlockWidth;
+
+	D_CHECK(row >= 0 && row < kRowCount);
+	D_CHECK(column >= 0 && column < kRowCount);
+
+	GSBlock* curBlock = m_BlockMap[row][column];
+	if(curBlock)
+		curBlock->OpClickBlock();
 }

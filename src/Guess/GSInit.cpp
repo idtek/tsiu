@@ -10,9 +10,6 @@ GameEngine::GameEngine(u32 _width, u32 _height, const Char* _title, Bool _isWind
 	GSBlockManager::Create();
 }
 
-static const int kRowCount		= 3;
-static const int kColumnCount	= 3;
-
 void GameEngine::DoInit()
 {
 	//Add window msg call back
@@ -22,6 +19,11 @@ void GameEngine::DoInit()
 	int wndHeight = GetRenderMod()->GetRenderer()->GetHeight();
 
 	GSBlockManager::GetPtr()->Init(wndWidth, wndHeight);
+}
+
+void GameEngine::DoUnInit()
+{
+	GSBlockManager::Destroy();
 }
 
 //---------------------------------------------------------------------------------------
@@ -35,6 +37,12 @@ void GSWindowMsgCallBack::OnWindowResize(s32 width, s32 height)
 		u32 wndWidth  = pRender->GetWidth();
 		u32 wndHeight = pRender->GetHeight();
 
-		GSBlockManager::GetPtr()->OnResizeWindow(wndWidth, wndHeight);
+		if(GSBlockManager::GetPtr())
+			GSBlockManager::GetPtr()->OnResizeWindow(wndWidth, wndHeight);
 	}
+}
+void GSWindowMsgCallBack::OnMouseLDown(s32 x, s32 y)
+{
+	if(GSBlockManager::GetPtr())
+		GSBlockManager::GetPtr()->OnClick(x, y);
 }
