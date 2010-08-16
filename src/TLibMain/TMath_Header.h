@@ -7,5 +7,6 @@
 #include "TMath_Vector4.h"
 #include "TMath_Matrix3.h"
 #include "TMath_Matrix4.h"
+#include "TMath_Point2.h"
 
 #endif
