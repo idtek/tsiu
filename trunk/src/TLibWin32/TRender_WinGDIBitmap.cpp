@@ -183,6 +183,7 @@ namespace TsiU
 			HDC hMemDC = CreateCompatibleDC(hDC);
 			HBITMAP hOldBitmap = (HBITMAP)SelectObject(hMemDC, m_hBitmap);
 
+			SetStretchBltMode(hDC, COLORONCOLOR);
 			StretchBlt(hDC, x, y, width, height, hMemDC, 0, 0, GetWidth(), GetHeight(), SRCCOPY);
 
 			SelectObject(hMemDC, hOldBitmap);

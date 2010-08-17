@@ -12,22 +12,32 @@ public:
 		EEffectController_Once,
 	};	
 
-	//void Tick(f32 _fDeltaTime);
-	
-private:
 	struct KeyFrame
 	{
 		struct FrameInfo
 		{
+			static FrameInfo Blend(const FrameInfo& frame1, const FrameInfo& frame2, f32 coef);
 			Point2<u32> m_UpperLeft;
 			u32			m_Width;
 			u32			m_Height;
-		};
+		} m_FrameInfo;
 		f32			m_Time;
-		f32			m_NextTime;
 	};
-	List<KeyFrame>  m_Frames;
-	f32				m_CurTime;
+
+	GSEffectController();
+
+	void						AddFrame(const KeyFrame& frame);
+	const KeyFrame::FrameInfo&  GetCurFrame() const;
+	void						Clear();
+
+	void Start();
+	void Tick(f32 _fDeltaTime);
+	
+private:
+	Array<KeyFrame>		m_Frames;
+	f32					m_CurTime;
+	KeyFrame::FrameInfo	m_CurFrame;
+	Bool				m_HasStarted;
 };
 
 
@@ -62,7 +72,7 @@ private:
 		EImageState_Num
 	};
 	u32					m_uiCurrentState;
-	WinGDIBitmap*		m_poImages[EImageState_Num];
+	WinGDIJpeg*			m_poImages[EImageState_Num];
 	GSEffectController	m_EffectController;
 };
 

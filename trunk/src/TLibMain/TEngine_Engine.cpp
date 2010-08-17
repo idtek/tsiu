@@ -180,9 +180,9 @@ namespace TsiU
 			DoPostFrame();
 
 #if PLATFORM_TYPE == PLATFORM_WIN32
-			int time = int(1000.0f/60 - fDeltaT * 1000.f);
-			if(time > 0)
-				Sleep(time);
+			//int time = int(1000.0f/60 - fDeltaT * 1000.f);
+			//if(time > 0)
+			//	Sleep(time);
 #endif	
 		}
 	}

@@ -109,6 +109,16 @@ namespace TsiU
 				}
 			}
 		}
+		else
+		{
+			if(GetLibSettings()->IsDefined(E_LS_Has_D3D) || GetLibSettings()->IsDefined(E_LS_Has_GDI))
+			{
+				if(_fDeltaTime > 0)
+				{	
+					m_poRenderer->ShowFPS(1.f / _fDeltaTime);
+				}
+			}
+		}
 #endif
 	}
 
