@@ -22,7 +22,7 @@ namespace TsiU
 		}
 		virtual u32 GetTick()
 		{
-			return (u32)::GetTickCount();
+			return (u32)::timeGetTime();
 		}
 		virtual u32 GetTickPerSec()
 		{
