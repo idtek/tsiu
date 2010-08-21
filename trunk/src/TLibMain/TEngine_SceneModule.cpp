@@ -1,11 +1,11 @@
 #include "TEngine_SceneModule.h"
-#include "TEngine_Object.h"
 #include "TRender_Camera.h"
 #include "TRender_Renderer.h"
 #include "TMath_Matrix4.h"
 #include "TRender_Enum.h"
 #include "TEngine_Private.h"
 #include "TEngine_RenderModule.h"
+#include "TCore_LibSettings.h"
 
 namespace TsiU
 {
@@ -49,7 +49,7 @@ namespace TsiU
 		m_poCameraList.Clear();
 	}
 
-	void SceneModule::RunOneFrame(float p_fDeltaTime)
+	void SceneModule::RunOneFrame(float _fDeltaTime)
 	{
 		if(m_poDefaultCamera)
 		{
@@ -62,55 +62,82 @@ namespace TsiU
 		{
 			Object* pObj = (*it).second;
 			if(pObj->HasControlFlag(E_OCF_Active))
-				pObj->Tick(p_fDeltaTime);
+				pObj->Tick(_fDeltaTime);
 		}
 
 	}
 
 	void SceneModule::Draw()
 	{		
-		ObjIterator it;
-
-		for(it = m_ObjList.begin(); it != m_ObjList.end(); it++)
+		if(GetLibSettings()->IsDefined(E_LS_Has_GDI))
 		{
-			Object* pObj = (*it).second;
-			pObj->UpdateMatrix();
-			if(pObj->HasControlFlag(E_OCF_Drawable))
+			Array<Object*> objectArrayWithZOrder[EZOrder_Max];
+
+			ObjIterator it;
+			for(it = m_ObjList.begin(); it != m_ObjList.end(); it++)
 			{
-				DrawableObject *pDObj = (DrawableObject *)pObj;
-				pDObj->Draw();
+				Object* pObj = (*it).second;
+				pObj->UpdateMatrix();
+				if(pObj->HasControlFlag(E_OCF_Drawable))
+				{
+					objectArrayWithZOrder[pObj->GetZOrder()].PushBack(pObj);
+				}
+			}
+			for(s32 i = EZOrder_Bottom; i >= EZOrder_Top; --i)
+			{
+				Array<Object*>& pCurObjectArray = objectArrayWithZOrder[i];
+				for(s32 j = 0; j < pCurObjectArray.Size(); ++j)
+				{
+					DrawableObject* pDObj = (DrawableObject*)pCurObjectArray[j];
+					pDObj->Draw();
+				}
 			}
 		}
-
+		else
+		{
+			ObjIterator it;
+			for(it = m_ObjList.begin(); it != m_ObjList.end(); it++)
+			{
+				Object* pObj = (*it).second;
+				pObj->UpdateMatrix();
+				if(pObj->HasControlFlag(E_OCF_Drawable))
+				{
+					DrawableObject *pDObj = (DrawableObject *)pObj;
+					pDObj->Draw();
+				}
+			}
+		}
 	}
-	Bool SceneModule::AddObject(const Char* p_poName, Object* p_poObj)
+	Bool SceneModule::AddObject(const Char* _poName, Object* _poObj)
 	{
-		Object* l_poObj = GetSceneObject<Object>(p_poName);
-		if(l_poObj)
+		Object* poObj = GetSceneObject<Object>(_poName);
+		if(poObj)
 			return false;
 		else
-			m_ObjList.insert(std::pair<const Char*, Object*>(p_poName, p_poObj));
+		{
+			m_ObjList.insert(std::pair<const Char*, Object*>(_poName, _poObj));
+		}
 		return true;
 	}
-	Bool SceneModule::AddGuiObject(u8 p_ucId, Object* p_poObj)
+	//Bool SceneModule::AddGuiObject(u8 _ucId, Object* _poObj)
+	//{
+	//	Char strBuff[16] = "";
+	//	sprintf(strBuff, "__GUIOBJ_%d", _ucId);
+	//	return AddObject(strBuff, _poObj);
+	//}
+	Bool SceneModule::AddCamera(Camera* _poCamera, Bool _bIsDefault)
 	{
-		Char strBuff[16] = "";
-		sprintf(strBuff, "__GUIOBJ_%d", p_ucId);
-		return AddObject(strBuff, p_poObj);
-	}
-	Bool SceneModule::AddCamera(Camera* p_poCamera, Bool _bIsDefault)
-	{
-		D_CHECK(p_poCamera);
-		m_poCameraList.PushBack(p_poCamera);
+		D_CHECK(_poCamera);
+		m_poCameraList.PushBack(_poCamera);
 
 		if(_bIsDefault)
-			m_poDefaultCamera = p_poCamera;
+			m_poDefaultCamera = _poCamera;
 		return true;
 	}
-	Bool SceneModule::AddLight(Light* p_poLight)
+	Bool SceneModule::AddLight(Light* _poLight)
 	{
-		D_CHECK(p_poLight);
-		m_poLightList.PushBack(p_poLight);
+		D_CHECK(_poLight);
+		m_poLightList.PushBack(_poLight);
 
 		return true;
 	}

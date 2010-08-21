@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\TLibMain;..\TLibWin32;..\ExternLibs\fox\include"
+				AdditionalIncludeDirectories="..\TLibMain;..\TLibWin32;..\ExternLibs\fox\include;..\ExternLibs\libjpeg\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;TLIB_DEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -107,7 +107,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\TLibMain;..\TLibWin32;..\ExternLibs\fox\include"
+				AdditionalIncludeDirectories="..\TLibMain;..\TLibWin32;..\ExternLibs\fox\include;..\ExternLibs\libjpeg\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
@@ -193,6 +193,69 @@
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile="$(OutDir)/TWin32_d.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release NoDX|Win32"
+			OutputDirectory="..\..\exe"
+			IntermediateDirectory="..\..\obj\$(ProjectName)\Release"
+			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="2"
+			DeleteExtensionsOnClean="*.obj;*.ilk;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.pgc;*.pgd;*.ncb;$(TargetPath);$(OutDir)$(TargetName).ilk"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\TLibMain;..\TLibWin32;..\ExternLibs\fox\include;..\ExternLibs\libjpeg\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;TLIB_NOWINDX;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)/TWin32.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"

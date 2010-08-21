@@ -130,8 +130,16 @@ namespace TsiU
 
 		HDC hDC = _poRenderer->GetOffscreenDC();
 		m_hBitmap = CreateCompatibleBitmap(hDC, Math::Max(m_iWidth,1), Math::Max(m_iHeight, 1));
+		if(!m_hBitmap)
+		{
+			D_Output("CreateCompatibleBitmap failed: %d\n", GetLastError());
+			VirtualFree(pixels, 0, MEM_RELEASE);
+			return false;
+		}
 		if(!SetDIBits(hDC, m_hBitmap, 0, m_iHeight, pixels, &bmi, DIB_RGB_COLORS))
 		{
+			D_Output("SetDIBits failed: %d\n", GetLastError());
+			VirtualFree(pixels, 0, MEM_RELEASE);
 			return false;
 		}
 		VirtualFree(pixels, 0, MEM_RELEASE);
