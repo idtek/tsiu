@@ -34,6 +34,8 @@ public:
 		E_ET_UpdateBlock7,
 		E_ET_UpdateBlock8,
 		E_ET_UpdateBlock9,
+
+		E_ET_EffectFinished,
 	};
 };
 

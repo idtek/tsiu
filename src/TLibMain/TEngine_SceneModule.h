@@ -6,24 +6,25 @@
 #include <map>
 #include <string>
 #include "TUtility_Array.h"
+#include "TEngine_Object.h"
 
 namespace TsiU
 {
 
-	#define BEGINE_DEFINE_GUI(poEngine, ulIdx, poGuiObj)	{ \
-		GuiObject* l_poGuiObj = poGuiObj;	\
-		poEngine->GetSceneMod()->AddGuiObject(ulIdx, l_poGuiObj);
+	//#define BEGINE_DEFINE_GUI(poEngine, ulIdx, poGuiObj)	{ \
+	//	GuiObject* l_poGuiObj = poGuiObj;	\
+	//	poEngine->GetSceneMod()->AddGuiObject(ulIdx, l_poGuiObj);
 
-	#define REGISTER_GUI_EVENT_HANDLER(ulType, poHandler)  \
-		l_poGuiObj->RegisterEventHandler(ulType, poHandler);
+	//#define REGISTER_GUI_EVENT_HANDLER(ulType, poHandler)  \
+	//	l_poGuiObj->RegisterEventHandler(ulType, poHandler);
 
-	#define END_DEFINE_GUI()	}
+	//#define END_DEFINE_GUI()	}
 
 }
 
 namespace TsiU
 {
-	class Object;
+	//class Object;
 	class Renderer;
 	class Camera;
 	class Light;
@@ -34,13 +35,13 @@ namespace TsiU
 		SceneModule();
 
 		virtual void Init();
-		virtual void RunOneFrame(float p_fDeltaTime);
+		virtual void RunOneFrame(float _fDeltaTime);
 		virtual void UnInit();
 
-		virtual Bool AddGuiObject(u8 p_ucId, Object* p_poObj);
-		virtual Bool AddObject(const Char* p_poName,Object* p_poObj);
-		virtual Bool AddCamera(Camera* p_poCamera, Bool _bIsDefault);
-		virtual Bool AddLight(Light* p_poLight);
+		//virtual Bool AddGuiObject(u8 _ucId, Object* _poObj);
+		virtual Bool AddObject(const Char* _poName,Object* _poObj);
+		virtual Bool AddCamera(Camera* _poCamera, Bool _bIsDefault);
+		virtual Bool AddLight(Light* _poLight);
 		
 		virtual void Draw();
 
@@ -48,9 +49,9 @@ namespace TsiU
 		{
 			return m_poDefaultCamera;
 		}
-		inline void SetDefaultCamera(Camera* p_poCamera)
+		inline void SetDefaultCamera(Camera* _poCamera)
 		{
-			m_poDefaultCamera = p_poCamera;
+			m_poDefaultCamera = _poCamera;
 		}
 		inline void SetDefaultCamera(u32 _uiId)
 		{
@@ -61,10 +62,10 @@ namespace TsiU
 		}
 
 		template<typename T>
-		T* GetSceneObject(const Char* p_poName);
+		T* GetSceneObject(const Char* _poName);
 
-		template<typename T>
-		T* GetGuiObject(u8 p_ucId);
+		//template<typename T>
+		//T* GetGuiObject(u8 _ucId);
 
 	private:
 		typedef std::map<std::string, Object*>::iterator ObjIterator;
@@ -78,21 +79,21 @@ namespace TsiU
 	};
 
 	template<typename T>
-	T* SceneModule::GetSceneObject(const Char* p_poName)
+	T* SceneModule::GetSceneObject(const Char* _poName)
 	{
-		ObjIterator it = m_ObjList.find(p_poName);
+		ObjIterator it = m_ObjList.find(_poName);
 		if(it == m_ObjList.end())
 			return NULL;
 		else
 			return (T*)((*it).second);
 	}
-	template<typename T>
-	T* SceneModule::GetGuiObject(u8 p_ucId)
-	{
-		Char strBuff[16] = "";
-		sprintf(strBuff, "__GUIOBJ_%d", p_ucId);
-		return GetSceneObject<T>(strBuff);
-	}
+	//template<typename T>
+	//T* SceneModule::GetGuiObject(u8 _ucId)
+	//{
+	//	Char strBuff[16] = "";
+	//	sprintf(strBuff, "__GUIOBJ_%d", _ucId);
+	//	return GetSceneObject<T>(strBuff);
+	//}
 }
 
 #endif

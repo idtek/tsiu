@@ -60,6 +60,7 @@ public:
 
 	void OpUpdateBlock(const Event* _poEvent);
 	void OpClickBlock();
+	void OpEffectFinished(const Event* _poEvent);
 
 private:
 	u32	m_uiX, m_uiY;
@@ -74,6 +75,8 @@ private:
 	u32					m_uiCurrentState;
 	WinGDIJpeg*			m_poImages[EImageState_Num];
 	GSEffectController	m_EffectController;
+	u8					m_iDefaultZOrder;
+	Bool				m_bReadFromEffect;
 };
 
 class GSBlockManager : public Singleton<GSBlockManager>
