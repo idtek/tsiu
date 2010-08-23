@@ -1,13 +1,22 @@
 #include "GSGlobalDef.h"
 #include "GSBlock.h"
+#include <fmod.hpp>
+#include <fmod_errors.h>
 
 //-----------------------------------------------------------------------------------------------------
 Engine*						g_poEngine	= NULL;
 //--------------------------------------------------------------------------------------------------------------
+
+static FMOD::System		*gSystem	= NULL;
+static FMOD::Sound      *gSound		= NULL;
+static FMOD::Channel    *gChannel	= NULL;
+
 GameEngine::GameEngine(u32 _width, u32 _height, const Char* _title, Bool _isWindowed)
 	:Engine(_width, _height, _title, _isWindowed)
 {
 	GSBlockManager::Create();
+
+	FMOD::System_Create(&gSystem);
 }
 
 void GameEngine::DoInit()
@@ -21,11 +30,20 @@ void GameEngine::DoInit()
 	GSBlockManager::GetPtr()->Init(wndWidth, wndHeight);
 
 	GameEngine::GetGameEngine()->GetSceneMod()->AddObject("background", new GSBackground);
+
+	gSystem->init(32, FMOD_INIT_NORMAL, 0);
+	gSystem->createStream("bg.mp3", FMOD_HARDWARE, 0, &gSound);
+	gSystem->playSound(FMOD_CHANNEL_FREE, gSound, false, &gChannel);
+	//gChannel->setVolume(0.2f);
 }
 
 void GameEngine::DoUnInit()
 {
 	GSBlockManager::Destroy();
+
+	gSound->release();
+	gSystem->close();
+	gSystem->release();
 }
 
 //---------------------------------------------------------------------------------------
