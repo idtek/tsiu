@@ -292,7 +292,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="tinyxml.lib libjpeg.lib"
+				AdditionalDependencies="tinyxml.lib libjpeg.lib fmodex_vc.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\ExternLibs\TinyXML\lib;..\ExternLibs\libjpeg\lib;..\ExternLibs\fmod\lib"
 				IgnoreDefaultLibraryNames="libcmt.lib;LIBCMTD.lib"
