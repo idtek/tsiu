@@ -19,6 +19,8 @@ void GameEngine::DoInit()
 	int wndHeight = GetRenderMod()->GetRenderer()->GetHeight();
 
 	GSBlockManager::GetPtr()->Init(wndWidth, wndHeight);
+
+	GameEngine::GetGameEngine()->GetSceneMod()->AddObject("background", new GSBackground);
 }
 
 void GameEngine::DoUnInit()

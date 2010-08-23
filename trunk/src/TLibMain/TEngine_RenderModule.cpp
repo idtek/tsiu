@@ -84,7 +84,7 @@ namespace TsiU
 
 	void RenderModule::RunOneFrame(float _fDeltaTime)
 	{
-#ifdef TLIB_DEBUG
+//#ifdef TLIB_DEBUG
 		//Show fps only if we have renderer part
 		if(GetLibSettings()->IsDefined(E_LS_Has_GUI))
 		{
@@ -119,7 +119,7 @@ namespace TsiU
 				}
 			}
 		}
-#endif
+//#endif
 	}
 
 	void RenderModule::UnInit()
