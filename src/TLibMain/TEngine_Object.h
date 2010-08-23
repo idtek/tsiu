@@ -17,7 +17,7 @@ namespace TsiU
 
 	enum{
 		EZOrder_Top = 0,
-		EZOrder_Bottom = 255,
+		EZOrder_Bottom = 15,
 		EZOrder_Max
 	};
 

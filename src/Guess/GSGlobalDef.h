@@ -25,17 +25,7 @@ public:
 
 public:
 	enum{
-		E_ET_UpdateBlock1 = E_ET_User,
-		E_ET_UpdateBlock2,
-		E_ET_UpdateBlock3,
-		E_ET_UpdateBlock4,
-		E_ET_UpdateBlock5,
-		E_ET_UpdateBlock6,
-		E_ET_UpdateBlock7,
-		E_ET_UpdateBlock8,
-		E_ET_UpdateBlock9,
-
-		E_ET_EffectFinished,
+		E_ET_EffectFinished = E_ET_User,
 	};
 };
 
