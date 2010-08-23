@@ -267,12 +267,20 @@ void GSBlock::STATE_HandleBack()
 	kf.m_Time = 1.f;
 	m_EffectController->AddFrame(kf);
 
+	kf.m_FrameInfo.m_UpperLeft.X(m_uiX);
+	kf.m_FrameInfo.m_UpperLeft.Y(m_uiY);
+	kf.m_FrameInfo.m_Width = m_uiWidth;
+	kf.m_FrameInfo.m_Height = m_uiHeight;
+	kf.m_FrameInfo.m_PicIndex = EImageIndex_Front;
+	kf.m_Time = 1.5f;
+	m_EffectController->AddFrame(kf);
+
 	kf.m_FrameInfo.m_UpperLeft.X(0);
 	kf.m_FrameInfo.m_UpperLeft.Y(0);
 	kf.m_FrameInfo.m_Width = GameEngine::GetGameEngine()->GetRenderMod()->GetRenderer()->GetWidth();
 	kf.m_FrameInfo.m_Height = GameEngine::GetGameEngine()->GetRenderMod()->GetRenderer()->GetHeight();
 	kf.m_FrameInfo.m_PicIndex = EImageIndex_Front;
-	kf.m_Time = 2.f;
+	kf.m_Time = 2.5f;
 	m_EffectController->AddFrame(kf);
 	
 	m_EffectController->Start();
