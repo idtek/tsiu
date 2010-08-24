@@ -358,15 +358,15 @@ void GSBlockManager::Init(s32 _wWidth, s32 _wHeight)
 	m_BlockHeight = _wHeight / kRowCount; 
 
 	static const ConstPicInfo kPicList[] = {
-		ConstPicInfo("back.jpg", "1.jpg", "3-a.jpg"), 
-		ConstPicInfo("back.jpg", "1.jpg", "3-a.jpg"),
-		ConstPicInfo("back.jpg", "1.jpg", "3-a.jpg"),
-		ConstPicInfo("back.jpg", "1.jpg", "3-a.jpg"),
-		ConstPicInfo("back.jpg", "1.jpg", "3-a.jpg"),
-		ConstPicInfo("back.jpg", "1.jpg", "3-a.jpg"),
-		ConstPicInfo("back.jpg", "1.jpg", "3-a.jpg"),
-		ConstPicInfo("back.jpg", "1.jpg", "3-a.jpg"),
-		ConstPicInfo("back.jpg", "1.jpg", "3-a.jpg")
+		ConstPicInfo("back1.jpg", "1.jpg", "3-a.jpg"), 
+		ConstPicInfo("back2.jpg", "2.jpg", "3-a.jpg"),
+		ConstPicInfo("back3.jpg", "3.jpg", "3-a.jpg"),
+		ConstPicInfo("back4.jpg", "4.jpg", "3-a.jpg"),
+		ConstPicInfo("back5.jpg", "5.jpg", "3-a.jpg"),
+		ConstPicInfo("back6.jpg", "6.jpg", "3-a.jpg"),
+		ConstPicInfo("back7.jpg", "7.jpg", "3-a.jpg"),
+		ConstPicInfo("back8.jpg", "8.jpg", "3-a.jpg"),
+		ConstPicInfo("back9.jpg", "9.jpg", "3-a.jpg")
 	};
 
 	GSBlock* newBlock = NULL;
