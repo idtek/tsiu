@@ -439,6 +439,10 @@
 					RelativePath="..\tlibmain\TCore_Panic.cpp"
 					>
 				</File>
+				<File
+					RelativePath="..\TLibMain\TCore_Thread.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="inc"
@@ -469,6 +473,10 @@
 				</File>
 				<File
 					RelativePath="..\tlibmain\TCore_Panic.h"
+					>
+				</File>
+				<File
+					RelativePath="..\TLibMain\TCore_Thread.h"
 					>
 				</File>
 				<File
