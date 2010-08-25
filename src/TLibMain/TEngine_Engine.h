@@ -20,7 +20,7 @@ namespace TsiU
 	class Engine
 	{
 	public:
-		Engine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindow);
+		Engine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindow, s32 _iRateLock = 60);
 		virtual ~Engine();
 
 		Bool Init();
@@ -54,6 +54,7 @@ namespace TsiU
 		DebugConsole*		m_poDebugConsole;
 #endif
 		Bool m_bQuitEngine;
+		s32	 m_iRateLock;
 	};
 }
 

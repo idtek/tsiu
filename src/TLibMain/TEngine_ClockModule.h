@@ -20,8 +20,13 @@ namespace TsiU
 
 		D_Inline f32 GetFrameElapsedSeconds() const;
 		D_Inline f32 GetTotalElapsedSeconds() const;
-		D_Inline u32 GetFrameElapsedTicks() const;
-		D_Inline u32 GetTotalElapsedTicks() const;
+		D_Inline s64 GetFrameElapsedTicks() const;
+		D_Inline s64 GetTotalElapsedTicks() const;
+
+		D_Inline void SetRateLock(s32 _iRateLock);
+
+		void StartFrame();
+		void EndFrame();
 
 	private:
 		Tick* m_poTick;
@@ -29,11 +34,14 @@ namespace TsiU
 		f32	m_fFrameElapsedSeconds;
 		f32	m_fTotalElapsedSeconds;
 
-		u32	m_uiFrameElapsedTicks;
-		u32	m_uiTotalElapsedTicks;
+		s64	m_uiFrameElapsedTicks;
+		s64	m_uiTotalElapsedTicks;
 
-		u32	m_uiCurrentTicks;
-		u32	m_uiLastTicks;
+		s64	m_uiCurrentTicks;
+		s64	m_uiLastTicks;
+
+		s32	m_iRateLock;
+		s64 m_iStartFrameTicks;
 	};
 
 	D_Inline f32 ClockModule::GetFrameElapsedSeconds() const
@@ -44,13 +52,18 @@ namespace TsiU
 	{	
 		return m_fTotalElapsedSeconds;	
 	};
-	D_Inline u32 ClockModule::GetFrameElapsedTicks() const
+	D_Inline s64 ClockModule::GetFrameElapsedTicks() const
 	{
 		return m_uiFrameElapsedTicks;
 	}
-	D_Inline u32 ClockModule::GetTotalElapsedTicks() const
+	D_Inline s64 ClockModule::GetTotalElapsedTicks() const
 	{
 		return m_uiTotalElapsedTicks;
+	}
+	D_Inline void ClockModule::SetRateLock(s32 _iRateLock)
+	{
+		m_iRateLock = _iRateLock;
+
 	}
 }
 

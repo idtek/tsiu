@@ -19,16 +19,12 @@
 #include "TUtility_DebugConsole.h"
 #endif
 
-#if PLATFORM_TYPE == PLATFORM_WIN32
-#include <windows.h>
-#endif
-
 namespace TsiU
 {
 	Engine* __g_Root = NULL;
 	Engine* poGetEngine(){ D_CHECK(__g_Root); return __g_Root; };
 
-	Engine::Engine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindow)
+	Engine::Engine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindow, s32 _iRateLock)
 	{
 		m_poClockModule = NULL;
 		m_poSceneModule = NULL;
@@ -52,6 +48,7 @@ namespace TsiU
 #endif
 		m_poClockModule = new ClockModule();
 		D_CHECK(m_poClockModule);
+		m_poClockModule->SetRateLock(_iRateLock);
 
 		//if(GetLibSettings()->IsDefined(E_LS_Has_D3D) || GetLibSettings()->IsDefined(E_LS_Has_GDI))
 		{
@@ -133,6 +130,8 @@ namespace TsiU
 	{
 		while(1)
 		{
+			m_poClockModule->StartFrame();
+
 			Renderer* poRenderer = m_poRenderModule->GetRenderer();
 			RenderWindowMsg* poRenderWindowMsg = m_poRenderModule->GetRenderWindowMsg();
 
@@ -179,11 +178,7 @@ namespace TsiU
 
 			DoPostFrame();
 
-#if PLATFORM_TYPE == PLATFORM_WIN32
-			//int time = int(1000.0f/60 - fDeltaT * 1000.f);
-			//if(time > 0)
-			//	Sleep(time);
-#endif	
+			m_poClockModule->EndFrame();
 		}
 	}
 }
