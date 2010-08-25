@@ -68,10 +68,7 @@ typedef void*				Udef;
 #endif
 
 #define D_Output printf
-
-#if !defined Unused
-#define Unused(p) ((void)(p))
-#endif
+#define D_Unused(p) ((void)(p))
 
 #define D_SafeDelete(p)		if(p)		{ delete p; p = NULL; }
 

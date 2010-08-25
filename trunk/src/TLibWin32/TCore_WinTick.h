@@ -14,20 +14,26 @@ namespace TsiU
 	public:
 		WinTick()
 		{
-			timeBeginPeriod(1);
+			::timeBeginPeriod(1);
+			::QueryPerformanceFrequency(&m_Freq);
 		}
 		~WinTick()
 		{
-			timeEndPeriod(1);
+			::timeEndPeriod(1);
 		}
-		virtual u32 GetTick()
+		virtual s64 GetTick()
 		{
-			return (u32)::timeGetTime();
+			LARGE_INTEGER tick;
+			::QueryPerformanceCounter(&tick);
+			return (s64)tick.QuadPart;
 		}
-		virtual u32 GetTickPerSec()
+		virtual s64 GetTickPerSec()
 		{
-			return 1000;
+			return m_Freq.QuadPart;
 		}
+
+	private:
+		LARGE_INTEGER m_Freq;
 	};
 }
 

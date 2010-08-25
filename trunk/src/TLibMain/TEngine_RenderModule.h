@@ -37,15 +37,28 @@ namespace TsiU
 			m_poRendererWin = _poWin;
 		}
 
-	private:			
+	private:		
+		class FpsTimer
+		{
+		public:
+			FpsTimer();
+
+			f32		GetFPS() const;
+			void	SetTimer(f32 _fTotalTime);
+
+		private:
+			f32		m_fLastTime;
+			f32		m_fFPS;
+		};
+
 		Udef				m_poRendererWin;
 		Renderer*			m_poRenderer;
 		RenderWindowMsg*	m_poRenderWindowMsg;
 
 		FXApp*				m_poApp;
 		FXMainWindow*		m_poMainWindow;
-
-
+		
+		FpsTimer			m_FpsTimer;
 	};
 }
 

@@ -1,11 +1,31 @@
 #include "TRender_Renderer.h"
 #include "TRender_RenderWindowMsg.h"
 #include "TCore_LibSettings.h"
-
+#include "TEngine_Engine.h"
+#include "TEngine_Private.h"
+#include "TEngine_ClockModule.h"
 #include "TEngine_RenderModule.h"
 
 namespace TsiU
 {
+	RenderModule::FpsTimer::FpsTimer()
+		: m_fLastTime(0.f)
+		, m_fFPS(0.f)
+	{
+	}
+
+	f32 RenderModule::FpsTimer::GetFPS() const
+	{
+		return m_fFPS;
+	}
+	void RenderModule::FpsTimer::SetTimer(f32 _fTotalTime)
+	{
+		f32 fRealDt = _fTotalTime - m_fLastTime;
+		if(fRealDt)
+			m_fFPS = 1.f / fRealDt;
+		m_fLastTime = _fTotalTime;
+	}
+
 	RenderModule::RenderModule(u32 _uiWidth, u32 _uiHeight, StringPtr _strTitle, Bool _bIsWindow)
 		:m_poApp(NULL), 
 		 m_poMainWindow(NULL), 
@@ -84,42 +104,24 @@ namespace TsiU
 
 	void RenderModule::RunOneFrame(float _fDeltaTime)
 	{
-//#ifdef TLIB_DEBUG
+#ifdef TLIB_DEBUG
+		m_FpsTimer.SetTimer(poGetEngine()->GetClockMod()->GetTotalElapsedSeconds());
+
 		//Show fps only if we have renderer part
 		if(GetLibSettings()->IsDefined(E_LS_Has_GUI))
 		{
-			if(GetLibSettings()->IsDefined(E_LS_Has_D3D) || GetLibSettings()->IsDefined(E_LS_Has_GDI))
-			{
-				if(_fDeltaTime > 0)
-				{	
-					Char l_strBuff[64]={0};
-					sprintf(l_strBuff, "FPS = %.2f", 1.f / _fDeltaTime);
-					m_poMainWindow->setTitle(l_strBuff);
-					//m_poRenderer->ShowFPS(1.f / _fDeltaTime);
-				}
-			}
-			else
-			{
-				if(_fDeltaTime > 0)
-				{	
-					Char l_strBuff[64]={0};
-					sprintf(l_strBuff, "FPS = %.2f", 1.f / _fDeltaTime);
-					m_poMainWindow->setTitle(l_strBuff);
-					//m_poRenderer->ShowFPS(1.f / _fDeltaTime);
-				}
-			}
+			Char strBuff[64]={0};
+			sprintf(strBuff, "FPS = %.2f", m_FpsTimer.GetFPS() );
+			m_poMainWindow->setTitle(strBuff);
 		}
 		else
 		{
 			if(GetLibSettings()->IsDefined(E_LS_Has_D3D) || GetLibSettings()->IsDefined(E_LS_Has_GDI))
 			{
-				if(_fDeltaTime > 0)
-				{	
-					m_poRenderer->ShowFPS(1.f / _fDeltaTime);
-				}
+				m_poRenderer->ShowFPS(m_FpsTimer.GetFPS());
 			}
 		}
-//#endif
+#endif
 	}
 
 	void RenderModule::UnInit()
