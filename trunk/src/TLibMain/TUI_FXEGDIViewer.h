@@ -1,7 +1,7 @@
 #ifndef __TUI_FXEGDIVIEWER__
 #define __TUI_FXEGDIVIEWER__
 
-#include "TCore_Types.h"
+
 #include "TUtility_Array.h"
 #include "fx.h"
 

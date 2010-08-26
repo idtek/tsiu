@@ -1,7 +1,7 @@
 #ifndef __TCORE_TICK__
 #define __TCORE_TICK__
 
-#include "TCore_Types.h"
+
 
 namespace TsiU
 {

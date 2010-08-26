@@ -86,6 +86,29 @@ typedef void*				Udef;
 	#pragma warning(disable:4018)
 	#pragma warning(disable:4819)
 	#pragma warning(disable:4067)
+	#include <winsock2.h>
+	#pragma comment(lib,"ws2_32")
+
+	#define WIN32_LEAN_AND_MEAN
+	#define NOGDICAPMASKS
+	#define OEMRESOURCE
+	#define NOATOM
+	#define NOCLIPBOARD
+	#define NOCTLMGR
+	#define NOMEMMGR
+	#define NOMETAFILE
+	#define NOOPENFILE
+	#define NOSERVICE
+	#define NOSOUND
+	#define NOCOMM
+	#define NOKANJI
+	#define NOHELP
+	#define NOPROFILER
+	#define NODEFERWINDOWPOS
+	#define NOMCX
+	//#undef _WIN32_WINNT
+	//#define _WIN32_WINNT 0x0501
+	#include <windows.h>
 #endif
 
 #endif

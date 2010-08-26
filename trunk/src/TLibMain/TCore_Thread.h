@@ -1,20 +1,16 @@
 #ifndef __TCORE_THREAD__
 #define __TCORE_THREAD__
 
-#include "TCore_Types.h"
+
 #include <string>
-
-
-#if PLATFORM_TYPE == PLATFORM_WIN32
-#include <windows.h>
-#endif
 
 namespace TsiU
 {
 	class IThreadRunner
 	{
 	public:
-		virtual u32 Run() = 0;
+		virtual u32		Run() = 0;
+		virtual void	NotifyQuit() = 0;
 	};
 
 	class Thread
@@ -36,6 +32,7 @@ namespace TsiU
 		~Thread();
 
 		Bool Start();
+		Bool Stop(s32 _timeOutInMilliSeconds = -1);
 		Bool HasStarted() const;
 
 	private:

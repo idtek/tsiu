@@ -1,7 +1,7 @@
 #ifndef __TSCRIPT_SCRIPTVARIANT__
 #define __TSCRIPT_SCRIPTVARIANT__
 
-#include "TCore_Types.h"
+
 
 namespace TsiU
 {

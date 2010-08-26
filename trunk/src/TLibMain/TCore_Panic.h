@@ -1,7 +1,6 @@
 #ifndef __TCORE_PANIC__ 
 #define __TCORE_PANIC__
 
-#include "TCore_Types.h"
 #include "TCore_Creator.h"
 
 namespace TsiU

@@ -1,7 +1,7 @@
 #ifndef __TAI_STRINGID__
 #define __TAI_STRINGID__
 
-#include "TCore_Types.h"
+
 
 #define STRINGID_USE_STRING 1
 

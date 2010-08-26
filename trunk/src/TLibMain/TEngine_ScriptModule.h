@@ -1,7 +1,7 @@
 #ifndef __TENGINE_SCRIPTMODULE__
 #define __TENGINE_SCRIPTMODULE__
 
-#include "TCore_Types.h"
+
 #include "TEngine_Module.h"
 #include <string>
 #include <map>

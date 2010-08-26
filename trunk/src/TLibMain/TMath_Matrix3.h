@@ -1,7 +1,7 @@
 #ifndef __TMATH_MATRIX3__
 #define __TMATH_MATRIX3__
 
-#include "TCore_Types.h"
+
 #include "TMath_Basic.h"
 #include "TMath_Vector3.h"
 #include "TMath_Quaternion.h"

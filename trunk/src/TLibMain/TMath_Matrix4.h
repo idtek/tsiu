@@ -1,7 +1,7 @@
 #ifndef __TMATH_MATRIX4__
 #define __TMATH_MATRIX4__
 
-#include "TCore_Types.h"
+
 #include "TMath_Basic.h"
 #include "TMath_Vector4.h"
 #include "TMath_Vector3.h"

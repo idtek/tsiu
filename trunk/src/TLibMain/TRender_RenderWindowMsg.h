@@ -1,7 +1,7 @@
 #ifndef __TRENDER_RENDERWINDOW_MSG__
 #define __TRENDER_RENDERWINDOW_MSG__
 
-#include "TCore_Types.h"
+
 #include "TUtility_Array.h"
 
 namespace TsiU

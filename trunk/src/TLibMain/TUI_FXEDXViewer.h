@@ -1,7 +1,7 @@
 #ifndef __TUI_FXEDXVIEWER__
 #define __TUI_FXEDXVIEWER__
 
-#include "TCore_Types.h"
+
 #include "TMath_Vector3.h"
 #include "TMath_Quaternion.h"
 #include "fx.h"

@@ -18,8 +18,8 @@ namespace TsiU
 
 	void NetworkModule::RunOneFrame(float _fDeltaTime)
 	{
-		m_ulRS % 2 ? _RecvPart() : _SendPart();
-		m_ulRS++;
+		//m_ulRS % 2 ? _RecvPart() : _SendPart();
+		//m_ulRS++;
 	}
 
 	void NetworkModule::Init()

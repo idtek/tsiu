@@ -1,11 +1,6 @@
 #ifndef __TWIN32_PRIVATE__
 #define __TWIN32_PRIVATE__
 
-#include <winsock2.h>
-#pragma comment(lib,"ws2_32")
-
-#include <windows.h>
-
 #include "TCore_Types.h"
 
 #ifndef TLIB_NOWINDX

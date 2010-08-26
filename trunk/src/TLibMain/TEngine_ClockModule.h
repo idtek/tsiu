@@ -1,7 +1,7 @@
 #ifndef __TENGINE_CLOCKMODULE__
 #define __TENGINE_CLOCKMODULE__
 
-#include "TCore_Types.h"
+
 #include "TEngine_Module.h"
 
 namespace TsiU

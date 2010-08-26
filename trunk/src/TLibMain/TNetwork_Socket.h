@@ -1,7 +1,7 @@
 #ifndef __TNETWORK_SOCKET__
 #define __TNETWORK_SOCKET__
 
-#include "TCore_Types.h"
+
 #include "TUtility_List.h"
 
 namespace TsiU

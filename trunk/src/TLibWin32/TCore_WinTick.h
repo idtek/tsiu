@@ -5,7 +5,7 @@
 #include "TCore_Tick.h"
 #include "TCore_Creator.h"
 
-#include "TWin32_Private.h"
+
 
 namespace TsiU
 {

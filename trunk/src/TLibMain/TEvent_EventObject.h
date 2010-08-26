@@ -1,7 +1,7 @@
 #ifndef __TEVNET_EVENTOBJECT__
 #define __TEVNET_EVENTOBJECT__
 
-#include "TCore_Types.h"
+
 #include "TEvent_EventID.h"
 #include "TUtility_Array.h"
 

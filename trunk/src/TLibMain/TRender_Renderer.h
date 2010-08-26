@@ -1,7 +1,7 @@
 #ifndef __TRENDER_RENDER__
 #define __TRENDER_RENDER__
 
-#include "TCore_Types.h"
+
 #include "TRender_Color.h"
 #include "TRender_RenderWindow.h"
 #include "TMath_Quaternion.h"

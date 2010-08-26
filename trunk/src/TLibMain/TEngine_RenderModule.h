@@ -1,7 +1,7 @@
 #ifndef __TENGINE_RENDERMODULE__
 #define __TENGINE_RENDERMODULE__
 
-#include "TCore_Types.h"
+
 #include "TEngine_Module.h"
 
 #include "fx.h"

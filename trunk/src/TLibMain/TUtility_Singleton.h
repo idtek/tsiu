@@ -1,7 +1,7 @@
 #ifndef __TUTILITY_SINGLETON__
 #define __TUTILITY_SINGLETON__
 
-#include "TCore_Types.h"
+
 
 namespace TsiU
 {

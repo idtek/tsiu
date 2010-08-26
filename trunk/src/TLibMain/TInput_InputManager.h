@@ -1,7 +1,7 @@
 #ifndef __TINPUT_INPUTMANAGER__
 #define __TINPUT_INPUTMANAGER__
 
-#include "TCore_Types.h"
+
 #include "TUtility_Array.h"
 #include "TInput_Enum.h"
 

@@ -1,7 +1,7 @@
 #ifndef __TSCRIPT_SCRIPTMACHINE__
 #define __TSCRIPT_SCRIPTMACHINE__
 
-#include "TCore_Types.h"
+
 #include "TScript_Private.h"
 
 namespace TsiU

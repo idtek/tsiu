@@ -1,7 +1,7 @@
 #ifndef __TMATH_BASIC__
 #define __TMATH_BASIC__
 
-#include "TCore_Types.h"
+
 #include <math.h>
 
 namespace TsiU

@@ -2,7 +2,7 @@
 #define __TRENDER_WINGDI_JPEG__
 
 #include "TCore_Types.h"
-#include "TWin32_Private.h"
+
 #include "TRender_Color.h"
 
 namespace TsiU

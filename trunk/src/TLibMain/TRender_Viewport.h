@@ -1,7 +1,7 @@
 #ifndef __TRENDER_VIEWPORT__
 #define __TRENDER_VIEWPORT__
 
-#include "TCore_Types.h"
+
 
 namespace TsiU
 {

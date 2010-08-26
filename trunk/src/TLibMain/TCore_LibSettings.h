@@ -1,7 +1,7 @@
 #ifndef __TCORE_LIBSETTINGS__ 
 #define __TCORE_LIBSETTINGS__
 
-#include "TCore_Types.h"
+
 #include "TCore_Creator.h"
 
 namespace TsiU

@@ -3,7 +3,7 @@
 
 #include "TCore_Types.h"
 #include "TInput_Enum.h"
-#include "TWin32_Private.h"
+
 #include "TInput_InputManager.h"
 
 namespace TsiU

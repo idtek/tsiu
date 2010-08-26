@@ -1,7 +1,7 @@
 #ifndef __TENGINE_OBJECT__
 #define __TENGINE_OBJECT__
 
-#include "TCore_Types.h"
+
 #include "TMath_Vector3.h"
 #include "TMath_Matrix4.h"
 #include "TMath_Quaternion.h"

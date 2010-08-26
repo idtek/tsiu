@@ -3,7 +3,7 @@
 
 #include "TCore_Types.h"
 #include "TRender_RenderWindowMsg.h"
-#include "TWin32_Private.h"
+
 
 namespace TsiU
 {

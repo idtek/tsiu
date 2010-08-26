@@ -1,6 +1,8 @@
 #ifndef __TSIU_HEADER__
 #define __TSIU_HEADER__
 
+#include "TsiU_PCH.h"
+
 #include "TAI_Header.h"
 #include "TCore_Header.h"
 #include "TEngine_Header.h"

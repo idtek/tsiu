@@ -1,7 +1,7 @@
 #ifndef __TENGINE_NETWORKMODULE__
 #define __TENGINE_NETWORKMODULE__
 
-#include "TCore_Types.h"
+
 #include "TEngine_Module.h"
 #include "TUtility_List.h"
 

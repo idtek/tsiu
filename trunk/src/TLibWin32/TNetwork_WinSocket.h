@@ -1,7 +1,7 @@
 #ifndef __TNETWORK_WINSOCKET__
 #define __TNETWORK_WINSOCKET__
 
-#include "TWin32_Private.h"
+
 #include "TNetwork_Socket.h"
 
 namespace TsiU

@@ -1,7 +1,7 @@
 #ifndef __TMATH_VECTOR2__
 #define __TMATH_VECTOR2__
 
-#include "TCore_Types.h"
+
 #include "TMath_Basic.h"
 
 namespace TsiU

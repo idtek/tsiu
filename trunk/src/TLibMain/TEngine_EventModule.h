@@ -1,7 +1,7 @@
 #ifndef __TENGINE_EVENTMODULE__
 #define __TENGINE_EVENTMODULE__
 
-#include "TCore_Types.h"
+
 #include "TEngine_Module.h"
 #include <map>
 #include "TEvent_EventObject.h"
