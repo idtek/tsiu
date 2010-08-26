@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="VOPManager"
+	Name="VUPManager"
 	ProjectGUID="{7AB0A901-98D9-4910-A8E9-04342DB146B1}"
 	RootNamespace="VOPManager"
 	Keyword="Win32Proj"
@@ -274,7 +274,19 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\VMCommand.h"
+				>
+			</File>
+			<File
 				RelativePath=".\VMGlobalDef.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VMVup.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VMVupManager.h"
 				>
 			</File>
 		</Filter>
