@@ -2,7 +2,7 @@
 #define __TRENDER_WINDX_SIMPLERENDEROBJECT__
 
 #include "TCore_Types.h"
-#include "TWin32_Private.h"
+
 #include "TRender_SimpleRenderObject.h"
 
 #ifndef TLIB_NOWINDX

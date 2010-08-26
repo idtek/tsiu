@@ -1,7 +1,7 @@
 #ifndef __TENGINE_ENGINE__
 #define __TENGINE_ENGINE__
 
-#include "TCore_Types.h"
+
 
 namespace TsiU
 {

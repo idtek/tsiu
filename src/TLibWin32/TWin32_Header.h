@@ -1,6 +1,8 @@
 #ifndef __TWIN32_HEADER__
 #define __TWIN32_HEADER__
 
+#include "TWin32_PCH.h"
+
 #include "TCore_WinPanic.h"
 #include "TCore_WinTick.h"
 #include "TInput_WinInputManager.h"

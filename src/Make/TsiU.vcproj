@@ -176,10 +176,13 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="TsiU_PCH.h"
+				PrecompiledHeaderFile="$(OutDir)/$(ProjectName).pch"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
+				ForcedIncludeFiles="TsiU_PCH.h"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -436,6 +439,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\TLibMain\TCore_Mutex.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\tlibmain\TCore_Panic.cpp"
 					>
 				</File>
@@ -469,6 +476,10 @@
 				</File>
 				<File
 					RelativePath="..\tlibmain\TCore_Memory.h"
+					>
+				</File>
+				<File
+					RelativePath="..\TLibMain\TCore_Mutex.h"
 					>
 				</File>
 				<File
@@ -884,6 +895,26 @@
 					>
 				</File>
 			</Filter>
+		</Filter>
+		<Filter
+			Name="PCH"
+			>
+			<File
+				RelativePath="..\TLibMain\TsiU_PCH.cpp"
+				>
+				<FileConfiguration
+					Name="Debug NoDX|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\TLibMain\TsiU_PCH.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt"

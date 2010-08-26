@@ -1,7 +1,7 @@
 #ifndef __TRENDER_RENDERWINDOW__
 #define __TRENDER_RENDERWINDOW__
 
-#include "TCore_Types.h"
+
 
 namespace TsiU
 {

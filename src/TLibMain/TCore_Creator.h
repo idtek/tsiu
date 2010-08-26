@@ -1,8 +1,6 @@
 #ifndef __TCORE_CREATOR__
 #define __TCORE_CREATOR__
 
-#include "TCore_Types.h"
-
 namespace TsiU
 {
 	enum

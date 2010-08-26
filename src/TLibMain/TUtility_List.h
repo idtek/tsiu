@@ -1,7 +1,7 @@
 #ifndef __TUTILITY_LIST__
 #define __TUTILITY_LIST__
 
-#include "TCore_Types.h"
+
 
 namespace TsiU
 {

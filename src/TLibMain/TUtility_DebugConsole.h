@@ -1,7 +1,7 @@
 #ifndef __TUTILITY_DEBUGCONSOLE__
 #define __TUTILITY_DEBUGCONSOLE__
 
-#include "TCore_Types.h"
+
 
 #if PLATFORM_TYPE == PLATFORM_WIN32
 #include <windows.h>

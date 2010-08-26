@@ -1,7 +1,7 @@
 #ifndef __TRENDER_WINDXTEXTURE_H__
 #define __TRENDER_WINDXTEXTURE_H__
 
-#include "TWin32_Private.h"
+
 #include "TRender_Texture.h"
 
 #ifndef TLIB_NOWINDX

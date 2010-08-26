@@ -1,7 +1,7 @@
 #ifndef __TMATH_QUATERNION__
 #define __TMATH_QUATERNION__
 
-#include "TCore_Types.h"
+
 #include "TMath_Basic.h"
 #include "TMath_Vector3.h"
 

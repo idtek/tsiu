@@ -1,7 +1,7 @@
 #ifndef __TCORE_MEMORY__ 
 #define __TCORE_MEMORY__
 
-#include "TCore_Types.h"
+
 #include "TCore_Allocator.h"
 
 namespace TsiU

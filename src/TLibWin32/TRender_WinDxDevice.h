@@ -3,7 +3,7 @@
 
 #include "TCore_Types.h"
 #include "TCore_Memory.h"
-#include "TWin32_Private.h"
+
 
 #ifndef TLIB_NOWINDX
 namespace TsiU

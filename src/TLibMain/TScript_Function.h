@@ -1,7 +1,7 @@
 #ifndef __TSCRIPT_FUNCTION__
 #define __TSCRIPT_FUNCTION__
 
-#include "TCore_Types.h"
+
 #include <string>
 #include "TScript_Private.h"
 

@@ -1,7 +1,7 @@
 #ifndef __TRENDER_CAMERA__
 #define __TRENDER_CAMERA__
 
-#include "TCore_Types.h"
+
 #include "TMath_Vector3.h"
 #include "TEngine_Object.h"
 #include "TMath_Matrix4.h"

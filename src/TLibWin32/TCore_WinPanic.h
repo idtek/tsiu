@@ -2,7 +2,7 @@
 #define __TCORE_WINPANIC__
 
 #include "TCore_Panic.h"
-#include "TWin32_Private.h"
+
 
 namespace TsiU
 {

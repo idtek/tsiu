@@ -1,7 +1,7 @@
 #ifndef __TEXTURE_H__
 #define __TEXTURE_H__
 
-#include "TCore_Types.h"
+
 
 namespace TsiU
 {

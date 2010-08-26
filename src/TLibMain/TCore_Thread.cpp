@@ -22,6 +22,8 @@ namespace TsiU
 		: m_pRunner(_pRunner)
 		, m_ePriority(_ePriority)
 		, m_strThreadName(_strName)
+		, m_bStarted(false)
+		, m_pThreadID(NULL)
 	{
 
 	}
@@ -55,6 +57,26 @@ namespace TsiU
 				return false;
 			}
 			::SetThreadPriority(m_pThreadID, sThreadPriorities[m_ePriority]);
+#endif
+		}
+		return true;
+	}
+
+	Bool Thread::Stop(s32 _timeOutInMilliSeconds)
+	{
+		if(HasStarted())
+		{
+			m_pRunner->NotifyQuit();
+
+#if PLATFORM_TYPE == PLATFORM_WIN32
+			DWORD timeOut = INFINITE;
+			if(_timeOutInMilliSeconds >= 0)
+				timeOut = _timeOutInMilliSeconds;
+			s32 nRet = WaitForSingleObject(m_pThreadID, timeOut);
+			if(nRet == WAIT_TIMEOUT)
+			{
+				TerminateThread(m_pThreadID, 0);
+			}
 #endif
 		}
 		return true;

@@ -5,7 +5,7 @@
 #include "TRender_Enum.h"
 
 #include "TRender_Color.h"
-#include "TWin32_Private.h"
+
 
 #ifndef TLIB_NOWINDX
 namespace TsiU

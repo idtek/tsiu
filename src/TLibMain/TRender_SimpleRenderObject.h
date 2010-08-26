@@ -1,7 +1,7 @@
 #ifndef __TRENDER_SIMPLE_RENDER_OBJECT__
 #define __TRENDER_SIMPLE_RENDER_OBJECT__
 
-#include "TCore_Types.h"
+
 #include "TRender_Color.h"
 #include "TEngine_Object.h"
 

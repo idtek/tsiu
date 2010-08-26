@@ -4,7 +4,7 @@
 #include "TCore_Types.h"
 #include "TRender_Renderer.h"
 
-#include "TWin32_Private.h"
+
 
 #ifndef TLIB_NOWINDX
 

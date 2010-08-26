@@ -1,7 +1,7 @@
 #ifndef __TRENDER_COLOR__
 #define __TRENDER_COLOR__
 
-#include "TCore_Types.h"
+
 #include "TCore_Exception.h"
 #include "TCore_Memory.h"
 

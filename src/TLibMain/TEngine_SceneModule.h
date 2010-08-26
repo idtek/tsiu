@@ -1,7 +1,7 @@
 #ifndef __TENGINE_SCENEMODULE__
 #define __TENGINE_SCENEMODULE__
 
-#include "TCore_Types.h"
+
 #include "TEngine_Module.h"
 #include <map>
 #include <string>

@@ -3,7 +3,7 @@
 
 #include "TCore_Types.h"
 #include "TInput_InputDevice.h"
-#include "TWin32_Private.h"
+
 
 #ifndef TLIB_NOWINDX
 namespace TsiU

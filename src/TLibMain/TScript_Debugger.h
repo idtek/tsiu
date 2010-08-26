@@ -1,7 +1,7 @@
 #ifndef __TSCRIPT_SCRIPTDEBUGGER__
 #define __TSCRIPT_SCRIPTDEBUGGER__
 
-#include "TCore_Types.h"
+
 #include "TScript_Private.h"
 
 namespace TsiU

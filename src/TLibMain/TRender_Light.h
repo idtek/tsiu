@@ -1,7 +1,7 @@
 #ifndef __TRENDER_LIGHT__
 #define __TRENDER_LIGHT__
 
-#include "TCore_Types.h"
+
 #include "TRender_Color.h"
 #include "TMath_Vector3.h"
 #include "TEngine_Object.h"

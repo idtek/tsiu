@@ -5,7 +5,7 @@
 #include "TRender_Renderer.h"
 #include "TRender_RenderWindowMsg.h"
 
-#include "TWin32_Private.h"
+
 
 namespace TsiU
 {
