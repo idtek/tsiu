@@ -1,4 +1,5 @@
 #include "VMGlobalDef.h"
+#include "VMCommand.h"
 
 Engine*	g_poEngine = NULL;
 
@@ -24,6 +25,7 @@ public:
 public:
 	enum {
 		ID_SENDCOMMAND = FXMainWindow::ID_LAST,
+		ID_TABLE
 	};
 
 private:
@@ -65,6 +67,23 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	new FXLabel(matrix, "Command: ",NULL, JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_CENTER_Y);
 	m_Command = new FXTextField(matrix, 1, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
 	new FXButton(matrix, "Send", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+
+	FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poGroupV2,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+	FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY|TABLE_NO_COLSELECT|TABLE_NO_ROWSELECT,0,0,0,0, 2,2,2,2);
+	table->setBackColor(FXRGB(255,255,255));
+	table->setVisibleRows(20);
+	table->setVisibleColumns(4);
+	table->setTableSize(0, 4);
+	table->setCellColor(0,0,FXRGB(255,240,240));
+	table->setCellColor(1,0,FXRGB(240,255,240));
+	table->setCellColor(0,1,FXRGB(255,240,240));
+	table->setCellColor(1,1,FXRGB(240,255,240));
+	table->setColumnWidth(0, 155);
+	table->setColumnWidth(1, 155);
+	table->setRowHeaderWidth(0);
+	table->setColumnText(0, "Name");
+	table->setColumnText(1, "Value");
+	table->setSelBackColor(FXRGB(128,128,128));
 }
 
 long MyCanvas::onCmdSendCommand(FXObject* sender, FXSelector sel,void* ptr)
@@ -86,27 +105,77 @@ long MyCanvas::onCmdSendCommand(FXObject* sender, FXSelector sel,void* ptr)
 	}
 	m_CurrentCommand = m_CommandHistory.Size();
 
-	
-	//UDP_PACK stMsg;
-	//stMsg.ulFilter = 0;
-	//stMsg.ulType = MsgType_Command;
-	//stMsg.bIsHidden = true;
-	//strncpy(stMsg.unValue._zValue, commandStr.text(), 32); 
-
-	//WSABUF stWSABuf;
-	//stWSABuf.buf = (char*)&stMsg;
-	//stWSABuf.len = sizeof(stMsg);
-
-	//DWORD cbRet = 0;
-	//WSASendTo(g_hSSock, &stWSABuf,1, &cbRet, 0, (struct sockaddr*)&g_stDestAddr, sizeof(struct sockaddr), NULL, NULL);
-
+	VMCommandCenter* vmCenter = VMCommandCenter::GetPtr();
+	if(vmCenter)
+	{
+		Bool bRet = vmCenter->ExecuteFromString(commandStr.text());
+		if(!bRet)
+		{
+		}
+	}
 	m_Command->selectAll();
 
 	return 1;
 }
 
 //-------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------
+MemPool::MemPool()
+{
+	size = 0;
+	loss = 0;
+	maxsize = 100000;
+};
 
+MemPool::~MemPool()
+{
+	mempool.clear();
+};
+
+int MemPool::GetUDPData(UDP_PACK *buf, int cnt /* = 1 */)
+{
+	if(!buf)
+		return 0;
+	if( size < cnt)
+		cnt = size;
+	s.Lock();
+	std::deque<UDP_PACK>::iterator itstart,itend;
+	itstart = itend = mempool.begin();
+	for(int i = 0; i < cnt; ++i)
+	{
+		memcpy(buf + i, &(*itend), sizeof(UDP_PACK));
+		itend++;
+	}
+	mempool.erase(itstart, itend);
+	size -= cnt;
+	s.UnLock();
+	return cnt;
+};
+
+void MemPool::InsertUDPData(const UDP_PACK& up)
+{
+	s.Lock();
+	if( size < maxsize )
+	{
+		mempool.push_back(up);
+		size++;
+	}
+	else
+	{
+		loss++;
+	}
+	s.UnLock();
+};
+
+void MemPool::CleanBuff()
+{
+	s.Lock();
+	size = 0;
+	loss = 0;
+	mempool.clear();
+	s.UnLock();
+}
+//--------------------------------------------------------------------
 
 class RecvUDPRunner : public IThreadRunner
 {
@@ -138,14 +207,12 @@ u32 RecvUDPRunner::Run()
 		if(!m_pRecvSocket || !m_pRecvSocket->bIsValid())
 			return 1;
 
-		//UDP_PACK pack;
-		//s32 iRet = m_pRecvSocket->RecvFrom((Char*)&pack, sizeof(UDP_PACK));
-		//if(!iRet)
-		//{
-		//	m_pUDPPackBuffer->InsertUDPData(pack);
-		//}
-		D_Output("hello\n");
-		::Sleep(2000);
+		UDP_PACK pack;
+		s32 iRet = m_pRecvSocket->RecvFrom((Char*)&pack, sizeof(UDP_PACK));
+		if(!iRet)
+		{
+			m_pUDPPackBuffer->InsertUDPData(pack);
+		}
 	}
 }
 
@@ -162,8 +229,17 @@ MyEngine::MyEngine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIs
 	,m_pSendSocket(NULL)
 	,m_pUDPPackBuffer(NULL)
 {
+	VMCommandCenter::Create();
 }
 
+//-------------------------------------------------------------------------------------------------------------------------------
+s32 Test_SayHello(const VMCommandParamHolder& _p1, const VMCommandParamHolder& _p2)
+{
+	D_Output("[Test_SayHello]: Hello, %s\n", _p1.ToString());
+	return 0;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------
 void MyEngine::DoInit()
 {
 	//Init UI
@@ -190,11 +266,16 @@ void MyEngine::DoInit()
 	m_pRecvThread = new Thread(new RecvUDPRunner(m_pRecvSocket, m_pUDPPackBuffer));
 	Bool bRet = m_pRecvThread->Start();
 	D_CHECK(bRet);
+
+	//Register cmd
+	VMCommandCenter::GetPtr()->RegisterCommand("say", Test_SayHello, VMCommand::EParamType_String);
 }
 
 void MyEngine::DoUnInit()
 {
-	m_pRecvThread->Stop(5000);
+	VMCommandCenter::Destroy();
+
+	m_pRecvThread->Stop(1000);
 	D_SafeDelete(m_pRecvThread);
 	
 	m_pRecvSocket->Destroy();

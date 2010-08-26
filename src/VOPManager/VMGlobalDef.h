@@ -12,12 +12,12 @@ using namespace TsiU;
 extern Engine*						g_poEngine;
 
 //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
 struct UDP_PACK
 {
 	u32  ulFilter;
 	u32	 ulType;
 	Char zName[32];
-	Bool bIsHidden;
 	union
 	{
 		struct
@@ -40,7 +40,7 @@ public:
 	virtual ~MemPool();
 
 	int			GetUDPData(UDP_PACK *buf, int cnt = 1);	
-	void		InsertUDPData(UDP_PACK up);
+	void		InsertUDPData(const UDP_PACK& up);
 	void		CleanBuff();
 
 	inline int	GetSize() { return size; };
@@ -59,63 +59,6 @@ private:
 	int loss;
 	int maxsize;
 };
-
-//--------------------------------------------------------------------------
-inline MemPool::MemPool()
-{
-	size = 0;
-	loss = 0;
-	maxsize = 100000;
-};
-
-inline MemPool::~MemPool()
-{
-	mempool.clear();
-};
-
-inline int MemPool::GetUDPData(UDP_PACK *buf, int cnt /* = 1 */)
-{
-	if(!buf)
-		return 0;
-	if( size < cnt)
-		cnt = size;
-	s.Lock();
-	std::deque<UDP_PACK>::iterator itstart,itend;
-	itstart = itend = mempool.begin();
-	for(int i = 0; i < cnt; ++i)
-	{
-		memcpy(buf + i, &(*itend), sizeof(UDP_PACK));
-		itend++;
-	}
-	mempool.erase(itstart, itend);
-	size -= cnt;
-	s.UnLock();
-	return cnt;
-};
-
-inline void MemPool::InsertUDPData(UDP_PACK up)
-{
-	s.Lock();
-	if( size < maxsize )
-	{
-		mempool.push_back(up);
-		size++;
-	}
-	else
-	{
-		loss++;
-	}
-	s.UnLock();
-};
-
-inline void MemPool::CleanBuff()
-{
-	s.Lock();
-	size = 0;
-	loss = 0;
-	mempool.clear();
-	s.UnLock();
-}
 //----------------------------------------------------------------
 class MyEngine : public Engine
 {

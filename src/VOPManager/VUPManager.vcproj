@@ -264,7 +264,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VMCommand.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\VMInit.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VMVup.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VMVupManager.cpp"
 				>
 			</File>
 		</Filter>
