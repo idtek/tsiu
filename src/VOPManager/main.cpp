@@ -23,8 +23,9 @@ int main(int argc, char* argv[])
 	GetLibSettings()->SetCreator(new T_Creator<DefaultFile>,			E_CreatorType_File);
 #endif
 	GetLibSettings()->DefineMacro(E_LS_Has_GUI);
+	GetLibSettings()->DefineMacro(E_LS_Has_Network);
 
-	g_poEngine = new MyEngine(800, 600, "VOP Manager", false);
+	g_poEngine = new MyEngine(800, 600, "VUP Manager", false);
 
 	D_CHECK(g_poEngine);
 
