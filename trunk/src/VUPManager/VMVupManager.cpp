@@ -162,11 +162,11 @@ void VMVupManager::Create()
 }
 void VMVupManager::Tick(f32 _fDeltaTime)
 {
-	s32 iSize = g_poMem->GetSize();
+	s32 iSize = m_pUDPPackBuffer->GetSize();
 	if(iSize != 0)
 	{
 		UDP_PACK *poPacArray = new UDP_PACK[iSize];
-		g_poMem->GetUDPData(poPacArray, iSize);
+		m_pUDPPackBuffer->GetUDPData(poPacArray, iSize);
 		for(s32 i = 0; i < iSize; ++i)
 		{
 			UDP_PACK *poPack = poPacArray + i;
