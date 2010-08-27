@@ -9,15 +9,17 @@ using namespace TsiU;
 #include "TWin32_Header.h"
 #endif
 
-extern Engine*						g_poEngine;
+//-------------------------------------------------------------------------
+extern Engine*		g_poEngine;
 
 //-------------------------------------------------------------------------
+enum{
+	E_ET_UIUpdateList = E_ET_User,
+};
 //-------------------------------------------------------------------------
 struct UDP_PACK
 {
-	u32  ulFilter;
 	u32	 ulType;
-	Char zName[32];
 	union
 	{
 		struct
@@ -28,6 +30,43 @@ struct UDP_PACK
 		s32 _iValue;
 		f32 _fValue;	
 	}unValue;
+};
+//--------------------------------------------------------------------------
+class MyCanvas : public FXCanvas {
+	FXDECLARE(MyCanvas)
+
+protected:
+	MyCanvas();
+
+public:
+	MyCanvas(FXComposite* p,
+		FXObject* tgt = NULL,
+		FXSelector sel = 0,
+		FXuint opts = 0,
+		FXint x = 0,
+		FXint y = 0,
+		FXint w = 0,
+		FXint h = 0);
+
+public:
+	void onUpdateList(const Event* _poEvent);
+
+public:
+	long onCmdSendCommand(FXObject* sender, FXSelector sel, void* ptr);
+	long onKeyPress(FXObject* sender, FXSelector sel, void* ptr);
+
+public:
+	enum {
+		ID_SENDCOMMAND = FXMainWindow::ID_LAST,
+		ID_TABLE
+	};
+
+private:
+	FXTextField*		m_Command;
+	Array<FXString>		m_CommandHistory;
+	s32					m_CurrentCommand;
+
+	FXTable*			m_VUPTable;
 };
 
 //--------------------------------------------------------------------------
@@ -60,19 +99,15 @@ private:
 	int maxsize;
 };
 //----------------------------------------------------------------
-class MyEngine : public Engine
+class GameEngine : public Engine
 {
 public:
-	MyEngine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindow);
+	static GameEngine* GetGameEngine() { return (GameEngine*)g_poEngine;	}
+
+	GameEngine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindow);
 
 	virtual void DoInit();
 	virtual void DoUnInit();
-
-private:
-	Socket*		m_pRecvSocket;
-	Socket*		m_pSendSocket;
-	Thread*		m_pRecvThread;
-	MemPool*	m_pUDPPackBuffer;
 };
 
 #endif

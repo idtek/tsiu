@@ -1,10 +1,12 @@
 #include "VMVup.h"
 
-//VMVup::VupStatus VMVup::kStatus[VMVup::VupStatus::EVupStatus_Invalid]	= VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Invalid,	"Invalid");
-//VMVup::VupStatus VMVup::kStatus[VMVup::VupStatus::EVupStatus_Ready]		= VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Ready,		"Ready");
-//VMVup::VupStatus VMVup::kStatus[VMVup::VupStatus::EVupStatus_Running]	= VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Running,	"Running");
-//VMVup::VupStatus VMVup::kStatus[VMVup::VupStatus::EVupStatus_Success]	= VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Success,	"Success");
-//VMVup::VupStatus VMVup::kStatus[VMVup::VupStatus::EVupStatus_Failed]	= VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Failed,		"Failed");
+const VMVup::VupStatus VMVup::kStatus[VMVup::VupStatus::EVupStatus_Num]	= {
+	VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Invalid,	"Invalid"),
+	VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Ready,	"Ready"),
+	VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Running,	"Running"),
+	VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Success,	"Success"),
+	VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Failed,	"Failed")
+};
 
 VMVup::VMVup(s32 _id)
 	: m_iUniqueID(_id)

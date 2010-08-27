@@ -43,7 +43,7 @@ public:
 		static s32 i = 0;
 		return i++;
 	}
-	//static VupStatus kStatus[VupStatus::EVupStatus_Num];
+	static const VupStatus kStatus[VupStatus::EVupStatus_Num];
 
 public:
 	VMVup(s32 _id);
