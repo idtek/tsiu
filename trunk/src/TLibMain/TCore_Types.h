@@ -106,8 +106,14 @@ typedef void*				Udef;
 	#define NOPROFILER
 	#define NODEFERWINDOWPOS
 	#define NOMCX
-	//#undef _WIN32_WINNT
-	//#define _WIN32_WINNT 0x0501
+	#undef WINVER				
+	#define WINVER 0x0501		
+	#undef _WIN32_WINNT		
+	#define _WIN32_WINNT 0x0501						
+	#undef  _WIN32_WINDOWS		
+	#define _WIN32_WINDOWS 0x0410
+	#undef _WIN32_IE
+	#define _WIN32_IE 0x0600
 	#include <windows.h>
 #endif
 
