@@ -1,4 +1,4 @@
-#include "d:\\Tsiu\\src\\VUPClient\\VCExportHeader.h"
+#include "..\\VUPClient\\VCExportHeader.h"
 
 //#pragma comment(lib, "VUPClient.lib")
 
