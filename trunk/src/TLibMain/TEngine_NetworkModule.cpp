@@ -47,7 +47,8 @@ namespace TsiU
 		{
 			m_poMine = CallCreator<Socket>(E_CreatorType_Socket);
 			m_poMine->Create(E_NETWORK_PROTO_TCP, true);
-			m_poMine->Bind(NULL, _ulPort);
+			m_poMine->SetAddress(NULL, _ulPort);
+			m_poMine->Bind();
 			m_poMine->Listen();
 
 			m_ulPeerType = E_PeerType_Server;

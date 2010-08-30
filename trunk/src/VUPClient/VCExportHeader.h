@@ -9,7 +9,21 @@
 
 extern "C"
 {
-	void DLL_EXPORT VC_Print(const char* _str);
+	class DLL_EXPORT VUPClientAdapter
+	{
+	public:
+		VUPClientAdapter();
+		virtual ~VUPClientAdapter();
+
+		bool Init(unsigned int _uiPassport);
+		bool RegisterMe();
+		bool Tick();
+
+	private:
+		unsigned int	m_uiPassport;
+		unsigned short	m_uiPort;
+		unsigned char	m_uiStatus;
+	};
 }
 
 #endif

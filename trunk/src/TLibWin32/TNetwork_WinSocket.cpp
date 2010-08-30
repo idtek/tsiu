@@ -19,7 +19,10 @@ namespace TsiU
 		m_TimeOut.tv_usec	= 0;
 
 		if(m_Sock == INVALID_SOCKET)
+		{
+			D_Output("%d", GetLastError());
 			return -1;
+		}
 
 		if(m_bIsAsync)
 		{
@@ -45,7 +48,16 @@ namespace TsiU
 		closesocket(m_Sock);
 		return 0;
 	}
-	s32 WinSocket::Bind(const Char* _poAddress, u16 _ulPort)
+	s32 WinSocket::Bind()
+	{
+		s32 sRet = bind(m_Sock, (sockaddr*)&m_Addr, sizeof(SOCKADDR_IN));
+		if(sRet == SOCKET_ERROR)
+		{
+			return -1;
+		}
+		return 0;
+	}
+	s32 WinSocket::SetAddress(const Char* _poAddress, u16 _ulPort)
 	{
 		m_Addr.sin_family = AF_INET;
 		if(!_poAddress)
@@ -53,12 +65,16 @@ namespace TsiU
 		else
 			m_Addr.sin_addr.S_un.S_addr = inet_addr(_poAddress);
 		m_Addr.sin_port = htons(_ulPort);
-		s32 sRet = bind(m_Sock, (sockaddr*)&m_Addr, sizeof(SOCKADDR_IN));
-		if(sRet == SOCKET_ERROR)
-		{
-			return -1;
-		}
+
 		return 0;
+	}
+	const Char* WinSocket::GetIPAddress()
+	{
+		return inet_ntoa(m_Addr.sin_addr);
+	}
+	u16 WinSocket::GetPort()
+	{
+		return ntohs(m_Addr.sin_port);
 	}
 	s32 WinSocket::Connect(const Char* _poAddress, u16 _ulPort)
 	{

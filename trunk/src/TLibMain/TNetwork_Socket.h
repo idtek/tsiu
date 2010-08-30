@@ -23,8 +23,9 @@ namespace TsiU
 	public:
 		Socket(){};
 		virtual s32 Create(u32 _ulProtoType, Bool _bIsAsync) = 0;
+		virtual s32 SetAddress(const Char* _poAddress, u16 _ulPort) = 0;
 		virtual s32 Destroy() = 0;
-		virtual s32 Bind(const Char* _poAddress, u16 _ulPort) = 0;
+		virtual s32 Bind() = 0;
 		virtual s32 Listen() = 0;
 		virtual s32 Connect(const Char* _poAddress, u16 _ulPort) = 0;
 		virtual s32 IOCtl(u32 _ulCmd, u32* _ulValue) = 0;
@@ -35,6 +36,8 @@ namespace TsiU
 		virtual s32 RecvFrom(Char* _poBuffer, s32 _ulBufferLen) = 0;
 		virtual s32 SetTimeOut(u32 _ulTimeOut) = 0;
 
+		virtual const Char* GetIPAddress() = 0;
+		virtual u16			GetPort() = 0;
 		virtual Bool bIsValid() = 0;
 	};
 }
