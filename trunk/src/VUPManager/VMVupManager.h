@@ -33,11 +33,12 @@ class VMVupManager : public Object
 	typedef std::map<s32, VMVup*>::const_iterator	VUPMapConstIterator;
 
 public:
-	static s32 AddVup(const VMCommandParamHolder& _p1, const VMCommandParamHolder& _p2, const VMCommandParamHolder& _p3);
-	static s32 UpdateVup(const VMCommandParamHolder& _p1, const VMCommandParamHolder& _p2, const VMCommandParamHolder& _p3);
-	static s32 RemoveVup(const VMCommandParamHolder& _p1, const VMCommandParamHolder& _p2, const VMCommandParamHolder& _p3);
-	static s32 StartTesting(const VMCommandParamHolder& _p1, const VMCommandParamHolder& _p2, const VMCommandParamHolder& _p3);
-	static s32 Refresh(const VMCommandParamHolder& _p1, const VMCommandParamHolder& _p2, const VMCommandParamHolder& _p3);
+	static s32 AddVup(const VMCommand::ParamList& _paramList);
+	static s32 UpdateVup(const VMCommand::ParamList& _paramList);
+	static s32 RemoveVup(const VMCommand::ParamList& _paramList);
+	static s32 StartTesting(const VMCommand::ParamList& _paramList);
+	static s32 Refresh(const VMCommand::ParamList& _paramList);
+	static s32 KillClient(const VMCommand::ParamList& _paramList);
 
 public:
 	VMVupManager();
@@ -53,6 +54,7 @@ public:
 
 	void			StartTesting(s32 _id);
 	void			Refresh();
+	void			KillClient(s32 _id);
 
 	friend class MyCanvas;
 

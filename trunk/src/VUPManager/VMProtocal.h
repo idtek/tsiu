@@ -8,7 +8,7 @@ enum
 	EPT_C2M_ReportClientStatus,
 	
 	EPT_M2C_StartTesting,
-	EPT_M2C_QuitProcess,
+	EPT_M2C_KillClient,
 	EPT_M2C_Refresh,
 };
 
