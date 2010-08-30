@@ -12,8 +12,9 @@ namespace TsiU
 		WinSocket();
 
 		virtual s32 Create(u32 _ulProtoType, Bool _bIsAsync);
+		virtual s32 SetAddress(const Char* _poAddress, u16 _ulPort);
 		virtual s32 Destroy();
-		virtual s32 Bind(const Char* _poAddress, u16 _ulPort);
+		virtual s32 Bind();
 		virtual s32 Listen();
 		virtual s32 Connect(const Char* _poAddress, u16 _ulPort);
 		virtual s32 IOCtl(u32 _ulCmd, u32* _ulValue);
@@ -23,6 +24,9 @@ namespace TsiU
 		virtual s32 SendTo(const Char* _poBuffer, s32 _ulBufferLen);
 		virtual s32 RecvFrom(Char* _poBuffer, s32 _ulBufferLen);
 		virtual s32 SetTimeOut(u32 _ulTimeOut);
+
+		virtual const Char* GetIPAddress();
+		virtual u16			GetPort();
 		
 		virtual Bool bIsValid();
 

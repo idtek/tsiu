@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="VUPClient"
-	ProjectGUID="{519EB62C-94A5-49A9-B331-DD4017C41617}"
-	RootNamespace="VUPClient"
+	Name="VUPClientLoader"
+	ProjectGUID="{FCB77295-9274-4D61-9667-8813AF6E0F11}"
+	RootNamespace="VUPClientLoader"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -19,8 +19,8 @@
 			Name="Debug|Win32"
 			OutputDirectory="..\..\exe"
 			IntermediateDirectory="..\..\obj\$(ProjectName)\Debug"
-			ConfigurationType="2"
-			CharacterSet="2"
+			ConfigurationType="1"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -40,8 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\TLibMain;..\TLibWin32;..\ExternLibs\TinyXML\include;&quot;..\ExternLibs\lua-5.1.3\src&quot;;..\ExternLibs\fox\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;VUPCLIENT_EXPORTS;TLIB_DEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;"
+				PreprocessorDefinitions="WIN32;_DEBUG;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -61,13 +60,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="tinyxmld.lib"
-				OutputFile="$(OutDir)\$(ProjectName)_d.dll"
+				OutputFile="$(OutDir)\$(ProjectName)_d.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\ExternLibs\TinyXML\lib"
-				IgnoreDefaultLibraryNames="libcmtd.lib MSVCPRTD.LIB"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -99,8 +95,8 @@
 			Name="Release|Win32"
 			OutputDirectory="..\..\exe"
 			IntermediateDirectory="..\..\obj\$(ProjectName)\Release"
-			ConfigurationType="2"
-			CharacterSet="2"
+			ConfigurationType="1"
+			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -120,8 +116,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\TLibMain;..\TLibWin32;..\ExternLibs\TinyXML\include;&quot;..\ExternLibs\lua-5.1.3\src&quot;;..\ExternLibs\fox\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;VUPCLIENT_EXPORTS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;NDEBUG;"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -139,12 +134,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="tinyxml.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\ExternLibs\TinyXML\lib"
-				IgnoreDefaultLibraryNames="libcmt.lib MSVCPRT.LIB"
+				AdditionalLibraryDirectories="D:\Tsiu\exe"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -193,18 +186,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\VCExportHeader.h"
-				>
-			</File>
-			<File
-				RelativePath=".\VCGlobalDef.h"
-				>
-			</File>
-			<File
-				RelativePath="..\VUPManager\VMProtocal.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -212,10 +193,6 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
-		<File
-			RelativePath=".\ReadMe.txt"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

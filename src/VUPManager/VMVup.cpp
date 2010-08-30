@@ -1,24 +1,19 @@
 #include "VMVup.h"
 
-const VMVup::VupStatus VMVup::kStatus[VMVup::VupStatus::EVupStatus_Num]	= {
-	VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Invalid,	"Invalid"),
-	VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Ready,	"Ready"),
-	VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Running,	"Running"),
-	VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Success,	"Success"),
-	VMVup::VupStatus(VMVup::VupStatus::EVupStatus_Failed,	"Failed")
+const VMVup::VupStatus VMVup::kStatus[EVupStatus_Num]	= {
+	VMVup::VupStatus(EVupStatus_Invalid,	"Invalid"),
+	VMVup::VupStatus(EVupStatus_Ready,		"Ready"),
+	VMVup::VupStatus(EVupStatus_Running,	"Running"),
+	VMVup::VupStatus(EVupStatus_Success,	"Success"),
+	VMVup::VupStatus(EVupStatus_Failed,		"Failed")
 };
 
-VMVup::VMVup(s32 _id)
+VMVup::VMVup(s32 _id, const Char* _ipAddr, u16 _port)
 	: m_iUniqueID(_id)
-	, m_eCurrentStatus(VupStatus::EVupStatus_Invalid)
+	, m_strIPAddress(_ipAddr)
+	, m_uiPort(_port)
+	, m_uiCurrentStatus(EVupStatus_Invalid)
 {
-}
-
-VMVup::VMVup(s32 _id, VupStatus::EVupStatus _status)
-	: m_iUniqueID(_id)
-	, m_eCurrentStatus(_status)
-{
-
 }
 
 VMVup& VMVup::operator = (const VMVup& _rhs)
@@ -26,7 +21,7 @@ VMVup& VMVup::operator = (const VMVup& _rhs)
 	if(this != &_rhs &&
 	   m_iUniqueID == _rhs.m_iUniqueID)
 	{
-		m_eCurrentStatus = _rhs.m_eCurrentStatus;
+		m_uiCurrentStatus = _rhs.m_uiCurrentStatus;
 	}
 	return *this;
 }

@@ -1,7 +1,7 @@
 #include "VMCommand.h"
 
 //-------------------------------------------------------------------------------------
-Bool VMCommandCenter::RegisterCommand(StringPtr _strCmdName, VMCommand::VMCommandHandler _pHandler, VMCommand::EParamType _param1, VMCommand::EParamType _param2)
+Bool VMCommandCenter::RegisterCommand(StringPtr _strCmdName, VMCommand::VMCommandHandler _pHandler, VMCommand::EParamType _param1, VMCommand::EParamType _param2, VMCommand::EParamType _param3)
 {
 	if(_strCmdName == NULL || !strcmp(_strCmdName, ""))
 	{
@@ -13,13 +13,18 @@ Bool VMCommandCenter::RegisterCommand(StringPtr _strCmdName, VMCommand::VMComman
 		D_Output("[VMCommandCenter::RegisterCommand] invalid parameter type\n");
 		return false;
 	}
+	if(_param3 != VMCommand::EParamType_None && (_param1 == VMCommand::EParamType_None ||  _param2 == VMCommand::EParamType_None))
+	{
+		D_Output("[VMCommandCenter::RegisterCommand] invalid parameter type\n");
+		return false;
+	}
 	VMCommandMapIterator it = m_CommandMap.find(_strCmdName);
 	if(it != m_CommandMap.end())
 	{
 		D_Output("[VMCommandCenter::RegisterCommand] duplicate command name\n");
 		return false;
 	}
-	VMCommand* newCommand = new VMCommand(_pHandler, _param1, _param2);
+	VMCommand* newCommand = new VMCommand(_pHandler, _param1, _param2, _param3);
 	m_CommandMap.insert(std::pair<std::string, VMCommand*>(_strCmdName, newCommand));
 	return true;
 }
@@ -64,7 +69,7 @@ Bool VMCommandCenter::ExecuteFromString(StringPtr _cmd)
 				param[i].Set<s32>(0);
 			}
 		}
-		s32 iRet = rc.Execute(param[0], param[1]);
+		s32 iRet = rc.Execute(param[0], param[1], param[2]);
 		if(iRet)
 		{
 			D_Output("[VMCommandCenter::Parse] Error occurs when executing command\n");

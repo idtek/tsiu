@@ -36,9 +36,9 @@ public:
 class VMCommand
 {
 public:
-	static const s32 kMaxParameterCount = 2;
+	static const s32 kMaxParameterCount = 3;
 
-	typedef s32 (*VMCommandHandler)(const VMCommandParamHolder& _p1, const VMCommandParamHolder& _p2);
+	typedef s32 (*VMCommandHandler)(const VMCommandParamHolder& _p1, const VMCommandParamHolder& _p2, const VMCommandParamHolder& _p3);
 	enum EParamType
 	{
 		EParamType_None,
@@ -48,17 +48,18 @@ public:
 	};
 
 public:
-	VMCommand(VMCommandHandler _pHandler, EParamType _param1 = EParamType_None, EParamType _param2 = EParamType_None)
+	VMCommand(VMCommandHandler _pHandler, EParamType _param1 = EParamType_None, EParamType _param2 = EParamType_None, EParamType _param3 = EParamType_None)
 		:m_pHandler(_pHandler)
 	{
 		m_ParamType[0] = _param1;
 		m_ParamType[1] = _param2;
+		m_ParamType[2] = _param3;
 	}
-	s32 Execute(const VMCommandParamHolder& _p1, const VMCommandParamHolder& _p2)
+	s32 Execute(const VMCommandParamHolder& _p1, const VMCommandParamHolder& _p2, const VMCommandParamHolder& _p3)
 	{
 		if(m_pHandler)
 		{
-			return (*m_pHandler)(_p1, _p2);
+			return (*m_pHandler)(_p1, _p2, _p3);
 		}
 		return 0;
 	}
@@ -83,7 +84,8 @@ public:
 	Bool RegisterCommand(StringPtr						_strCmdName, 
 						 VMCommand::VMCommandHandler	_pHandler, 
 						 VMCommand::EParamType			_param1 = VMCommand::EParamType_None, 
-						 VMCommand::EParamType			_param2 = VMCommand::EParamType_None);
+						 VMCommand::EParamType			_param2 = VMCommand::EParamType_None,
+						 VMCommand::EParamType			_param3 = VMCommand::EParamType_None);
 	Bool ExecuteFromString(StringPtr _cmd);
 
 private:

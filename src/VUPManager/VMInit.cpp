@@ -43,7 +43,7 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	new FXButton(matrix, "Send", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
 
 	FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poGroupV2,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-	FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY|TABLE_NO_COLSELECT|TABLE_NO_ROWSELECT,0,0,0,0, 2,2,2,2);
+	FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY,0,0,0,0, 2,2,2,2);
 	table->setBackColor(FXRGB(255,255,255));
 	table->setVisibleRows(20);
 	table->setVisibleColumns(4);
@@ -57,6 +57,8 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	table->setRowHeaderWidth(0);
 	table->setColumnText(0, "ID");
 	table->setColumnText(1, "Status");
+	table->setColumnText(2, "IP");
+	table->setColumnText(3, "Port");
 	table->setSelBackColor(FXRGB(128,128,128));
 
 	m_VUPTable = table;
@@ -147,6 +149,13 @@ void MyCanvas::onUpdateList(const Event* _poEvent)
 		m_VUPTable->setItemText(iRow, 1, VMVup::kStatus[vup.GetCurrentStatus()].GetName());
 		m_VUPTable->setItemJustify(iRow, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
+		m_VUPTable->setItemText(iRow, 2, vup.GetIPAddress());
+		m_VUPTable->setItemJustify(iRow, 2, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+		sprintf(zValue, "%d", vup.GetPort());
+		m_VUPTable->setItemText(iRow, 3, zValue);
+		m_VUPTable->setItemJustify(iRow, 3, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
 		iRow++;
 	}
 	if(iRow < m_VUPTable->getNumRows())
@@ -155,63 +164,6 @@ void MyCanvas::onUpdateList(const Event* _poEvent)
 	}
 }
 
-//-------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------
-MemPool::MemPool()
-{
-	size = 0;
-	loss = 0;
-	maxsize = 100000;
-};
-
-MemPool::~MemPool()
-{
-	mempool.clear();
-};
-
-int MemPool::GetUDPData(UDP_PACK *buf, int cnt /* = 1 */)
-{
-	if(!buf)
-		return 0;
-	if( size < cnt)
-		cnt = size;
-	s.Lock();
-	std::deque<UDP_PACK>::iterator itstart,itend;
-	itstart = itend = mempool.begin();
-	for(int i = 0; i < cnt; ++i)
-	{
-		memcpy(buf + i, &(*itend), sizeof(UDP_PACK));
-		itend++;
-	}
-	mempool.erase(itstart, itend);
-	size -= cnt;
-	s.UnLock();
-	return cnt;
-};
-
-void MemPool::InsertUDPData(const UDP_PACK& up)
-{
-	s.Lock();
-	if( size < maxsize )
-	{
-		mempool.push_back(up);
-		size++;
-	}
-	else
-	{
-		loss++;
-	}
-	s.UnLock();
-};
-
-void MemPool::CleanBuff()
-{
-	s.Lock();
-	size = 0;
-	loss = 0;
-	mempool.clear();
-	s.UnLock();
-}
 //---------------------------------------------------------------------------------------------
 GameEngine::GameEngine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindow)
 	:Engine(_uiWidth, _uiHeight, _strTitle, _bIsWindow, 60)

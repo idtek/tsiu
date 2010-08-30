@@ -1,8 +1,6 @@
 #ifndef __TUTILITY_ARRAY__
 #define __TUTILITY_ARRAY__
 
-
-
 namespace TsiU
 {
 	template<typename T>

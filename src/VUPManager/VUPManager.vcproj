@@ -377,6 +377,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VMProtocal.h"
+				>
+			</File>
+			<File
 				RelativePath=".\VMVup.h"
 				>
 			</File>

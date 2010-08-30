@@ -9,6 +9,4 @@ using namespace TsiU;
 #include "TWin32_Header.h"
 #endif
 
-#include "VCExportHeader.h"
-
 #endif
