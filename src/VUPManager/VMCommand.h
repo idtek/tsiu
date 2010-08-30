@@ -9,8 +9,6 @@ class VMCommandParamHolder
 {
 	typedef union
 	{
-		s32		iVal;
-		f32		fVal;
 		Char*	sVal;
 	} ParamValue;
 
@@ -19,13 +17,16 @@ public:
 	{
 		memset(&m_Param, 0, sizeof(ParamValue));
 	}
+	VMCommandParamHolder(Char* _val)
+	{
+		Set(_val);
+	}
 
-	s32			ToInt()		const	{ return m_Param.iVal;	}
-	f32			ToFloat()	const	{ return m_Param.fVal;	}
-	Char*		ToString()	const	{ return m_Param.sVal;	}
+	s32			ToInt()		const	{ return atoi(m_Param.sVal);	}
+	f32			ToFloat()	const	{ return atof(m_Param.sVal);	}
+	Char*		ToString()	const	{ return m_Param.sVal;			}
 
-	template<typename T>
-	void Set(const T& _val){
+	void Set(Char* _val){
 		m_Param = *(ParamValue*)&_val;
 	}
 
@@ -36,41 +37,38 @@ public:
 class VMCommand
 {
 public:
-	static const s32 kMaxParameterCount = 3;
+	static const s32 kMaxCommandLength = 128;
 
-	typedef s32 (*VMCommandHandler)(const VMCommandParamHolder& _p1, const VMCommandParamHolder& _p2, const VMCommandParamHolder& _p3);
-	enum EParamType
-	{
-		EParamType_None,
-		EParamType_Int,
-		EParamType_Float,
-		EParamType_String,
-	};
+	typedef Array<VMCommandParamHolder> ParamList;
+	typedef s32 (*VMCommandHandler)(const ParamList& _paramList);
 
 public:
-	VMCommand(VMCommandHandler _pHandler, EParamType _param1 = EParamType_None, EParamType _param2 = EParamType_None, EParamType _param3 = EParamType_None)
+	VMCommand(VMCommandHandler _pHandler, const ParamList* _defaultParamList)
 		:m_pHandler(_pHandler)
 	{
-		m_ParamType[0] = _param1;
-		m_ParamType[1] = _param2;
-		m_ParamType[2] = _param3;
+		if(_defaultParamList)
+			m_DefaultParamList = *_defaultParamList;
+		else
+			m_DefaultParamList.Clear();
 	}
-	s32 Execute(const VMCommandParamHolder& _p1, const VMCommandParamHolder& _p2, const VMCommandParamHolder& _p3)
+	s32 Execute(ParamList& _paramList)
 	{
 		if(m_pHandler)
 		{
-			return (*m_pHandler)(_p1, _p2, _p3);
+			if(_paramList.Size() < m_DefaultParamList.Size())
+			{
+				for(s32 i = _paramList.Size(); i < m_DefaultParamList.Size(); ++i)
+				{
+					_paramList.PushBack(m_DefaultParamList[i]);
+				}
+			}
+			return (*m_pHandler)(_paramList);
 		}
 		return 0;
 	}
-	EParamType GetParamType(s32 _idx) const
-	{
-		D_CHECK(_idx >= 0 && _idx < kMaxParameterCount);
-		return m_ParamType[_idx];
-	}
 private:
-	EParamType			m_ParamType[kMaxParameterCount];
 	VMCommandHandler	m_pHandler;
+	ParamList			m_DefaultParamList;
 };
 
 class VMCommandCenter : public Singleton<VMCommandCenter>
@@ -81,11 +79,9 @@ class VMCommandCenter : public Singleton<VMCommandCenter>
 public:
 	VMCommandCenter(){}
 
-	Bool RegisterCommand(StringPtr						_strCmdName, 
-						 VMCommand::VMCommandHandler	_pHandler, 
-						 VMCommand::EParamType			_param1 = VMCommand::EParamType_None, 
-						 VMCommand::EParamType			_param2 = VMCommand::EParamType_None,
-						 VMCommand::EParamType			_param3 = VMCommand::EParamType_None);
+	Bool RegisterCommand(StringPtr							_strCmdName, 
+						 VMCommand::VMCommandHandler		_pHandler,
+						 const VMCommand::ParamList*		_defaultParamList = NULL);
 	Bool ExecuteFromString(StringPtr _cmd);
 
 private:

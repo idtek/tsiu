@@ -13,6 +13,8 @@ namespace TsiU
 		T& operator[]( u32 index );
 		const T& operator[]( u32 index ) const;
 
+		const Array<T>& operator=(const Array<T>& rhs);
+
 		void ReSize(u32 newsize);
 		void Set(u32 i, const T& item);
 		T& Get(u32 i) const;
@@ -126,6 +128,22 @@ namespace TsiU
 		}
 		m_Size = 0;
 		m_Capacity = 0;
+	}
+
+	template<typename T>
+	const Array<T>& Array<T>::operator=(const Array<T>& rhs)
+	{
+		if(this == &rhs)
+			return *this;
+
+		Clear();
+
+		//ReSize(rhs.Size());
+		for(s32 i = 0; i < rhs.Size(); ++i)
+		{
+			PushBack(rhs[i]);
+		}
+		return *this;
 	}
 
 	template<typename T>

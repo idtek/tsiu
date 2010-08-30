@@ -27,7 +27,7 @@ namespace{
 		return suiStartPort + (::GetTickCount() % (suiEndPort - suiStartPort));
 	}
 
-	const Char*			g_strServerIP	= "10.192.84.23";//"10.192.84.23";//"10.192.84.24";
+	const Char*			g_strServerIP	= "127.0.0.1";//"10.192.84.23";//"10.192.84.24";
 	u16					g_uiServerPort	= 51001;
 };
 
@@ -177,6 +177,11 @@ bool VUPClientAdapter::Tick()
 					pack.m_unValue.m_ClientRegisterParam.m_uiPort		= m_uiPort;
 					pack.m_unValue.m_ClientRegisterParam.m_uiStatus		= m_uiStatus;
 					g_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
+					break;
+				}
+			case EPT_M2C_KillClient:
+				{
+					exit(0);
 					break;
 				}
 			}
