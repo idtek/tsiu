@@ -57,13 +57,25 @@ namespace TsiU
 		}
 		return 0;
 	}
-	s32 WinSocket::SetAddress(const Char* _poAddress, u16 _ulPort)
+	s32 WinSocket::SetAddress(const Char* _poAddress, u16 _ulPort, Bool _bIsBroadCast)
 	{
 		m_Addr.sin_family = AF_INET;
 		if(!_poAddress)
 			m_Addr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
 		else
 			m_Addr.sin_addr.S_un.S_addr = inet_addr(_poAddress);
+
+		if(_bIsBroadCast)
+		{
+			//broadcast
+			s32 iBroadcast = 1;
+			s32 iRet = setsockopt(m_Sock, SOL_SOCKET, SO_BROADCAST, (char*)&iBroadcast, sizeof(iBroadcast));
+			if(iRet == SOCKET_ERROR)
+			{
+				return -1;
+			}
+		}
+
 		m_Addr.sin_port = htons(_ulPort);
 
 		return 0;

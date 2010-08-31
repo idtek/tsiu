@@ -1,6 +1,5 @@
 #include "VCExportHeader.h"
 #include "VCGlobalDef.h"
-#include "..\\VUPManager\\VMProtocal.h"
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -18,16 +17,16 @@ namespace{
 
 	u16 _GeneratePort(u16 _uiCurrentPort){
 		static const u16 suiStartPort	= 50000;
-		static const u16 suiEndPort		= 51000;
+		static const u16 suiEndPort		= 50050;
 
 		if(_uiCurrentPort >= suiEndPort)
 			return 0; //failed
 		if(_uiCurrentPort >= suiStartPort)
 			return (_uiCurrentPort + 1);
-		return suiStartPort + (::GetTickCount() % (suiEndPort - suiStartPort));
+		return suiStartPort;// + (::GetTickCount() % (suiEndPort - suiStartPort));
 	}
 
-	const Char*			g_strServerIP	= "127.0.0.1";//"10.192.84.23";//"10.192.84.24";
+	const Char*			g_strServerIP	= "10.192.84.23";//"10.192.84.24";
 	u16					g_uiServerPort	= 51001;
 };
 
@@ -75,7 +74,6 @@ void RecvUDPRunner::NotifyQuit()
 	m_bRequestStop = true;
 }
 //----------------------------------------------------------------------------------
-
 VUPClientAdapter::VUPClientAdapter()
 {
 	WSADATA wsaData;
@@ -91,8 +89,14 @@ VUPClientAdapter::~VUPClientAdapter()
 }
 bool VUPClientAdapter::Init(unsigned int _uiPassport)
 {
-	m_uiStatus = EVupStatus_Ready;
+	//Init status
+	m_uiStatus = EVupStatus_Invalid;
 	m_uiPassport = _uiPassport;
+	m_uiTestPhase = ETestPhase_INVALID;
+
+	//Init pack func
+	m_PackFunctions[EPT_C2M_ReportClientRunningStatus]	= &VUPClientAdapter::_PACK_ReportClientRunningStatus;
+	m_PackFunctions[EPT_C2M_ReportClientTesingPhase]	= &VUPClientAdapter::_PACK_ReportClientTesingPhase;
 
 	g_pRecvSocket = new WinSocket;
 	s32 iRet = g_pRecvSocket->Create(E_NETWORK_PROTO_UDP, false);
@@ -141,12 +145,38 @@ bool VUPClientAdapter::RegisterMe()
 		pack.m_unValue.m_ClientRegisterParam.m_uiPassPort	= m_uiPassport;
 		pack.m_unValue.m_ClientRegisterParam.m_uiPort		= m_uiPort;
 		pack.m_unValue.m_ClientRegisterParam.m_uiStatus		= m_uiStatus;
+		pack.m_unValue.m_ClientRegisterParam.m_uiStatus		= m_uiPassport;
 		g_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
 		return true;
 	}
 	return false;
 }
+void VUPClientAdapter::Watch(unsigned char _uiKey, const char* _zName, const int* _watchedvalue)
+{
+	WatchedValue<int>* wV = new WatchedValue<int>(_uiKey);
+	wV->Set(_watchedvalue);
+	WatchedNameValueMap* pNameValueMap = NULL;
+
+	WatchedValueMapIterator it = m_WatchValues.find(_uiKey);
+	if(it == m_WatchValues.end())
+	{
+		pNameValueMap = new WatchedNameValueMap;
+		m_WatchValues.insert(std::pair<unsigned char, WatchedNameValueMap*>(_uiKey, pNameValueMap));
+	}
+	else
+	{
+		pNameValueMap = (*it).second;
+	}
+	pNameValueMap->insert(std::pair<std::string, WatchedValueBase*>(_zName, wV));
+}
 bool VUPClientAdapter::Tick()
+{
+	_HandleWatchedValue();
+	_HandleRecvPack();
+	return true;
+}
+
+void VUPClientAdapter::_HandleRecvPack()
 {
 	s32 iSize = g_pUDPPackBuffer->GetSize();
 	if(iSize != 0)
@@ -163,9 +193,9 @@ bool VUPClientAdapter::Tick()
 					m_uiStatus = EVupStatus_Running;
 
 					UDP_PACK pack;
-					pack.m_uiType = EPT_C2M_ReportClientStatus;
-					pack.m_unValue.m_ReportClientStatusParam.m_uiPassPort	= m_uiPassport;
-					pack.m_unValue.m_ReportClientStatusParam.m_uiStatus		= m_uiStatus;
+					pack.m_uiType = EPT_C2M_ReportClientRunningStatus;
+					pack.m_unValue.m_ReportClientRunningStatusParam.m_uiPassPort	= m_uiPassport;
+					pack.m_unValue.m_ReportClientRunningStatusParam.m_uiStatus		= m_uiStatus;
 					g_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
 					break;
 				}
@@ -176,6 +206,7 @@ bool VUPClientAdapter::Tick()
 					pack.m_unValue.m_ClientRegisterParam.m_uiPassPort	= m_uiPassport;
 					pack.m_unValue.m_ClientRegisterParam.m_uiPort		= m_uiPort;
 					pack.m_unValue.m_ClientRegisterParam.m_uiStatus		= m_uiStatus;
+					pack.m_unValue.m_ClientRegisterParam.m_uiTestPhase	= m_uiTestPhase;
 					g_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
 					break;
 				}
@@ -188,5 +219,54 @@ bool VUPClientAdapter::Tick()
 		}
 		delete[] poPacArray;
 	}
-	return true;
+}
+
+void VUPClientAdapter::_HandleWatchedValue()
+{
+	WatchedValueMapIterator itWV;
+	for(itWV = m_WatchValues.begin(); itWV != m_WatchValues.end(); ++itWV)
+	{
+		WatchedNameValueMap* pNameValueMap = (*itWV).second;
+		WatchedNameValueMapIterator innerIt;
+	
+		Bool shouldSendMsg = false;
+		for(innerIt = pNameValueMap->begin(); innerIt != pNameValueMap->end(); ++innerIt)
+		{
+			WatchedValueBase* wV = (*innerIt).second;
+			if(wV->HasChanged())
+			{
+				shouldSendMsg = true;
+				wV->Flush();
+			}
+		}
+		if(shouldSendMsg)
+		{
+			UDP_PACK pack;
+			pack.m_uiType = (*itWV).first;
+			Pack_Func func = m_PackFunctions[pack.m_uiType];
+			if(func)
+				(this->*func)(&pack, *pNameValueMap);
+			else
+			{
+				D_CHECK(0);
+			}
+			g_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
+		}
+	}
+}
+
+void VUPClientAdapter::_PACK_ReportClientTesingPhase(UDP_PACK* outPack, WatchedNameValueMap& nameValue)
+{
+	m_uiTestPhase = (u8)*static_cast<const int*>(nameValue[kNAME_ReportClientTesingPhase_Phase]->GetValue());
+
+	outPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPassPort = m_uiPassport;
+	outPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPhase = m_uiTestPhase;
+}
+
+void VUPClientAdapter::_PACK_ReportClientRunningStatus(UDP_PACK* outPack, WatchedNameValueMap& nameValue)
+{
+	m_uiStatus = (u8)*static_cast<const int*>(nameValue[kNAME_ReportClientRunningStatus_Phase]->GetValue());
+
+	outPack->m_unValue.m_ReportClientRunningStatusParam.m_uiPassPort = m_uiPassport;
+	outPack->m_unValue.m_ReportClientRunningStatusParam.m_uiStatus = m_uiStatus;
 }
