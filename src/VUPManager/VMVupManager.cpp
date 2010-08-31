@@ -54,16 +54,24 @@ s32 VMVupManager::AddVup(const VMCommand::ParamList& _paramList)
 
 s32 VMVupManager::UpdateVup(const VMCommand::ParamList& _paramList)
 {
-	s32	iPassport = _paramList[0].ToInt();
-	u8	uiStatus = static_cast<u8>(_paramList[1].ToInt());
+	s32	iPassport = _paramList[1].ToInt();
 	VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
 	VMVup* newVup = pMan->FindVup(iPassport);
-	if(newVup)
+	if(!newVup)
+		return 1;
+
+	const Char* pOption = _paramList[0].ToString();
+	if(!strcmp(pOption , "-rs"))
 	{
+		u8	uiStatus = static_cast<u8>(_paramList[2].ToInt());
 		newVup->SetStatus(uiStatus);
-		return 0;
 	}
-	return 1;
+	else if(!strcmp(pOption , "-tp"))
+	{
+		u8	uiPhase = static_cast<u8>(_paramList[2].ToInt());
+		newVup->SetTestPhase(uiPhase);
+	}
+	return 0;
 }
 
 s32 VMVupManager::RemoveVup(const VMCommand::ParamList& _paramList)
@@ -191,16 +199,17 @@ void VMVupManager::StartTesting(s32 _id)
 
 void VMVupManager::Refresh()
 {
+	for(int i = 50000; i <= 50050; i++)
+	{
+		UDP_PACK pack;
+		pack.m_uiType = EPT_M2C_Refresh;
+		m_pSendSocket->SetAddress("10.255.255.255", i, true);
+		m_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
+	}
 	VUPMapConstIterator it = m_poVupMap.begin();
 	for(;it != m_poVupMap.end(); ++it)
 	{
 		const VMVup* pVup = (*it).second;
-
-		UDP_PACK pack;
-		pack.m_uiType = EPT_M2C_Refresh;
-		m_pSendSocket->SetAddress(pVup->GetIPAddress(), pVup->GetPort());
-		m_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
-
 		delete pVup;
 	}
 	m_poVupMap.clear();
@@ -286,16 +295,28 @@ void VMVupManager::Tick(f32 _fDeltaTime)
 													poPack->m_unValue.m_ClientRegisterParam.m_uiPort);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
 
-					sprintf(cmd, "updatevup %d %d",	poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort,
-													poPack->m_unValue.m_ClientRegisterParam.m_uiStatus);
+					sprintf(cmd, "updatevup -rs %d %d",	poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort,
+													    poPack->m_unValue.m_ClientRegisterParam.m_uiStatus);
+					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
+
+					sprintf(cmd, "updatevup -rs %d %d",	poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort,
+														poPack->m_unValue.m_ClientRegisterParam.m_uiTestPhase);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
 				}
 				break;
-			case EPT_C2M_ReportClientStatus:
+			case EPT_C2M_ReportClientRunningStatus:
 				{
 					Char cmd[VMCommand::kMaxCommandLength];
-					sprintf(cmd, "updatevup %d %d",	poPack->m_unValue.m_ReportClientStatusParam.m_uiPassPort,
-													poPack->m_unValue.m_ReportClientStatusParam.m_uiStatus);
+					sprintf(cmd, "updatevup -rs %d %d",	poPack->m_unValue.m_ReportClientRunningStatusParam.m_uiPassPort,
+													    poPack->m_unValue.m_ReportClientRunningStatusParam.m_uiStatus);
+					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
+				}
+				break;
+			case EPT_C2M_ReportClientTesingPhase:
+				{
+					Char cmd[VMCommand::kMaxCommandLength];
+					sprintf(cmd, "updatevup -tp %d %d",	poPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPassPort,
+														poPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPhase);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
 				}
 				break;

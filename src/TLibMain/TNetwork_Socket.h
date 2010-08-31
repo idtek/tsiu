@@ -15,7 +15,7 @@ namespace TsiU
 	enum
 	{
 		E_NETWORK_IOCTRL_NBIO = 0,
-		E_NETWORK_IOCTRL_NREAD
+		E_NETWORK_IOCTRL_NREAD,
 	};
 
 	class Socket
@@ -23,7 +23,7 @@ namespace TsiU
 	public:
 		Socket(){};
 		virtual s32 Create(u32 _ulProtoType, Bool _bIsAsync) = 0;
-		virtual s32 SetAddress(const Char* _poAddress, u16 _ulPort) = 0;
+		virtual s32 SetAddress(const Char* _poAddress, u16 _ulPort, Bool _bIsBroadCast = false) = 0;
 		virtual s32 Destroy() = 0;
 		virtual s32 Bind() = 0;
 		virtual s32 Listen() = 0;

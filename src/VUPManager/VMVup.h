@@ -11,7 +11,7 @@ public:
 	{
 	public:
 		VupStatus()
-			: m_uiStatus(EVupStatus_Invalid)
+			: m_uiStatus(0)
 			, m_strStatusName()
 		{}
 		VupStatus(u8 _status, StringPtr _name)
@@ -34,6 +34,7 @@ public:
 		return i++;
 	}
 	static const VupStatus kStatus[EVupStatus_Num];
+	static const VupStatus kTestPhase[ETestPhase_Num];
 
 public:
 	VMVup(s32 _id, const Char* _ipAddr, u16 _port);
@@ -52,12 +53,25 @@ public:
 		return m_strIPAddress.c_str();
 	}
 	void SetStatus(u8 _status){
-		m_uiCurrentStatus = _status;
+		if(_status >= EVupStatus_Num)
+			m_uiCurrentStatus = EVupStatus_Invalid;
+		else
+			m_uiCurrentStatus = _status;
+	}
+	void SetTestPhase(u8 _phase){
+		if(_phase >= ETestPhase_Num)
+			m_uiCurrentTestPhase = ETestPhase_INVALID;
+		else
+			m_uiCurrentTestPhase = _phase;
+	}
+	u8 GetCurrentTestPhase() const {
+		return m_uiCurrentTestPhase;
 	}
 
 private:
 	s32				m_iUniqueID;
 	u8				m_uiCurrentStatus;
+	u8				m_uiCurrentTestPhase;
 	u16				m_uiPort;
 	std::string		m_strIPAddress;
 };
