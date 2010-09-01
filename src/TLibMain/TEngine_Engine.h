@@ -13,9 +13,9 @@ namespace TsiU
 	class ScriptModule;
 	class RenderModule;
 
-#ifdef TLIB_DEBUG
+//#ifdef TLIB_DEBUG
 	class DebugConsole;
-#endif
+//#endif
 
 	class Engine
 	{
@@ -50,9 +50,9 @@ namespace TsiU
 		ScriptModule*		m_poScriptModule;
 		RenderModule*		m_poRenderModule;
 
-#ifdef TLIB_DEBUG
+//#ifdef TLIB_DEBUG
 		DebugConsole*		m_poDebugConsole;
-#endif
+//#endif
 		Bool m_bQuitEngine;
 		s32	 m_iRateLock;
 	};

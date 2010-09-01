@@ -1,0 +1,66 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>UDT Reference</title>
+</head>
+
+<body>
+
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="table1" bgcolor="#99CCFF" bordercolor="#99CCFF">
+  <tr>
+    <td width="100%"><font face="Verdana" size="2"><i>&nbsp;UDT </i></font><i>
+	<font face="Verdana" size="2">Tutorial</font></i></td>
+  </tr>
+</table>
+<h1><font face="Verdana" size="4">Rendezvous Connection and Firewalls</font></h1>
+<p><font face="Verdana" size="2">While UDT was originally written for extremely
+high speed data transfer, there are many other potential benefits from this
+reliable UDP-based library. One particular usage is to setup reliable
+connections between machines behind firewalls, especially those NAT firewall. To
+meet this requirement, UDT has added the rendezvous connection setup support.</font></p>
+<p><font face="Verdana" size="2">Traditional BSD socket setup process requires
+explicit server side and client side. To punch NAT firewalls, a common method is
+to use the SO_REUSEADDR socket option to open two sockets bound to the same
+port, one listens and the other connects. UDT provides the more convenient
+rendezvous connection setup, in which there is no server or client, and two
+users can connect to each other directly.</font></p>
+<p><font face="Verdana" size="2">Inside the UDT implementation of the rendezvous
+connection setup, each UDT socket sends connection request to its peer side, and
+whoever receives the request will then send back response and set up the
+connection.</font></p>
+<p><font face="Verdana" size="2">An example is shown below.&nbsp;Each UDT socket
+must bind to a known address and then try to connect to peer side's known
+address. After the connect call is returned, the UDT connection is set up.</font></p>
+<font face="Verdana" size="2">
+<p style="margin-top: 0; margin-bottom: 0"><b>Example: rendezvous connection
+setup</b></p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="table2" bgcolor="#C0C0C0" bordercolor="#C0C0C0">
+  <tr>
+    <td width="100%">
+    <p style="margin-top: 0; margin-bottom: 0">
+    <font size="1" face="Courier New">UDTSOCKET u;</font></p>
+	<p style="margin-top: 0; margin-bottom: 0">
+    <font face="Courier New" size="1">...</font></p>
+
+</font>
+
+    <p style="margin-top: 0; margin-bottom: 0">
+    <font size="1" face="Courier New">UDT::bind(u, &amp;known_addr,
+    sizeof(known_addr));</font></p>
+    <p><font face="Courier New" size="1">UDT::connect(u, &amp;peer_addr, sizeof(peer_addr));</font></td>
+  </tr>
+</table>
+
+<p>However, UDT does not support SO_REUSEADDR option.
+When both the user are behind firewalls and they talk to a known server for the
+peer address and port, a UDT socket can be set up first and connect to the
+server. After it retrieves the information about the peer side, it should then
+disconnect and start this rendezvous connection to the peer side.</p>
+
+</body>
+
+</html>

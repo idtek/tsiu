@@ -1,0 +1,136 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>UDT Reference</title>
+</head>
+
+<body>
+
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="table3" bgcolor="#99CCFF" bordercolor="#99CCFF">
+  <tr>
+    <td width="100%"><font face="Verdana" size="2"><i>&nbsp;UDT Reference: UDT 
+	Functions</i></font></td>
+  </tr>
+</table>
+<h1 style="margin-bottom: 0"><font face="Verdana" size="4">recvmsg</font></h1>
+<p><font face="Verdana" size="2">The <b>recvmsg </b>method receives a valid
+message.</font></p>
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="table4" bgcolor="#C0C0C0" bordercolor="#C0C0C0">
+  <tr>
+    <td width="100%">
+    <p style="margin-top: 0; margin-bottom: 0">
+    <font size="1" face="Courier New">int recvmsg(<br>
+&nbsp; UDTSOCKET <font color="#FFFFFF">u</font>,</font></p>
+    <p style="margin-top: 0; margin-bottom: 0">
+    <font size="1" face="Courier New">&nbsp; char *<font color="#FFFFFF"><a class="synParam" onclick="showTip(this)">buf</a></font>, <br>
+&nbsp; int <font color="#FFFFFF"> <a class="synParam" onclick="showTip(this)">len</a></font></font></p>
+    <p style="margin-top: 0; margin-bottom: 0">
+    <font size="1" face="Courier New">);</font></p>
+    </td>
+  </tr>
+</table>
+<h4><font face="Verdana" size="2">Parameters</font></h4>
+<dl>
+	<dt><font face="Verdana"><i><font size="2">u</font></i><font size="2">
+	</font></font> </dt>
+	<dd><font face="Verdana" size="2">[in] Descriptor identifying a connected 
+	socket. </font></dd>
+	<dt><font face="Verdana"><i><font size="2">buf</font></i><font size="2">
+	</font></font> </dt>
+	<dd><font face="Verdana" size="2">[out] Buffer used to store the message. </font></dd>
+	<dt><font face="Verdana"><i><font size="2">len</font></i><font size="2">
+	</font></font> </dt>
+	<dd><font face="Verdana" size="2">[in] Length of the buffer to store the message. </font>
+	</dd>
+</dl>
+<h4><font face="Verdana" size="2">Return Values</font></h4>
+<p><font face="Verdana" size="2">On success, the actual size of received data is returned; Otherwise,
+UDT::ERROR is returned and the specific error information can be retrieved by 
+<a href="error.htm">getlasterror</a>. If UDT_RCVTIMEO is set to a positive
+value, zero will be returned if no data is received before the timer expires.</font></p>
+  <table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" id="table5" bordercolordark="#C0C0C0" bordercolorlight="#C0C0C0" width="100%">
+    <tr>
+      <th align="center" bgcolor="#C0C0C0" width="133">
+		<font face="Verdana" size="2">Error Code</font></th>
+      <th align="center" bgcolor="#C0C0C0" width="812"><b>
+      <font face="Verdana" size="2">Comment</font></b></th>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		2001</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		connection broken before send is completed.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		2002</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		<i>u 
+		</i>is not connected.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		5004</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		<i>u 
+		</i>is an invalid UDT socket.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		5009</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		cannot use <i>recvmsg</i> in SOCK_STREAM mode.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		6002</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		no data is available to be received on a non-blocking socket.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <font face="Verdana" size="1">6003</font></td>
+      <td width="812">
+      <font face="Verdana" size="1">no buffer available for the non-blocking
+      recv call.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">6004</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+        an overlapped recv is in progress.</font></td>
+    </tr>
+    </table>
+<H4><font face="Verdana" size="2">Description</font></H4>
+<P><font face="Verdana" size="2">The <b>recvmsg </b>method retrieves the first
+valid message from the received message pool. If there is no valid messages, <b>recvmsg</b>
+wait until a valid message is available in blocking mode, or the time specified
+by UDT_RCVTIMEO expires. In non-blocking mode, recvmsg returns immediately if
+there is no available message.</font></P>
+<P><font face="Verdana" size="2">If the length of the buffer is shorter than the
+length of the first available message in the pool, the buffer will by filled by
+part of the message (starting continuously from the first byte of the message).
+The rest of the message will be discarded and will NOT be available for future
+read.</font></P>
+<H4><font face="Verdana" size="2">See Also</font></H4>
+<P><b><font face="Verdana" size="2"><a href="select.htm">select</a>, 
+<a href="send.htm">send</a>, <a href="sendmsg.htm">sendmsg</a>,
+<a href="sendfile.htm">sendfile</a>, <a href="recvfile.htm">recvfile</a>,
+<a href="overlap.htm">getoverlappedresult</a></font></b></P>
+
+</body>
+
+</html>

@@ -34,18 +34,18 @@ namespace TsiU
 		m_poScriptModule = NULL;
 		m_poRenderModule = NULL;
 
-#ifdef TLIB_DEBUG
+//#ifdef TLIB_DEBUG
 		m_poDebugConsole = NULL;
-#endif
+//#endif
 		m_bQuitEngine = false;
 
 		g_poPanic = CallCreator<Panic>(E_CreatorType_Panic);
 		g_poAllocator = CallCreator<Allocator>(E_CreatorType_Allocator);
 
-#ifdef TLIB_DEBUG
+//#ifdef TLIB_DEBUG
 		m_poDebugConsole = new DebugConsole();
 		D_CHECK(m_poDebugConsole);
-#endif
+//#endif
 		m_poClockModule = new ClockModule();
 		D_CHECK(m_poClockModule);
 		m_poClockModule->SetRateLock(_iRateLock);
@@ -89,9 +89,9 @@ namespace TsiU
 		D_SafeDelete(m_poScriptModule);
 		D_SafeDelete(m_poRenderModule);
 
-#ifdef TLIB_DEBUG
+//#ifdef TLIB_DEBUG
 		D_SafeDelete(m_poDebugConsole);
-#endif
+//#endif
 	}
 	
 	Bool Engine::Init()

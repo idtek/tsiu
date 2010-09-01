@@ -1,0 +1,175 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>UDT Reference</title>
+</head>
+
+<body>
+
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="AutoNumber1" bgcolor="#99CCFF" bordercolor="#99CCFF">
+  <tr>
+    <td width="100%"><font face="Verdana" size="2"><i>&nbsp;UDT Reference: UDT 
+	Functions</i></font></td>
+  </tr>
+</table>
+
+<div class=Section1>
+
+<h1 style='margin-bottom:0in;margin-bottom:.0001pt'><span style='font-size:
+13.5pt;font-family:Verdana'>recvfile</span></h1>
+
+<p><span style='font-size:10.0pt;font-family:Verdana'>The <b>recvfile </b>method
+sends out a file stream.</span></p>
+
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="table2" bgcolor="#C0C0C0" bordercolor="#C0C0C0">
+  <tr>
+    <td width="100%">
+  <p style='margin:0in;margin-bottom:.0001pt'><span style='font-size:7.5pt;
+  font-family:"Courier New"'>__int64 recvfile(</span></p>
+  <p style='margin:0in;margin-bottom:.0001pt'><span style='font-size:7.5pt;
+  font-family:"Courier New"'>&nbsp;&nbsp; UDTSOCKET u,<br>
+  &nbsp;&nbsp; ofstream&amp; <span style='color:white'>ofs</span>,</span></p>
+  <p style='margin:0in;margin-bottom:.0001pt'><span style='font-size:7.5pt;
+  font-family:"Courier New"'>&nbsp;&nbsp; const __int64&amp; <span
+  style='color:white'>offset</span>,</span></p>
+  <p style='margin:0in;margin-bottom:.0001pt'><span style='font-size:7.5pt;
+  font-family:"Courier New"'>&nbsp;&nbsp; const __int64&amp; <span
+  style='color:white'>size,</span></span></p>
+  <p style='margin:0in;margin-bottom:.0001pt'><span style='font-size:7.5pt;
+  font-family:"Courier New"'>&nbsp;&nbsp; const int&amp; <span
+  style='color:white'>block</span> = 367000<br>
+  );</span></p>
+    </td>
+  </tr>
+</table>
+<h4><span style='font-size:10.0pt;font-family:Verdana'>Parameters</span></h4>
+
+<p class=MsoNormal style="margin-top: 0; margin-bottom: 0"><i><span style='font-size:10.0pt;font-family:Verdana'>u</span></i><span
+style='font-size:10.0pt;font-family:Verdana'> </span></p>
+
+<p class=MsoNormal style='margin-left:.5in; margin-top:0; margin-bottom:0'><span style='font-size:10.0pt;
+font-family:Verdana'>[in] Handle to a connected socket.</span></p>
+
+<p class=MsoNormal style="margin-top: 0; margin-bottom: 0"><i><span style='font-size:10.0pt;font-family:Verdana'>ofs</span></i><span
+style='font-size:10.0pt;font-family:Verdana'> </span></p>
+
+<p class=MsoNormal style='margin-left:.5in; margin-top:0; margin-bottom:0'><span style='font-size:10.0pt;
+font-family:Verdana'>[out] ofstream descriptor of the file to store the
+incoming data.</span></p>
+
+<p class=MsoNormal style="margin-top: 0; margin-bottom: 0"><i><span style='font-size:10.0pt;font-family:Verdana'>offset</span></i></p>
+
+<p class=MsoNormal style='margin-left:.5in; margin-top:0; margin-bottom:0'><span style='font-size:10.0pt;
+font-family:Verdana'>[in] the position from where file is overwritten.</span></p>
+
+<p class=MsoNormal style="margin-top: 0; margin-bottom: 0"><i><span style='font-size:10.0pt;font-family:Verdana'>size</span></i></p>
+
+<p class=MsoNormal style='margin-left:.5in; margin-top:0; margin-bottom:0'><span style='font-size:10.0pt;
+font-family:Verdana'>[in] the total size to be received.</span></p>
+
+<p class=MsoNormal style="margin-top: 0; margin-bottom: 0"><i><span style='font-size:10.0pt;font-family:Verdana'>block</span></i></p>
+
+<p class=MsoNormal style='margin-left:.5in; margin-top:0; margin-bottom:0'><span style='font-size:10.0pt;
+font-family:Verdana'>[in] Optional. data block size for each receiving and
+writing.</span></p>
+
+<h4><span style='font-size:10.0pt;font-family:Verdana'>Return Values</span></h4>
+
+<p><span style='font-size:10.0pt;font-family:Verdana'>On success, the actual
+size of data received is returned. Otherwise, UDT::ERROR is returned and the
+specific error information can be retrieved using <a href="error.htm">getlasterror</a>.</span></p>
+
+<table border=1 cellspacing=0 cellpadding=0 width="100%" style='width:100.0%;
+ border-collapse:collapse;' id=table3
+ bordercolordark="#C0C0C0" bordercolorlight="#C0C0C0">
+ <tr>
+  <td width=133 style='width:99.75pt;background:silver;padding:0in 0in 0in 0in'>
+  <p class=MsoNormal align=center style='text-align:center'><b><span
+  style='font-size:10.0pt;font-family:Verdana'>Error Code</span></b></p>
+  </td>
+  <td width=812 style='width:609.0pt;background:silver;padding:0in 0in 0in 0in'>
+  <p class=MsoNormal align=center style='text-align:center'><b><span
+  style='font-size:10.0pt;font-family:Verdana'>Comment</span></b></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=133 style='width:99.75pt;padding:0in 0in 0in 0in'>
+  <p style='margin-top:1;margin-bottom:1'><span style='font-size:7.5pt;
+  font-family:Verdana'>2001</span></p>
+  </td>
+  <td width=812 style='width:609.0pt;padding:0in 0in 0in 0in'>
+  <p style='margin-top:1;margin-bottom:1'><span style='font-size:7.5pt;
+  font-family:Verdana'>connection is broken before the IO completes.</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=133 style='width:99.75pt;padding:0in 0in 0in 0in'>
+  <p style='margin-top:1;margin-bottom:1'><span style='font-size:7.5pt;
+  font-family:Verdana'>2002</span></p>
+  </td>
+  <td width=812 style='width:609.0pt;padding:0in 0in 0in 0in'>
+  <p style='margin-top:1;margin-bottom:1'><i><span style='font-size:7.5pt;
+  font-family:Verdana'>u</span></i><span style='font-size:7.5pt;font-family:
+  Verdana'> is not connected.</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=133 style='width:99.75pt;padding:0in 0in 0in 0in'>
+  <p style='margin-top:1;margin-bottom:1'><span style='font-size:7.5pt;
+  font-family:Verdana'>5000</span></p>
+  </td>
+  <td width=812 style='width:609.0pt;padding:0in 0in 0in 0in'>
+  <p style='margin-top:1;margin-bottom:1'><span style='font-size:7.5pt;
+  font-family:Verdana'>file system error.</span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=133 style='width:99.75pt;padding:0in 0in 0in 0in'>
+  <p style='margin-top:1;margin-bottom:1'><span style='font-size:7.5pt;
+  font-family:Verdana'>5004</span></p>
+  </td>
+  <td width=812 style='width:609.0pt;padding:0in 0in 0in 0in'>
+  <p style='margin-top:1;margin-bottom:1'><i><span style='font-size:7.5pt;
+  font-family:Verdana'>u</span></i><span style='font-size:7.5pt;font-family:
+  Verdana'> is an invalid UDT socket.</span></p>
+  </td>
+ </tr>
+ <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		5010</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		cannot use <i>recvfile</i> in SOCK_DGRAM mode.</font></td>
+    </tr>
+ <tr>
+  <td width=133 style='width:99.75pt;padding:0in 0in 0in 0in'>
+  <p style='margin-top:1;margin-bottom:1'><span style='font-size:7.5pt;
+  font-family:Verdana'>6004</span></p>
+  </td>
+  <td width=812 style='width:609.0pt;padding:0in 0in 0in 0in'>
+  <p style='margin-top:1;margin-bottom:1'><span style='font-size:7.5pt;
+  font-family:Verdana'>a non-blocking overlapped recv is in progress.</span></p>
+  </td>
+ </tr>
+</table>
+
+<h4><span style='font-size:10.0pt;font-family:Verdana'>Description</span></h4>
+
+<p><span style='font-size:10.0pt;font-family:Verdana'>The <b>recvfile </b>method
+reads data directly into a file stream. It is always in blocking mode. The <a
+href="opt.htm">UDT_RCVSYN</a> option only affects <a href="send.htm">recv</a>. </span><font face="Verdana" size="2">In
+addition, <a href="opt.htm">UDT_SNDTIMEO</a> does not apply to this method.</font></p>
+
+<h4><span style='font-size:10.0pt;font-family:Verdana'>See Also</span></h4>
+
+<p><b><span style='font-size:10.0pt;font-family:Verdana'><a href="send.htm">send</a>,
+<a href="sendfile.htm">sendfile</a>, <a href="recv.htm">recv</a></span></b></p>
+
+</div>
+
+</body>
+
+</html>
