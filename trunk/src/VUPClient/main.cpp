@@ -1,5 +1,6 @@
 #include "VCExportHeader.h"
 #include "VCGlobalDef.h"
+#include "tinyxml.h"
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -15,19 +16,50 @@ namespace{
 	Thread*				g_pRecvThread	 = NULL;
 	MemPool<UDP_PACK>*	g_pUDPPackBuffer = NULL;
 
-	u16 _GeneratePort(u16 _uiCurrentPort){
-		static const u16 suiStartPort	= 50000;
-		static const u16 suiEndPort		= 50050;
+	std::string			g_strServerIP	= "127.0.0.1";//10.192.84.23";//"10.192.84.24";
+	u16					g_uiServerPort	= 51001;
+	u16					g_uiStartPort	= 50000;
+	u16					g_uiEndPort		= 50050;
 
-		if(_uiCurrentPort >= suiEndPort)
+	u16 _GeneratePort(u16 _uiCurrentPort){
+		if(_uiCurrentPort >= g_uiEndPort)
 			return 0; //failed
-		if(_uiCurrentPort >= suiStartPort)
+		if(_uiCurrentPort >= g_uiStartPort)
 			return (_uiCurrentPort + 1);
-		return suiStartPort;// + (::GetTickCount() % (suiEndPort - suiStartPort));
+		return g_uiStartPort;// + (::GetTickCount() % (suiEndPort - suiStartPort));
 	}
 
-	const Char*			g_strServerIP	= "10.192.84.23";//"10.192.84.24";
-	u16					g_uiServerPort	= 51001;
+	Bool _InitParameter(){
+		//Init config file
+		TiXmlDocument* pConfigFile = new TiXmlDocument();
+		bool isOK = pConfigFile->LoadFile("VUPClientAdapterConfig.xml");
+		if(!isOK)
+		{
+			delete pConfigFile;
+			return false;
+		}
+		
+		TiXmlElement* root = pConfigFile->RootElement();
+
+		//ServerIP;
+		TiXmlElement* serverIP = root->FirstChildElement();
+		g_strServerIP = serverIP->GetText();
+		
+		TiXmlElement* serverPort = serverIP->NextSiblingElement();
+		g_uiServerPort = atoi(serverPort->GetText());
+
+		TiXmlElement* clientStartPort = serverPort->NextSiblingElement();
+		g_uiStartPort = atoi(clientStartPort->GetText());
+
+		TiXmlElement* clientEndPort = clientStartPort->NextSiblingElement();
+		g_uiEndPort = atoi(clientEndPort->GetText());
+
+		D_Output("Client Parameter:\nServer IP: %s\nServer Port: %d\nClient Start Port = %d\nClient End Port = %d\n", g_strServerIP.c_str(), g_uiServerPort, g_uiStartPort, g_uiEndPort);
+
+		delete pConfigFile;
+
+		return true;
+	}
 };
 
 //--------------------------------------------------------------------------------
@@ -75,12 +107,18 @@ void RecvUDPRunner::NotifyQuit()
 }
 //----------------------------------------------------------------------------------
 VUPClientAdapter::VUPClientAdapter()
+	: m_HasConnectedToManager(false) 
 {
 	WSADATA wsaData;
 	s32 sRet = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if(sRet)
 	{
 		D_FatalError("Network init failed\n");
+	}
+	for(int i = 0; i < EPT_Num; ++i)
+	{
+		m_PackFunctions[i] = NULL;
+		m_UDPPackHandler[i] = NULL;
 	}
 }
 VUPClientAdapter::~VUPClientAdapter()
@@ -89,6 +127,13 @@ VUPClientAdapter::~VUPClientAdapter()
 }
 bool VUPClientAdapter::Init(unsigned int _uiPassport)
 {
+	Bool isOK = _InitParameter();
+	if(!isOK)
+	{
+		D_Output("read configuration file failed\n");
+		return false;
+	}
+
 	//Init status
 	m_uiStatus = EVupStatus_Invalid;
 	m_uiPassport = _uiPassport;
@@ -109,7 +154,10 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 		{
 			uiPort = _GeneratePort(uiPort);
 			if(!uiPort)
+			{
+				D_Output("generate port failed\n");
 				return false;
+			}
 		}
 		else
 		{
@@ -121,7 +169,7 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	g_pSendSocket = new WinSocket;
 	iRet = g_pSendSocket->Create(E_NETWORK_PROTO_UDP, false);
 	D_CHECK(!iRet);
-	iRet = g_pSendSocket->SetAddress(g_strServerIP, g_uiServerPort);
+	iRet = g_pSendSocket->SetAddress(g_strServerIP.c_str(), g_uiServerPort);
 	D_CHECK(!iRet);
 
 	//Init mem pool
@@ -151,6 +199,7 @@ bool VUPClientAdapter::RegisterMe()
 	}
 	return false;
 }
+
 void VUPClientAdapter::Watch(unsigned char _uiKey, const char* _zName, const int* _watchedvalue)
 {
 	WatchedValue<int>* wV = new WatchedValue<int>(_uiKey);
@@ -169,13 +218,32 @@ void VUPClientAdapter::Watch(unsigned char _uiKey, const char* _zName, const int
 	}
 	pNameValueMap->insert(std::pair<std::string, WatchedValueBase*>(_zName, wV));
 }
+
+void VUPClientAdapter::ReachRDVPoint(unsigned short _uiRDVPointID, unsigned short _uiExpected, unsigned short _uiTimeout)
+{
+	UDP_PACK pack;
+	pack.m_uiType = EPT_C2M_ReachRDVPoint;
+	pack.m_unValue.m_ReachRDVPointParam.m_uiPassPort	= m_uiPassport;
+	pack.m_unValue.m_ReachRDVPointParam.m_uiRDVPointID	= _uiRDVPointID;
+	pack.m_unValue.m_ReachRDVPointParam.m_uiTimeout		= _uiTimeout;
+	pack.m_unValue.m_ReachRDVPointParam.m_uiExpected	= _uiExpected;
+	g_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
+}
+
+void VUPClientAdapter::RegisterUDPPackHandler(unsigned char _uiType, UdpPackHandler _pPackHandler)
+{
+	if(_uiType >= 0 && _uiType < EPT_Num)
+	{
+		m_UDPPackHandler[_uiType] = _pPackHandler;
+	}
+}
+
 bool VUPClientAdapter::Tick()
 {
 	_HandleWatchedValue();
 	_HandleRecvPack();
 	return true;
 }
-
 void VUPClientAdapter::_HandleRecvPack()
 {
 	s32 iSize = g_pUDPPackBuffer->GetSize();
@@ -186,21 +254,24 @@ void VUPClientAdapter::_HandleRecvPack()
 		for(s32 i = 0; i < iSize; ++i)
 		{
 			UDP_PACK *poPack = poPacArray + i;
-			switch(poPack->m_uiType)
-			{
-			case EPT_M2C_StartTesting:
-				{
-					m_uiStatus = EVupStatus_Running;
+			u8 packType = poPack->m_uiType;
 
-					UDP_PACK pack;
-					pack.m_uiType = EPT_C2M_ReportClientRunningStatus;
-					pack.m_unValue.m_ReportClientRunningStatusParam.m_uiPassPort	= m_uiPassport;
-					pack.m_unValue.m_ReportClientRunningStatusParam.m_uiStatus		= m_uiStatus;
-					g_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
-					break;
+			UdpPackHandler userFunc = m_UDPPackHandler[packType];
+			if(userFunc)
+			{
+				(*userFunc)(*poPack);
+			}
+			switch(packType)
+			{
+			case EPT_M2C_ClientRegisterACK:
+				{
+					m_HasConnectedToManager = true;
 				}
+				break;
 			case EPT_M2C_Refresh:
 				{
+					m_HasConnectedToManager = false;
+
 					UDP_PACK pack;
 					pack.m_uiType = EPT_C2M_ClientRegister;
 					pack.m_unValue.m_ClientRegisterParam.m_uiPassPort	= m_uiPassport;

@@ -1,7 +1,8 @@
 #include "VMVupManager.h"
 #include "VMVup.h"
+#include "tinyxml.h"
+#include <time.h>
 
- Mutex g_pMutex;
 //--------------------------------------------------------------------------
 RecvUDPRunner::RecvUDPRunner(Socket* _pRecvSock, MemPool<UDP_PACKWrapper>* _pMempool)
 	:m_pRecvSocket(_pRecvSock)
@@ -191,19 +192,26 @@ void VMVupManager::StartTesting(s32 _id)
 	if(!pVup)
 		return;
 
+	struct tm * nowtime;
+	__time64_t  thetime;
+	_time64(&thetime);
+	nowtime = _localtime64(&thetime);
+	int nowsecs = nowtime->tm_hour * 3600 + nowtime->tm_min * 60 + nowtime->tm_sec;
+
 	UDP_PACK pack;
 	pack.m_uiType = EPT_M2C_StartTesting;
+	pack.m_unValue.m_StartTestingParam.m_uiBurstTime = nowsecs;
 	m_pSendSocket->SetAddress(pVup->GetIPAddress(), pVup->GetPort());
 	m_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
 }
 
 void VMVupManager::Refresh()
 {
-	for(int i = 50000; i <= 50050; i++)
+	for(int i = m_uiClientStartPort; i <= m_uiClientEndPort; i++)
 	{
 		UDP_PACK pack;
 		pack.m_uiType = EPT_M2C_Refresh;
-		m_pSendSocket->SetAddress("10.255.255.255", i, true);
+		m_pSendSocket->SetAddress(m_strBroadCastAddress.c_str(), i, true);
 		m_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
 	}
 	VUPMapConstIterator it = m_poVupMap.begin();
@@ -233,6 +241,9 @@ void VMVupManager::KillClient(s32 _id)
 			delete pVup;
 		}
 		m_poVupMap.clear();
+
+		m_poRDVList.clear();
+		m_RDVRunningInfo.Reset();
 	}
 	else
 	{
@@ -248,13 +259,46 @@ void VMVupManager::KillClient(s32 _id)
 	}
 }
 
+Bool VMVupManager::_InitParameter()
+{
+	//Init config file
+	TiXmlDocument* pConfigFile = new TiXmlDocument();
+	bool isOK = pConfigFile->LoadFile("VUPManagerConfig.xml");
+	if(!isOK)
+	{
+		delete pConfigFile;
+		return false;
+	}
+
+	TiXmlElement* root = pConfigFile->RootElement();
+
+	TiXmlElement* serverPort = root->FirstChildElement();
+	m_uiServerPort = atoi(serverPort->GetText());
+
+	TiXmlElement* clientStartPort = serverPort->NextSiblingElement();
+	m_uiClientStartPort = atoi(clientStartPort->GetText());
+
+	TiXmlElement* clientEndPort = clientStartPort->NextSiblingElement();
+	m_uiClientEndPort = atoi(clientEndPort->GetText());
+
+	TiXmlElement* broadCastAddress = clientEndPort->NextSiblingElement();
+	m_strBroadCastAddress = broadCastAddress->GetText();
+
+	delete pConfigFile;
+
+	return true;
+}
+
 void VMVupManager::Create()
 {
+	if(!_InitParameter())
+		return;
+
 	//Init network
 	m_pRecvSocket = new WinSocket;
 	s32 iRet = m_pRecvSocket->Create(E_NETWORK_PROTO_UDP, false);
 	D_CHECK(!iRet);
-	iRet = m_pRecvSocket->SetAddress(NULL, 51001);
+	iRet = m_pRecvSocket->SetAddress(NULL, m_uiServerPort);
 	D_CHECK(!iRet);
 	iRet = m_pRecvSocket->Bind();
 	D_CHECK(!iRet);
@@ -273,8 +317,45 @@ void VMVupManager::Create()
 	m_pRecvThread = new Thread(new RecvUDPRunner(m_pRecvSocket, m_pUDPPackBuffer));
 	Bool bRet = m_pRecvThread->Start();
 	D_CHECK(bRet);
+
+	Refresh();
 }
 void VMVupManager::Tick(f32 _fDeltaTime)
+{
+	//Handle udp pack
+	_HandleUdpPack();
+
+	//Check rdv point
+	_UpdateRDVPoint();
+
+	//Update List
+	Event evt((EventType_t)E_ET_UIUpdateList);
+	evt.AddParam((void*)this);
+	GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evt);
+}
+
+void VMVupManager::_UpdateRDVPoint()
+{
+	if(m_RDVRunningInfo.IsValid())
+	{
+		f32 fNow = GameEngine::GetGameEngine()->GetClockMod()->GetTotalElapsedSeconds();
+		RDVPointListIterator it = m_poRDVList.find(m_RDVRunningInfo.m_uiCurrentRunningID);
+		D_CHECK(it == m_poRDVList.end());
+		const RDVPointInfo& info = (*it).second;
+		if(m_RDVRunningInfo.m_ClientList.Size() >= info.m_uiExpectedNum ||
+		   fNow - m_RDVRunningInfo.m_fStartTime >= (f32)info.m_uiTimeOut)
+		{
+			for(s32 i = 0; i < m_RDVRunningInfo.m_ClientList.Size(); ++i)
+			{
+				StartTesting(m_RDVRunningInfo.m_ClientList[i]);
+			}
+			m_RDVRunningInfo.Reset();
+			m_poRDVList.erase(it);
+		}
+	}
+}	
+
+void VMVupManager::_HandleUdpPack()
 {
 	s32 iSize = m_pUDPPackBuffer->GetSize();
 	if(iSize != 0)
@@ -296,19 +377,24 @@ void VMVupManager::Tick(f32 _fDeltaTime)
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
 
 					sprintf(cmd, "updatevup -rs %d %d",	poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort,
-													    poPack->m_unValue.m_ClientRegisterParam.m_uiStatus);
+														poPack->m_unValue.m_ClientRegisterParam.m_uiStatus);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
 
-					sprintf(cmd, "updatevup -rs %d %d",	poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort,
+					sprintf(cmd, "updatevup -tp %d %d",	poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort,
 														poPack->m_unValue.m_ClientRegisterParam.m_uiTestPhase);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
+
+					UDP_PACK pack;
+					pack.m_uiType = EPT_M2C_ClientRegisterACK;
+					m_pSendSocket->SetAddress(poPackWrapper->m_SrcIPAddress.c_str(), poPack->m_unValue.m_ClientRegisterParam.m_uiPort);
+					m_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
 				}
 				break;
 			case EPT_C2M_ReportClientRunningStatus:
 				{
 					Char cmd[VMCommand::kMaxCommandLength];
 					sprintf(cmd, "updatevup -rs %d %d",	poPack->m_unValue.m_ReportClientRunningStatusParam.m_uiPassPort,
-													    poPack->m_unValue.m_ReportClientRunningStatusParam.m_uiStatus);
+						poPack->m_unValue.m_ReportClientRunningStatusParam.m_uiStatus);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
 				}
 				break;
@@ -316,17 +402,42 @@ void VMVupManager::Tick(f32 _fDeltaTime)
 				{
 					Char cmd[VMCommand::kMaxCommandLength];
 					sprintf(cmd, "updatevup -tp %d %d",	poPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPassPort,
-														poPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPhase);
+						poPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPhase);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
+				}
+				break;
+			case EPT_C2M_ReachRDVPoint:
+				{
+					u16 uiRDVPoint = poPack->m_unValue.m_ReachRDVPointParam.m_uiRDVPointID;
+					RDVPointListIterator it = m_poRDVList.find(uiRDVPoint);
+					if(it == m_poRDVList.end())
+					{
+						D_Output("add new rdv point: %d\n", uiRDVPoint);
+						RDVPointInfo info;
+						info.m_uiID = uiRDVPoint;
+						info.m_uiExpectedNum = poPack->m_unValue.m_ReachRDVPointParam.m_uiExpected;
+						info.m_uiTimeOut = poPack->m_unValue.m_ReachRDVPointParam.m_uiTimeout;
+
+						m_poRDVList.insert(std::pair<RDVPointID, RDVPointInfo>(uiRDVPoint, info));
+
+						m_RDVRunningInfo.Reset();
+						m_RDVRunningInfo.m_bHasValidValue = true;
+						m_RDVRunningInfo.m_uiCurrentRunningID = uiRDVPoint;
+						m_RDVRunningInfo.m_fStartTime = GameEngine::GetGameEngine()->GetClockMod()->GetTotalElapsedSeconds();
+						m_RDVRunningInfo.m_ClientList.PushBack(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
+					}
+					else
+					{
+						D_CHECK(m_RDVRunningInfo.m_bHasValidValue);
+						D_CHECK(m_RDVRunningInfo.m_uiCurrentRunningID == uiRDVPoint);
+						m_RDVRunningInfo.m_ClientList.PushBack(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
+
+						D_Output("reach: %d\n", poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
+					}
 				}
 				break;
 			}
 		}
 		delete[] poPacArray;
 	}
-
-	//Update List
-	Event evt((EventType_t)E_ET_UIUpdateList);
-	evt.AddParam((void*)this);
-	GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evt);
 }

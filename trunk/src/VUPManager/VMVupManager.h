@@ -32,6 +32,34 @@ class VMVupManager : public Object
 	typedef std::map<s32, VMVup*>::iterator			VUPMapIterator;
 	typedef std::map<s32, VMVup*>::const_iterator	VUPMapConstIterator;
 
+	typedef u16 RDVPointID;
+	struct RDVPointInfo{
+		RDVPointID	m_uiID;
+		u16			m_uiExpectedNum;
+		u16			m_uiTimeOut;
+	};
+	typedef std::map<RDVPointID, RDVPointInfo>				RDVPointList;
+	typedef std::map<RDVPointID, RDVPointInfo>::iterator	RDVPointListIterator;
+
+	struct RDVPointRunningInfo{
+		RDVPointRunningInfo(){
+			Reset();
+		}
+		void Reset(){
+			m_bHasValidValue = false;
+			m_uiCurrentRunningID = (RDVPointID)-1;
+			m_fStartTime = 0.f;
+			m_ClientList.Clear();
+		}
+		Bool IsValid() const{
+			return m_bHasValidValue;
+		}
+		RDVPointID	m_uiCurrentRunningID;
+		Bool		m_bHasValidValue;
+		f32			m_fStartTime;
+		Array<s32>	m_ClientList;
+	};
+
 public:
 	static s32 AddVup(const VMCommand::ParamList& _paramList);
 	static s32 UpdateVup(const VMCommand::ParamList& _paramList);
@@ -59,11 +87,24 @@ public:
 	friend class MyCanvas;
 
 private:
-	 VUPMap						m_poVupMap;
-	 Socket*					m_pRecvSocket;
-	 Socket*					m_pSendSocket;
-	 Thread*					m_pRecvThread;
-	 MemPool<UDP_PACKWrapper>*	m_pUDPPackBuffer;
+	Bool _InitParameter();
+	void _HandleUdpPack();
+	void _UpdateRDVPoint();
+
+private:
+	VUPMap						m_poVupMap;
+	Socket*						m_pRecvSocket;
+	Socket*						m_pSendSocket;
+	Thread*						m_pRecvThread;
+	MemPool<UDP_PACKWrapper>*	m_pUDPPackBuffer;
+
+	RDVPointList				m_poRDVList;
+	RDVPointRunningInfo			m_RDVRunningInfo;
+
+	u16							m_uiServerPort;
+	u16							m_uiClientStartPort;
+	u16							m_uiClientEndPort;
+	std::string					m_strBroadCastAddress;
 };
 
 #endif

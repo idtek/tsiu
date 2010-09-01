@@ -18,7 +18,7 @@ Bool VMCommandCenter::RegisterCommand(StringPtr _strCmdName, VMCommand::VMComman
 	m_CommandMap.insert(std::pair<std::string, VMCommand*>(_strCmdName, newCommand));
 	return true;
 }
-
+//#pragma optimize("", off)
 Bool VMCommandCenter::ExecuteFromString(StringPtr _cmd)
 {
 	Char* token = NULL;

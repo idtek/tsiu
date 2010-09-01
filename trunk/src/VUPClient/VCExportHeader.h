@@ -28,6 +28,8 @@ extern "C"
 		unsigned char	m_AssociateType;
 	};
 
+	typedef void (*UdpPackHandler)(const UDP_PACK& _pInPack);
+
 	class DLL_EXPORT VUPClientAdapter
 	{
 		typedef std::map<std::string,	WatchedValueBase*>					WatchedNameValueMap;
@@ -45,7 +47,12 @@ extern "C"
 		bool RegisterMe();
 		bool Tick();
 		
+		bool HasConnectToManager() const{
+			return m_HasConnectedToManager;
+		}
+		void RegisterUDPPackHandler(unsigned char _uiType, UdpPackHandler _pPackHandler);
 		void Watch(unsigned char _uiKey, const char* _zName, const int* _watchedvalue);
+		void ReachRDVPoint(unsigned short _uiRDVPointID, unsigned short _uiExpected, unsigned short _uiTimeout);
 
 	private:
 		void _HandleRecvPack();
@@ -64,6 +71,9 @@ extern "C"
 
 		WatchedValueMap m_WatchValues;
 		Pack_Func		m_PackFunctions[EPT_Num];
+		UdpPackHandler	m_UDPPackHandler[EPT_Num];
+
+		bool			m_HasConnectedToManager;
 	};
 }
 template<typename T>
