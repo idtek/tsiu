@@ -1,0 +1,118 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>UDT Reference</title>
+</head>
+
+<body>
+
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="AutoNumber1" bgcolor="#99CCFF" bordercolor="#99CCFF">
+  <tr>
+    <td width="100%"><font face="Verdana" size="2"><i>&nbsp;UDT Reference: UDT Functions</i></font></td>
+  </tr>
+</table>
+<h1><font size="4" face="Verdana">connect</font></h1>
+<p><font face="Verdana" size="2">The <b>connect</b> method connects to a server UDT entity and constructs a UDT connection.</font></p>
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="AutoNumber2" bgcolor="#C0C0C0" bordercolor="#C0C0C0">
+  <tr>
+    <td width="100%">
+    <p style="margin-top: 0; margin-bottom: 0">
+    <font face="Courier New" size="1">int connect(<br>
+&nbsp; UDTSOCKET <font color="#FFFFFF"> <a class="synParam" onclick="showTip(this)">u</a></font>,</font><p style="margin-top: 0; margin-bottom: 0">
+    <font face="Courier New" size="1">&nbsp; const struct sockaddr *<font color="#FFFFFF"><a class="synParam" onclick="showTip(this)">name</a></font>,</font><p style="margin-top: 0; margin-bottom: 0">
+    <font face="Courier New" size="1">&nbsp; int <font color="#FFFFFF"> <a class="synParam" onclick="showTip(this)">namelen</a></font><br>
+	);</font></td>
+  </tr>
+</table>
+<h4><font face="Verdana" size="2">Parameters</font></h4>
+<dl>
+	<dt><font face="Verdana"><i><font size="2">u</font></i></font></dt>
+	<dd><font face="Verdana" size="2">[in] Descriptor identifying an unconnected 
+	socket. </font></dd>
+	<dt><font face="Verdana"><i><font size="2">name</font></i></font></dt>
+	<dd><font face="Verdana" size="2">[in] Name of the socket to which the 
+	connection should be established. </font></dd>
+	<dt><font face="Verdana"><i><font size="2">namelen</font></i></font></dt>
+	<dd><font face="Verdana" size="2">[in] Length of the name. </font></dd>
+</dl>
+<h4><font face="Verdana" size="2">Return Values</font></h4>
+<p><font face="Verdana" size="2">On success, 0 is returned. Otherwise, UDT::ERROR 
+is returned and the specific error information can be retrieved using
+<a href="error.htm">getlasterror</a>.</font></p>
+  <table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" id="table1" bordercolordark="#C0C0C0" bordercolorlight="#C0C0C0" width="100%">
+    <tr>
+      <th align="center" bgcolor="#C0C0C0" width="133">
+		<font face="Verdana" size="2">Error Code</font></th>
+      <th align="center" bgcolor="#C0C0C0" width="812"><b>
+      <font face="Verdana" size="2">Comment</font></b></th>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		1001</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		server does not exist.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		1002</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		the connection request is rejected by the server.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">1004</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">connection
+      request was aborted due to security reasons.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+        5002</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		the socket is not allowed to do a connect call: it is either in 
+		listening state or has been already connected.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		5004</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		<i>u</i> 
+		is an invalid UDT socket.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+        5008</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">The
+      rendezvous set up processing is enabled; bind should be called before
+      connect.</font></td>
+    </tr>
+    </table>
+<H4><font face="Verdana" size="2">Description</font></H4>
+<P><font face="Verdana" size="2">The 
+<A><b>connect</b></A> method tries to connect to the UDT server at <i>name</i>. 
+Since UDT is connection-oriented, the connection set up process will need at 
+least 1 round trip time to finish.</font></P>
+<P><font face="Verdana" size="2">The blocking manner does not affect the <b>connect</b> 
+call. The <b>connect</b> process is always blocked until the connection is set up or 
+rejected.</font></P>
+<p></p>
+<H4><font face="Verdana" size="2">See Also</font></H4>
+<P>
+<b><font face="Verdana" size="2"><a href="bind.htm">bind</a></font></b><font face="Verdana" size="2"><b>,
+<a href="listen.htm">listen</a></b></font></P>
+
+</body>
+
+</html>

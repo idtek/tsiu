@@ -63,6 +63,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VUPClientLoader", "VUPClien
 		{519EB62C-94A5-49A9-B331-DD4017C41617} = {519EB62C-94A5-49A9-B331-DD4017C41617}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UDT", "Make\UDT.vcproj", "{1941C513-8DD7-497C-88AE-858BB84885D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug NoDX|Win32 = Debug NoDX|Win32
@@ -143,6 +145,14 @@ Global
 		{FCB77295-9274-4D61-9667-8813AF6E0F11}.Release NoDX|Win32.Build.0 = Release|Win32
 		{FCB77295-9274-4D61-9667-8813AF6E0F11}.Release|Win32.ActiveCfg = Release|Win32
 		{FCB77295-9274-4D61-9667-8813AF6E0F11}.Release|Win32.Build.0 = Release|Win32
+		{1941C513-8DD7-497C-88AE-858BB84885D6}.Debug NoDX|Win32.ActiveCfg = Debug|Win32
+		{1941C513-8DD7-497C-88AE-858BB84885D6}.Debug NoDX|Win32.Build.0 = Debug|Win32
+		{1941C513-8DD7-497C-88AE-858BB84885D6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1941C513-8DD7-497C-88AE-858BB84885D6}.Debug|Win32.Build.0 = Debug|Win32
+		{1941C513-8DD7-497C-88AE-858BB84885D6}.Release NoDX|Win32.ActiveCfg = Release|Win32
+		{1941C513-8DD7-497C-88AE-858BB84885D6}.Release NoDX|Win32.Build.0 = Release|Win32
+		{1941C513-8DD7-497C-88AE-858BB84885D6}.Release|Win32.ActiveCfg = Release|Win32
+		{1941C513-8DD7-497C-88AE-858BB84885D6}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

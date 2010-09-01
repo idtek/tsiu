@@ -1,0 +1,72 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>UDT Reference</title>
+</head>
+
+<body>
+
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="table2" bgcolor="#99CCFF" bordercolor="#99CCFF">
+  <tr>
+    <td width="100%"><font face="Verdana" size="2"><i>&nbsp;UDT </i></font><i>
+	<font face="Verdana" size="2">Tutorial</font></i></td>
+  </tr>
+</table>
+<h1><font face="Verdana" size="4">Messaging with partial reliability</font></h1>
+<p><font face="Verdana" size="2">UDT3 added new functionalities of data 
+messaging with partial reliability. Previously in UDT2, data is regarded as 
+streams; there is no concept of message. The streaming functionality is still 
+kept in UDT3, but in UDT3, you have the choice to keep the message boundaries. 
+Furthermore, you can specify if a particular message should be deliver in order 
+or how long it should be kept in the sender buffer (time-to-live, or TTL).</font></p>
+<p><font face="Verdana" size="2">In UDT3, when a socket is created using 
+SOCK_STREAM mode, streaming mode is used; when a socket is created using 
+SOCK_DGRAM, messaging mode is used. In messaging node, <a href="sendmsg.htm">
+sendmsg</a> and <a href="recvmsg.htm">recvmsg</a> are used to send and receive a 
+message, respectively.</font></p>
+<p><font face="Verdana" size="2">For example:</font></p>
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="table3" bgcolor="#C0C0C0" bordercolor="#C0C0C0">
+  <tr>
+    <td width="100%">
+    <p style="margin-top: 0; margin-bottom: 0">
+	<font face="Courier New" size="1">UDTSOCKET u = UDT::socket(AF_INET, 
+	SOCK_DGRAM, 0);</font></p>
+	<p style="margin-top: 0; margin-bottom: 0">
+	&nbsp;</p>
+	<p style="margin-top: 0; margin-bottom: 0">
+	<font face="Courier New" size="1">char data[1024];</font></p>
+	<p style="margin-top: 0; margin-bottom: 0">
+	<font face="Courier New" size="1">int size = 1024;</font></p>
+	<p style="margin-top: 0; margin-bottom: 0">
+	&nbsp;</p>
+	<p style="margin-top: 0; margin-bottom: 0">
+	<font face="Courier New" size="1">int ssize = UDT::sendmsg(client, data, 
+	size, -1, false);<br>
+&nbsp;</font></p>
+	<p style="margin-top: 0; margin-bottom: 0">
+	<font face="Courier New" size="1">int rsize = UDT::recvmsg(u, data, size);</font></p>
+	</td>
+  </tr>
+</table>
+<p><font face="Verdana" size="2"><a href="sendmsg.htm">sendmsg</a> can specify 
+for each single message a TTL value. A negative value means infinite TTL, or the 
+message must be delivered. If a positive value is specified but the message has 
+not be delivered in that time period, the message will de discarded. A boolean 
+flag can also be used to specify if the message should be delivered in order, 
+which means the message cannot be received by the peer side unless all the 
+messages prior to it have been either received or discarded.</font></p>
+<p><font face="Verdana" size="2">Both <a href="sendmsg.htm">sendmsg</a> and
+<a href="recvmsg.htm">recvmsg</a> can be used in either blocking mode or 
+non-blocking mode. However, overlapped IO does not applied to these two methods.</font></p>
+<p><b><font face="Verdana" size="2">Note:</font></b></p>
+<p><font face="Verdana" size="2">While messaging API meets the requirements for 
+certain applications, it takes more overhead to provide these new 
+functionalities. Therefore, it is possible to observe a lower performance when 
+using SOCK_DGRAM than when using SOCK_STREAM.</font></p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>

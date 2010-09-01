@@ -1,0 +1,119 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>UDT Reference</title>
+</head>
+
+<body>
+
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="table2" bgcolor="#99CCFF" bordercolor="#99CCFF">
+  <tr>
+    <td width="100%"><font face="Verdana" size="2"><i>&nbsp;UDT Reference: UDT 
+	Functions</i></font></td>
+  </tr>
+</table>
+<h1 style="margin-bottom: 0"><font face="Verdana" size="4">sendfile</font></h1>
+<p><font face="Verdana" size="2">The <b>sendfile </b>method sends out a file 
+stream.</font></p>
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="table3" bgcolor="#C0C0C0" bordercolor="#C0C0C0">
+  <tr>
+    <td width="100%">
+    <p style="margin-top: 0; margin-bottom: 0"><font size="1" face="Courier New">
+    __int64 sendfile(</font></p>
+	<p style="margin-top: 0; margin-bottom: 0">
+	<font face="Courier New" size="1">&nbsp;&nbsp; UDTSOCKET u,<br>
+&nbsp;&nbsp; ifstream&amp; <font color="#FFFFFF">ifs</font>,</font></p>
+    <p style="margin-top: 0; margin-bottom: 0">
+    <font face="Courier New" size="1">&nbsp;&nbsp; const __int64&amp;
+    <font color="#FFFFFF">offset</font>,</font></p>
+    <p style="margin-top: 0; margin-bottom: 0">
+    <font face="Courier New" size="1">&nbsp;&nbsp; const __int64&amp;
+    <font color="#FFFFFF">size,</font></font></p>
+	<p style="margin-top: 0; margin-bottom: 0">
+    <font face="Courier New" size="1">&nbsp;&nbsp; const int&amp; 
+	<font color="#FFFFFF">block</font> = 7340000<br>
+    );</font></p>
+    </td>
+  </tr>
+</table>
+<h4><font face="Verdana" size="2">Parameters</font></h4>
+<dl>
+	<dt><font face="Verdana"><i><font size="2">u</font></i><font size="2">
+	</font></font> </dt>
+	<dd><font face="Verdana" size="2">[in] Handle to a connected socket.</font></dd>
+	<dt><font face="Verdana"><i><font size="2">ifs</font></i><font size="2">
+	</font></font> </dt>
+	<dd><font face="Verdana" size="2">[in] ifstream descriptor of the file to 
+	transferred.</font></dd>
+	<dt><i><font size="2" face="Verdana">offset</font></i></dt>
+	<dd><font size="2" face="Verdana">[in] the position from where file is read 
+	and sent.</font></dd>
+	<dt><i><font size="2" face="Verdana">size</font></i></dt>
+	<dd><font size="2" face="Verdana">[in] the total size to be transferred.</font></dd>
+	<dt><i><font size="2" face="Verdana">block</font></i></dt>
+	<dd><font size="2" face="Verdana">[in] Optional. data block size for each reading.</font></dd>
+</dl>
+<h4><font face="Verdana" size="2">Return Values</font></h4>
+<p><font face="Verdana" size="2">On success, the actual size of data sent is 
+returned. Otherwise, UDT::ERROR is returned and the specific error information 
+can be retrieved using <a href="error.htm">getlasterror</a>.</font></p>
+  <table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" id="table4" bordercolordark="#C0C0C0" bordercolorlight="#C0C0C0" width="100%">
+    <tr>
+      <th align="center" bgcolor="#C0C0C0" width="133">
+		<font face="Verdana" size="2">Error Code</font></th>
+      <th align="center" bgcolor="#C0C0C0" width="812"><b>
+      <font face="Verdana" size="2">Comment</font></b></th>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		2000</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		connection is broken before the IO completes.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		5000</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		file system error.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		5004</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">u 
+		is an invalid UDT socket.</font></td>
+    </tr>
+    <tr>
+      <td width="133">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		5010</font></td>
+      <td width="812">
+      <p style="margin-top: 1; margin-bottom: 1"><font face="Verdana" size="1">
+		cannot use <i>sendfile</i> in SOCK_DGRAM mode.</font></td>
+    </tr>
+    </table>
+<h4><font face="Verdana" size="2">Description</font></h4>
+<P><font face="Verdana" size="2">The <b>sendfile </b>method sends data from a 
+file stream. To send a whole file, simply set the <i>offset</i> to 0, and the<i> 
+size</i> to the actual file size.</font></P>
+<P><font face="Verdana" size="2">The data sending and receiving are orthogonal, 
+i.e., the peer side can use either <a href="recv.htm">recv</a> or
+<a href="recvfile.htm">recvfile</a> to receive data, no matter <a href="send.htm">
+send</a> or <b>sendfile</b> is used at the other side.</font></P>
+<P><font face="Verdana" size="2"><b>sendfile</b> is always in blocking mode. The
+<a href="opt.htm">UDT_SNDSYN</a> option only affects <a href="send.htm">send</a>.
+In addition, <a href="opt.htm">UDT_SNDTIMEO</a> does not apply to this method.</font></P>
+<H4><font face="Verdana" size="2">See Also</font></H4>
+<P><font face="Verdana" size="2"><b>
+<a href="recv.htm">recv</a>, <a href="recvfile.htm">recvfile</a></b></font></P>
+
+</body>
+
+</html>

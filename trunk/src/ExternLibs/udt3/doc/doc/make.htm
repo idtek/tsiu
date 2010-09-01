@@ -1,0 +1,74 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>UDT Reference</title>
+</head>
+
+<body>
+
+<h1><font face="Verdana" size="4">Installation Guide</font></h1>
+<font SIZE="2">
+<p><font face="Verdana">The UDT library is distributed with source code, 
+example applications, simulation scripts, and documentation. Currently the 
+source code can be compiled on Linux, BSD, Solaris, and Windows system.</font></p>
+<p><font face="Verdana">Here is the content of the distribution:</font></p>
+<p style="margin-top: 0; margin-bottom: 0"><font face="Verdana">
+<font color="#000080">./src</font>: UDT source code</font></p>
+<p style="margin-top: 0; margin-bottom: 0"><font face="Verdana">
+<font color="#000080">./app</font>: Example applications</font></p>
+<p style="margin-top: 0; margin-bottom: 0"><font face="Verdana">
+<font color="#000080">./sim</font>: NS-2 simulation scripts</font></p>
+<p style="margin-top: 0; margin-bottom: 0"><font face="Verdana">
+<font color="#000080">./doc</font>: UDT documentation</font></p>
+<p style="margin-top: 0; margin-bottom: 0"><font face="Verdana">
+<font color="#000080">./win</font>: Windows version of UDT</font></p>
+<p><font face="Verdana">The library is in the original source code format 
+without any installation tools, so installation is simply a <font color="#FF0000">make</font> command. To 
+make the C++ source code on different platform, the user needs to explicitly tell
+<font color="#FF0000">make</font> 
+the current operating system and hardware architecture with the &quot;-e&quot; option 
+(except for UNIX and Windows).</font></p>
+</font>
+<p style="margin-top: 0; margin-bottom: 0"><font face="Verdana" size="2">The available operating system options are: 
+LINUX and BSD.</font></p>
+<p style="margin-top: 0; margin-bottom: 0"><font face="Verdana" size="2">The available options for hardware architecture 
+are: IA32, IA64, POWERPC, and AMD64.</font></p>
+<p><font face="Verdana" size="2">The command is in the format:</font></p>
+<p><font face="Verdana" size="2" color="#FF0000">make -e os=XXX arch=YYY</font></p>
+<p><font face="Verdana" size="2">where XXX and YYY are one of the options above. 
+Note that it is case sensitive. There is a default value for Linux on the IA32 
+architecture, so if UDT is compiled on it, simply use
+<font color="#FF0000">make</font>.</font></p>
+<p style="margin-top: 0; margin-bottom: 0"><font face="Verdana" size="2">On 
+Windows, use the Visual Studio .Net project files at ./win directory.</font></p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;</p>
+<p style="margin-top: 0; margin-bottom: 0"><font face="Verdana" size="2">After a successful make, you can begin to use the UDT 
+library. The (only) header file <i><font color="#808000">udt.h </font></i>
+and the library <i><font color="#808000">libudt.a</font></i> (depending on the 
+target system, <font color="#808000"><i>libudt.so</i></font>,
+<font color="#808000"><i>libudt.dylib</i></font>, and <font color="#808000"><i>
+udt.dll</i></font> may be available) are located in <font color="#000080">./src</font> directory.</font></p>
+
+<p><font face="Verdana" size="2">Proper environment configuration should be set 
+up before using UDT library. For example, if using <i><font color="#808000">libudt.so</font></i>, 
+the library path environment variable must be updated as:</font></p>
+
+<p><font face="Verdana" size="2" color="#FF0000">export LD_LIBRARY_PATH=&lt;location 
+of libudt.so&gt;:$LD_LIBRARY_PATH</font></p>
+
+<p><b><font face="Verdana" size="2"><a name="DTRACE"></a>Note:</font></b></p>
+<p><font face="Verdana" size="2">1. By default, UDT uses the non-busy-waiting 
+data sending in order to reduce CPU usage. You may turn off the -DNO_BUSY_WAITING 
+option in ./src/Makefile, which may lead to better performance.</font></p>
+<p><font face="Verdana" size="2">2. If you need to configure congestion control
+algorithms, please uncomment the -DCUSTOM_CC compile option in ./src/Makefile.
+When this option is enabled, -DNO_BUSY_WAITIING is always disabled.</font></p>
+<p><font face="Verdana" size="2">3. UDT has been compiled on UNIX 
+systems. However, no thorough testing has been done on UNIX. Please contact the 
+developer directly for more information.</font></p>
+
+</body>
+
+</html>

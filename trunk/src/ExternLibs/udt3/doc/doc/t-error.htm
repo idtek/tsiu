@@ -1,0 +1,72 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>UDT Reference</title>
+</head>
+
+<body>
+
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="table1" bgcolor="#99CCFF" bordercolor="#99CCFF">
+  <tr>
+    <td width="100%"><font face="Verdana" size="2"><i>&nbsp;UDT </i></font><i>
+	<font face="Verdana" size="2">Tutorial</font></i></td>
+  </tr>
+</table>
+<h1><font face="Verdana" size="4">Error Handling</font></h1>
+<p><font face="Verdana" size="2">All UDT API will return an error upon a failed 
+operation. Particularly, UDT defines <b>UDT::INVALID_SOCK</b> and <b>UDT::ERROR</b> as error 
+returned values. Application should check the return value against these two 
+constants (several routine return <b>false</b> as error value).</font></p>
+<p><font face="Verdana" size="2">On error, <a href="error.htm">getlasterror</a> can be used to retrieve 
+the error information. In fact, the function returns the latest error occurred 
+in the thread where the function is called. <a href="error.htm">getlasterror</a> returns a
+<a href="structure.htm#UDTERROR">ERRORINFO</a> 
+structure, it contains both the error code and special text error message. Two 
+helper functions of <u><b>getErrorCode</b></u> and <u><b>getErrorMessage</b></u> can be used to read these 
+information.</font></p>
+<h4><font face="Verdana" size="2">Examples</font></h4>
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="table2" bgcolor="#C0C0C0" bordercolor="#C0C0C0">
+  <tr>
+    <td width="100%">
+    <p style="margin-top: 0; margin-bottom: 0">
+    <font face="Courier New" size="1">sockaddr_in my_addr;<br>
+	my_addr.sin_family = AF_INET;<br>
+	my_addr.sin_port = htons(21); //invalid port number<br>
+	my_addr.sin_addr.s_addr = INADDR_ANY;<br>
+	memset(&amp;(my_addr.sin_zero), '\0', 8);<br>
+&nbsp;</font><p style="margin-top: 0; margin-bottom: 0">
+    <font face="Courier New" size="1">UDTSOCKET serv = UDT::socket(AF_INET, 
+	SOCK_STREAM, 0);<br>
+	if (UDT::ERROR == UDT::bind(serv, (sockaddr*)&amp;my_addr, sizeof(my_addr)))<br>
+	{<br>
+&nbsp;&nbsp; cout &lt;&lt; &quot;bind: &quot; &lt;&lt; UDT::getlasterror().getErrorMessage();</font><p style="margin-top: 0; margin-bottom: 0">
+    &nbsp;<p style="margin-top: 0; margin-bottom: 0">
+    <font face="Courier New" size="1">&nbsp;&nbsp; // further action may depends 
+	on UDT::getlasterror().getErrorCode().</font><p style="margin-top: 0; margin-bottom: 0">
+    <font face="Courier New" size="1">&nbsp;&nbsp; // system level error can be 
+	accessed through &quot;errno&quot;</font><p style="margin-top: 0; margin-bottom: 0">
+    <font face="Courier New" size="1"><br>
+&nbsp;&nbsp; return 0;<br>
+	}</font></td>
+  </tr>
+</table>
+<p><font face="Verdana" size="2">In the example above, the output will be:</font></p>
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="table3" bgcolor="#C0C0C0" bordercolor="#C0C0C0">
+  <tr>
+    <td width="100%">
+    <font face="Verdana" size="1">error message: Couldn't set up network 
+    connection: Permission denied.</font></td>
+  </tr>
+</table>
+<p><font face="Verdana" size="2">The UDT error code only reflects the operation 
+error of the UDT socket level. Applications can still read the system level error (e.g.,
+<u>errno</u> in Linux, <u>GetLastError</u> in Windows) to read more specific error 
+information. However, the error message obtained by <u>getErrorMessage</u> contains 
+information of both the UDT level error and 
+the system level error.</font></p>
+
+</body>
+
+</html>
