@@ -1,0 +1,6 @@
+<config>
+	<serverport>51001</serverport>
+	<clientstartport>50000</clientstartport>
+	<clientendport>50050</clientendport>
+	<broadcastip>10.255.255.255</broadcastip>
+</config>

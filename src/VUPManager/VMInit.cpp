@@ -46,14 +46,16 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY,0,0,0,0, 2,2,2,2);
 	table->setBackColor(FXRGB(255,255,255));
 	table->setVisibleRows(20);
-	table->setVisibleColumns(7);
-	table->setTableSize(0, 7);
+	table->setVisibleColumns(5);
+	table->setTableSize(0, 5);
 	table->setCellColor(0,0,FXRGB(255,240,240));
 	table->setCellColor(1,0,FXRGB(240,255,240));
 	table->setCellColor(0,1,FXRGB(255,240,240));
 	table->setCellColor(1,1,FXRGB(240,255,240));
-	table->setColumnWidth(0, 155);
-	table->setColumnWidth(1, 155);
+	for(s32 i = 0; i < 5; ++i)
+	{
+		table->setColumnWidth(i, 120);
+	}
 	table->setRowHeaderWidth(0);
 	table->setColumnText(0, "ID");
 	table->setColumnText(1, "Status");

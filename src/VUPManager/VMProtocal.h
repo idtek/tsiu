@@ -7,7 +7,9 @@ enum
 	EPT_C2M_ClientRegister = 0,
 	EPT_C2M_ReportClientRunningStatus,
 	EPT_C2M_ReportClientTesingPhase,
+	EPT_C2M_ReachRDVPoint,
 
+	EPT_M2C_ClientRegisterACK,
 	EPT_M2C_StartTesting,
 	EPT_M2C_KillClient,
 	EPT_M2C_Refresh,
@@ -84,6 +86,15 @@ struct UDP_PACK
 			int				m_uiPassPort;
 			unsigned char	m_uiPhase;
 		}m_ReportClientTesingPhaseParam;
+		struct{
+			int				m_uiPassPort;
+			unsigned short	m_uiRDVPointID;
+			unsigned short	m_uiExpected;
+			unsigned short	m_uiTimeout;
+		}m_ReachRDVPointParam;
+		struct{
+			int				m_uiBurstTime;
+		}m_StartTestingParam;
 	}m_unValue;
 };
 
