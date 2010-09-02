@@ -23,7 +23,10 @@ int main(int argc, char* argv[])
 	GetLibSettings()->SetCreator(new T_Creator<DefaultFile>,			E_CreatorType_File);
 #endif
 	GetLibSettings()->DefineMacro(E_LS_Has_GUI);
+
+#ifndef USE_UDT_LIB
 	GetLibSettings()->DefineMacro(E_LS_Has_Network);
+#endif
 
 	g_poEngine = new GameEngine(800, 600, "VUP Manager", false);
 

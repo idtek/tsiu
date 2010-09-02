@@ -58,6 +58,8 @@ extern "C"
 		void _HandleRecvPack();
 		void _HandleWatchedValue();
 
+		void _InternalSend(UDP_PACK* _pOutPack, int _iPackLen);
+
 		//PACK func
 		void _PACK_ReportClientRunningStatus(UDP_PACK* outPack, WatchedNameValueMap& nameValue);
 		void _PACK_ReportClientTesingPhase(UDP_PACK* outPack, WatchedNameValueMap& nameValue);
