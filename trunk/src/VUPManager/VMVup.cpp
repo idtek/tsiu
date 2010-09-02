@@ -45,6 +45,7 @@ VMVup::VMVup(s32 _id, const Char* _ipAddr, u16 _port)
 	, m_uiPort(_port)
 	, m_uiCurrentStatus(EVupStatus_Invalid)
 	, m_uiCurrentTestPhase(ETestPhase_INVALID)
+	, m_iGroup(-1)
 {
 }
 

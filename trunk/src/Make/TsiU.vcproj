@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\ExternLibs\lua-5.1.3\src&quot;;..\TLibMain;..\ExternLibs\fox\include"
+				AdditionalIncludeDirectories="&quot;..\ExternLibs\lua-5.1.3\src&quot;;..\TLibMain;..\ExternLibs\fox\include;..\ExternLibs\udt3\src"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;TLIB_DEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;UNICODE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -110,7 +110,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;..\ExternLibs\lua-5.1.3\src&quot;;..\TLibMain;..\ExternLibs\fox\include"
+				AdditionalIncludeDirectories="&quot;..\ExternLibs\lua-5.1.3\src&quot;;..\TLibMain;..\ExternLibs\fox\include;..\ExternLibs\udt3\src"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
@@ -177,7 +177,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\ExternLibs\lua-5.1.3\src&quot;;..\TLibMain;..\ExternLibs\fox\include"
+				AdditionalIncludeDirectories="&quot;..\ExternLibs\lua-5.1.3\src&quot;;..\TLibMain;..\ExternLibs\fox\include;..\ExternLibs\udt3\src"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;TLIB_DEBUG;TLIB_NOWINDX;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;UNICODE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -245,7 +245,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;..\ExternLibs\lua-5.1.3\src&quot;;..\TLibMain;..\ExternLibs\fox\include"
+				AdditionalIncludeDirectories="&quot;..\ExternLibs\lua-5.1.3\src&quot;;..\TLibMain;..\ExternLibs\fox\include;..\ExternLibs\udt3\src"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;TLIB_NOWINDX;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
@@ -691,6 +691,10 @@
 			<Filter
 				Name="src"
 				>
+				<File
+					RelativePath="..\TLibMain\TNetwork_UDTSocket.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="inc"
@@ -701,6 +705,10 @@
 				</File>
 				<File
 					RelativePath="..\tlibmain\TNetwork_Socket.h"
+					>
+				</File>
+				<File
+					RelativePath="..\TLibMain\TNetwork_UDTSocket.h"
 					>
 				</File>
 			</Filter>

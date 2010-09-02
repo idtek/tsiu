@@ -6,6 +6,7 @@
 #include "TEngine_Private.h"
 #include "TEngine_RenderModule.h"
 #include "TCore_LibSettings.h"
+#include "TRender_Light.h"
 
 namespace TsiU
 {

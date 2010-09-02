@@ -12,7 +12,7 @@ struct UDP_PACKWrapper{
 	u16			m_SrcPort;
 };
 
-
+#ifndef USE_UDT_LIB
 class RecvUDPRunner : public IThreadRunner
 {
 public:
@@ -25,6 +25,13 @@ private:
 	Socket*						m_pRecvSocket;
 	Bool						m_bRequestStop;
 };
+#else
+class ListeningRunner : public IThreadRunner
+{
+public:
+	ListeningRunner
+};
+#endif
 
 class VMVupManager : public Object
 {
@@ -50,6 +57,8 @@ class VMVupManager : public Object
 			m_uiCurrentRunningID = (RDVPointID)-1;
 			m_fStartTime = 0.f;
 			m_ClientList.Clear();
+			m_CurrentGoup = 0;
+			m_CurrentNumberOfVUPInGroup = 0;
 		}
 		Bool IsValid() const{
 			return m_bHasValidValue;
@@ -58,6 +67,15 @@ class VMVupManager : public Object
 		Bool		m_bHasValidValue;
 		f32			m_fStartTime;
 		Array<s32>	m_ClientList;
+		s32			m_CurrentGoup;
+		s32			m_CurrentNumberOfVUPInGroup;
+	};
+
+	struct ManagerParameter{
+		s32			m_iIntervalOfEachGroup;
+		s32			m_iDelayOfStartTime;
+		s32			m_iGroupNum;
+		s32			m_iVUPNumInEachGroup;
 	};
 
 public:
@@ -67,6 +85,7 @@ public:
 	static s32 StartTesting(const VMCommand::ParamList& _paramList);
 	static s32 Refresh(const VMCommand::ParamList& _paramList);
 	static s32 KillClient(const VMCommand::ParamList& _paramList);
+	static s32 SetParameter(const VMCommand::ParamList& _paramList);
 
 public:
 	VMVupManager();
@@ -84,6 +103,8 @@ public:
 	void			Refresh();
 	void			KillClient(s32 _id);
 
+	void			SetParameter(StringPtr _pOption, const VMCommandParamHolder& _param);
+
 	friend class MyCanvas;
 
 private:
@@ -93,8 +114,14 @@ private:
 
 private:
 	VUPMap						m_poVupMap;
+
+#ifndef USE_UDT_LIB
 	Socket*						m_pRecvSocket;
 	Socket*						m_pSendSocket;
+#else
+	UDTSOCKET					m_pListeningSocket;
+	std::vector<UDTSOCKET>		m_pClientSocket;
+#endif
 	Thread*						m_pRecvThread;
 	MemPool<UDP_PACKWrapper>*	m_pUDPPackBuffer;
 
@@ -105,6 +132,8 @@ private:
 	u16							m_uiClientStartPort;
 	u16							m_uiClientEndPort;
 	std::string					m_strBroadCastAddress;
+
+	ManagerParameter			m_Parameters;
 };
 
 #endif

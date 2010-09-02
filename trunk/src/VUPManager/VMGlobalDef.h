@@ -9,6 +9,8 @@ using namespace TsiU;
 #include "TWin32_Header.h"
 #endif
 
+#define USE_UDT_LIB
+
 //-------------------------------------------------------------------------
 extern Engine*		g_poEngine;
 
