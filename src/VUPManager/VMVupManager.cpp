@@ -36,6 +36,8 @@ void RecvUDPRunner::NotifyQuit()
 {
 	m_bRequestStop = true;
 }
+
+
 //--------------------------------------------------------------------------------------------
 s32 VMVupManager::AddVup(const VMCommand::ParamList& _paramList)
 {
@@ -55,22 +57,26 @@ s32 VMVupManager::AddVup(const VMCommand::ParamList& _paramList)
 
 s32 VMVupManager::UpdateVup(const VMCommand::ParamList& _paramList)
 {
-	s32	iPassport = _paramList[1].ToInt();
+	s32	iPassport = _paramList[0].ToInt();
 	VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
 	VMVup* newVup = pMan->FindVup(iPassport);
 	if(!newVup)
 		return 1;
 
-	const Char* pOption = _paramList[0].ToString();
-	if(!strcmp(pOption , "-rs"))
+	s32 optionCount = (_paramList.Size() - 1) / 2;
+	for(s32 i = 0;  i < optionCount; ++i)
 	{
-		u8	uiStatus = static_cast<u8>(_paramList[2].ToInt());
-		newVup->SetStatus(uiStatus);
-	}
-	else if(!strcmp(pOption , "-tp"))
-	{
-		u8	uiPhase = static_cast<u8>(_paramList[2].ToInt());
-		newVup->SetTestPhase(uiPhase);
+		const Char* pOption = _paramList[1 + i * 2].ToString();
+		if(!strcmp(pOption , "-rs"))
+		{
+			u8	uiStatus = static_cast<u8>(_paramList[2 + i * 2].ToInt());
+			newVup->SetStatus(uiStatus);
+		}
+		else if(!strcmp(pOption , "-tp"))
+		{
+			u8	uiPhase = static_cast<u8>(_paramList[2 + i * 2].ToInt());
+			newVup->SetTestPhase(uiPhase);
+		}
 	}
 	return 0;
 }
@@ -106,6 +112,16 @@ s32 VMVupManager::KillClient(const VMCommand::ParamList& _paramList)
 
 	return 0;
 }
+s32 VMVupManager::SetParameter(const VMCommand::ParamList& _paramList)
+{
+	VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
+	s32 optionCount = _paramList.Size() / 2;
+	for(s32 i = 0;  i < optionCount; ++i)
+	{
+		pMan->SetParameter(_paramList[i * 2 + 0].ToString(), _paramList[i * 2 + 1]);
+	}
+	return 0;
+}
 
 //--------------------------------------------------------------------------------------------
 VMVupManager::VMVupManager()
@@ -114,16 +130,18 @@ VMVupManager::VMVupManager()
 	, m_pSendSocket(NULL)
 	, m_pUDPPackBuffer(NULL)
 {
-	VMCommandCenter::GetPtr()->RegisterCommand("addvup",		VMVupManager::AddVup);
-	VMCommandCenter::GetPtr()->RegisterCommand("updatevup",		VMVupManager::UpdateVup);
-	VMCommandCenter::GetPtr()->RegisterCommand("removevup",		VMVupManager::RemoveVup);
-	VMCommandCenter::GetPtr()->RegisterCommand("starttesting",	VMVupManager::StartTesting);
-	VMCommandCenter::GetPtr()->RegisterCommand("refresh",		VMVupManager::Refresh);
-	VMCommandCenter::GetPtr()->RegisterCommand("kill",			VMVupManager::KillClient);
+	VMCommandCenter::GetPtr()->RegisterCommand("addvup",		VMVupManager::AddVup,		3);
+	VMCommandCenter::GetPtr()->RegisterCommand("updatevup",		VMVupManager::UpdateVup,	3);
+	VMCommandCenter::GetPtr()->RegisterCommand("removevup",		VMVupManager::RemoveVup,	1);
+	VMCommandCenter::GetPtr()->RegisterCommand("starttesting",	VMVupManager::StartTesting, 1);
+	VMCommandCenter::GetPtr()->RegisterCommand("refresh",		VMVupManager::Refresh,		0);
+	VMCommandCenter::GetPtr()->RegisterCommand("kill",			VMVupManager::KillClient,	1);
 
 	VMCommand::ParamList defaultParam;
 	defaultParam.PushBack(VMCommandParamHolder("-1"));
-	VMCommandCenter::GetPtr()->RegisterCommand("killall",		VMVupManager::KillClient, &defaultParam);
+	VMCommandCenter::GetPtr()->RegisterCommand("killall",		VMVupManager::KillClient,	1, &defaultParam);
+
+	VMCommandCenter::GetPtr()->RegisterCommand("setp",			VMVupManager::SetParameter,	2);
 }
 
 VMVupManager::~VMVupManager()
@@ -188,7 +206,7 @@ Bool VMVupManager::RemoveVup(s32 _id)
 
 void VMVupManager::StartTesting(s32 _id)
 {
-	const VMVup* pVup = FindVup(_id);
+	VMVup* pVup = FindVup(_id);
 	if(!pVup)
 		return;
 
@@ -196,7 +214,7 @@ void VMVupManager::StartTesting(s32 _id)
 	__time64_t  thetime;
 	_time64(&thetime);
 	nowtime = _localtime64(&thetime);
-	int nowsecs = nowtime->tm_hour * 3600 + nowtime->tm_min * 60 + nowtime->tm_sec;
+	int nowsecs = nowtime->tm_hour * 3600 + nowtime->tm_min * 60 + nowtime->tm_sec + m_Parameters.m_iDelayOfStartTime + pVup->GetGroup() * m_Parameters.m_iIntervalOfEachGroup;
 
 	UDP_PACK pack;
 	pack.m_uiType = EPT_M2C_StartTesting;
@@ -258,6 +276,25 @@ void VMVupManager::KillClient(s32 _id)
 		RemoveVup(_id);
 	}
 }
+void VMVupManager::SetParameter(StringPtr _pOption, const VMCommandParamHolder& _param)
+{
+	if(!strcmp(_pOption, "-groupnumber") || !strcmp(_pOption, "-gn"))
+	{
+		m_Parameters.m_iGroupNum = _param.ToInt();
+	}
+	else if(!strcmp(_pOption, "-interval") || !strcmp(_pOption, "-i"))
+	{
+		m_Parameters.m_iIntervalOfEachGroup = _param.ToInt();
+	}
+	else if(!strcmp(_pOption, "-delay") || !strcmp(_pOption, "-d"))
+	{
+		m_Parameters.m_iDelayOfStartTime = _param.ToInt();
+	}
+	else if(!strcmp(_pOption, "-vupsnumberingroup") || !strcmp(_pOption, "-vn"))
+	{
+		m_Parameters.m_iVUPNumInEachGroup = _param.ToInt();
+	}
+}
 
 Bool VMVupManager::_InitParameter()
 {
@@ -284,6 +321,14 @@ Bool VMVupManager::_InitParameter()
 	TiXmlElement* broadCastAddress = clientEndPort->NextSiblingElement();
 	m_strBroadCastAddress = broadCastAddress->GetText();
 
+	TiXmlElement* initCommandGroups = broadCastAddress->NextSiblingElement();
+	TiXmlElement* command = initCommandGroups->FirstChildElement();
+	while(command)
+	{
+		VMCommandCenter::GetPtr()->ExecuteFromString(command->GetText());
+		command = command->NextSiblingElement();
+	}
+
 	delete pConfigFile;
 
 	return true;
@@ -294,6 +339,7 @@ void VMVupManager::Create()
 	if(!_InitParameter())
 		return;
 
+#ifndef USE_UDT_LIB
 	//Init network
 	m_pRecvSocket = new WinSocket;
 	s32 iRet = m_pRecvSocket->Create(E_NETWORK_PROTO_UDP, false);
@@ -306,6 +352,10 @@ void VMVupManager::Create()
 	m_pSendSocket = new WinSocket;
 	iRet = m_pSendSocket->Create(E_NETWORK_PROTO_UDP, false);
 	D_CHECK(!iRet);
+#else
+	m_pListeningSocket = UDT::socket(AF_INET, SOCK_DGRAM, 0);
+
+#endif
 	//iRet = m_pSendSocket->SetAddress(NULL, 52346);
 	//D_CHECK(!iRet);
 
@@ -355,6 +405,7 @@ void VMVupManager::_UpdateRDVPoint()
 	}
 }	
 
+//#pragma optimize("", off)
 void VMVupManager::_HandleUdpPack()
 {
 	s32 iSize = m_pUDPPackBuffer->GetSize();
@@ -376,12 +427,9 @@ void VMVupManager::_HandleUdpPack()
 													poPack->m_unValue.m_ClientRegisterParam.m_uiPort);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
 
-					sprintf(cmd, "updatevup -rs %d %d",	poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort,
-														poPack->m_unValue.m_ClientRegisterParam.m_uiStatus);
-					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
-
-					sprintf(cmd, "updatevup -tp %d %d",	poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort,
-														poPack->m_unValue.m_ClientRegisterParam.m_uiTestPhase);
+					sprintf(cmd, "updatevup %d -rs %d -tp %d",	poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort,
+															    poPack->m_unValue.m_ClientRegisterParam.m_uiStatus,
+																poPack->m_unValue.m_ClientRegisterParam.m_uiTestPhase);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
 
 					UDP_PACK pack;
@@ -393,16 +441,16 @@ void VMVupManager::_HandleUdpPack()
 			case EPT_C2M_ReportClientRunningStatus:
 				{
 					Char cmd[VMCommand::kMaxCommandLength];
-					sprintf(cmd, "updatevup -rs %d %d",	poPack->m_unValue.m_ReportClientRunningStatusParam.m_uiPassPort,
-						poPack->m_unValue.m_ReportClientRunningStatusParam.m_uiStatus);
+					sprintf(cmd, "updatevup %d -rs %d",	poPack->m_unValue.m_ReportClientRunningStatusParam.m_uiPassPort,
+														poPack->m_unValue.m_ReportClientRunningStatusParam.m_uiStatus);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
 				}
 				break;
 			case EPT_C2M_ReportClientTesingPhase:
 				{
 					Char cmd[VMCommand::kMaxCommandLength];
-					sprintf(cmd, "updatevup -tp %d %d",	poPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPassPort,
-						poPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPhase);
+					sprintf(cmd, "updatevup %d -tp %d",	poPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPassPort,
+														poPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPhase);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
 				}
 				break;
@@ -433,6 +481,27 @@ void VMVupManager::_HandleUdpPack()
 						m_RDVRunningInfo.m_ClientList.PushBack(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
 
 						D_Output("reach: %d\n", poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
+					}
+					if(m_RDVRunningInfo.m_CurrentNumberOfVUPInGroup + 1 > m_Parameters.m_iVUPNumInEachGroup)
+					{	
+						m_RDVRunningInfo.m_CurrentGoup++;
+						m_RDVRunningInfo.m_CurrentNumberOfVUPInGroup = 1;
+					}
+					else
+					{
+						m_RDVRunningInfo.m_CurrentNumberOfVUPInGroup++;
+					}
+					VMVup* vup = FindVup(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
+					if(vup)
+					{
+						if(m_RDVRunningInfo.m_CurrentGoup < m_Parameters.m_iGroupNum)
+						{
+							vup->SetGroup(m_RDVRunningInfo.m_CurrentGoup);
+						}
+						else
+						{
+							vup->SetGroup(m_Parameters.m_iGroupNum);
+						}
 					}
 				}
 				break;

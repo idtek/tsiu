@@ -129,9 +129,9 @@ namespace TsiU
 		
 		return 0;
 	}
-	s32 WinSocket::Listen()
+	s32 WinSocket::Listen(s32 _iBackLog)
 	{
-		s32 sRet = listen(m_Sock, 5);
+		s32 sRet = listen(m_Sock, _iBackLog);
 		if(sRet == SOCKET_ERROR)
 		{
 			return -1;
@@ -171,13 +171,6 @@ namespace TsiU
 			if(!poSock)
 				return -1;
 			poSock->_AcceptInitFrom(AcceptSock, &AcceptAddr, m_bIsAsync);
-			if(m_bIsAsync)
-			{
-				u32 ulValue = 1;
-				s32 sRet = poSock->IOCtl(E_NETWORK_IOCTRL_NBIO, &ulValue);
-				if(sRet == -1)
-					return -1;
-			}
 		}
 		return 0;
 	}
@@ -325,6 +318,13 @@ namespace TsiU
 		m_TimeOut.tv_sec	= 0;
 		m_TimeOut.tv_usec	= 0;
 
+		if(m_bIsAsync)
+		{
+			u32 ulValue = 1;
+			s32 sRet = IOCtl(E_NETWORK_IOCTRL_NBIO, &ulValue);
+			if(sRet == -1)
+				return -1;
+		}
 		return 0;
 	}
 }

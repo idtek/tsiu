@@ -38,34 +38,33 @@ public:
 
 public:
 	VMVup(s32 _id, const Char* _ipAddr, u16 _port);
-
 	VMVup& operator = (const VMVup& _rhs);
-	s32 GetUniqueID() const{
-		return m_iUniqueID;
+	
+	D_Inline s32		GetUniqueID()			const	{	return m_iUniqueID;				}
+	D_Inline u8			GetCurrentStatus()		const	{	return m_uiCurrentStatus;		}
+	D_Inline u16		GetPort()				const	{	return m_uiPort;				}
+	D_Inline StringPtr	GetIPAddress()			const	{	return m_strIPAddress.c_str();	}
+	D_Inline u8			GetCurrentTestPhase()	const	{	return m_uiCurrentTestPhase;	}
+	D_Inline s32		GetGroup()				const	{	return m_iGroup;				}
+
+	D_Inline void		SetGroup(s32 _group)
+	{	
+		m_iGroup = _group;
 	}
-	u8 GetCurrentStatus() const{
-		return m_uiCurrentStatus;
-	}
-	u16 GetPort() const{
-		return m_uiPort;
-	}
-	const Char* GetIPAddress() const{
-		return m_strIPAddress.c_str();
-	}
-	void SetStatus(u8 _status){
+
+	D_Inline void SetStatus(u8 _status)
+	{
 		if(_status >= EVupStatus_Num)
 			m_uiCurrentStatus = EVupStatus_Invalid;
 		else
 			m_uiCurrentStatus = _status;
 	}
-	void SetTestPhase(u8 _phase){
+	D_Inline void SetTestPhase(u8 _phase)
+	{
 		if(_phase >= ETestPhase_Num)
 			m_uiCurrentTestPhase = ETestPhase_INVALID;
 		else
 			m_uiCurrentTestPhase = _phase;
-	}
-	u8 GetCurrentTestPhase() const {
-		return m_uiCurrentTestPhase;
 	}
 
 private:
@@ -74,6 +73,7 @@ private:
 	u8				m_uiCurrentTestPhase;
 	u16				m_uiPort;
 	std::string		m_strIPAddress;
+	s32				m_iGroup;
 };
 
 #endif

@@ -49,7 +49,7 @@ namespace TsiU
 			m_poMine->Create(E_NETWORK_PROTO_TCP, true);
 			m_poMine->SetAddress(NULL, _ulPort);
 			m_poMine->Bind();
-			m_poMine->Listen();
+			m_poMine->Listen(5);
 
 			m_ulPeerType = E_PeerType_Server;
 		}

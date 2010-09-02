@@ -43,8 +43,9 @@ public:
 	typedef s32 (*VMCommandHandler)(const ParamList& _paramList);
 
 public:
-	VMCommand(VMCommandHandler _pHandler, const ParamList* _defaultParamList)
+	VMCommand(VMCommandHandler _pHandler, s32 _iMinParamCount, const ParamList* _defaultParamList)
 		:m_pHandler(_pHandler)
+		,m_iMinimunParamCount(_iMinParamCount)
 	{
 		if(_defaultParamList)
 			m_DefaultParamList = *_defaultParamList;
@@ -62,6 +63,9 @@ public:
 					_paramList.PushBack(m_DefaultParamList[i]);
 				}
 			}
+			if(m_iMinimunParamCount > 0 && _paramList.Size() < m_iMinimunParamCount)
+				return 1;
+
 			return (*m_pHandler)(_paramList);
 		}
 		return 0;
@@ -69,6 +73,7 @@ public:
 private:
 	VMCommandHandler	m_pHandler;
 	ParamList			m_DefaultParamList;
+	s32					m_iMinimunParamCount;
 };
 
 class VMCommandCenter : public Singleton<VMCommandCenter>
@@ -81,6 +86,7 @@ public:
 
 	Bool RegisterCommand(StringPtr							_strCmdName, 
 						 VMCommand::VMCommandHandler		_pHandler,
+						 s32								_iMinParamCount,
 						 const VMCommand::ParamList*		_defaultParamList = NULL);
 	Bool ExecuteFromString(StringPtr _cmd);
 

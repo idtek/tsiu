@@ -46,13 +46,13 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY,0,0,0,0, 2,2,2,2);
 	table->setBackColor(FXRGB(255,255,255));
 	table->setVisibleRows(20);
-	table->setVisibleColumns(5);
-	table->setTableSize(0, 5);
+	table->setVisibleColumns(6);
+	table->setTableSize(0, 6);
 	table->setCellColor(0,0,FXRGB(255,240,240));
 	table->setCellColor(1,0,FXRGB(240,255,240));
 	table->setCellColor(0,1,FXRGB(255,240,240));
 	table->setCellColor(1,1,FXRGB(240,255,240));
-	for(s32 i = 0; i < 5; ++i)
+	for(s32 i = 0; i < 6; ++i)
 	{
 		table->setColumnWidth(i, 120);
 	}
@@ -62,6 +62,7 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	table->setColumnText(2, "Testing Phase");
 	table->setColumnText(3, "IP");
 	table->setColumnText(4, "Port");
+	table->setColumnText(5, "Group");
 	table->setSelBackColor(FXRGB(128,128,128));
 
 	m_VUPTable = table;
@@ -161,6 +162,10 @@ void MyCanvas::onUpdateList(const Event* _poEvent)
 		sprintf(zValue, "%d", vup.GetPort());
 		m_VUPTable->setItemText(iRow, 4, zValue);
 		m_VUPTable->setItemJustify(iRow, 4, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+		sprintf(zValue, "%d", vup.GetGroup());
+		m_VUPTable->setItemText(iRow, 5, zValue);
+		m_VUPTable->setItemJustify(iRow, 5, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
 		iRow++;
 	}

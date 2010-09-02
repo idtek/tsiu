@@ -3,4 +3,7 @@
 	<clientstartport>50000</clientstartport>
 	<clientendport>50050</clientendport>
 	<broadcastip>10.255.255.255</broadcastip>
+	<commands>
+		<command>setp -groupnumber 3 -vupsnumberingroup 1 -delay 5 -interval 5</command>
+	</commands>
 </config>

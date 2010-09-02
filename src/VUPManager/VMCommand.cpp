@@ -1,7 +1,7 @@
 #include "VMCommand.h"
 
 //-------------------------------------------------------------------------------------
-Bool VMCommandCenter::RegisterCommand(StringPtr _strCmdName, VMCommand::VMCommandHandler _pHandler, const VMCommand::ParamList*	_defaultParamList)
+Bool VMCommandCenter::RegisterCommand(StringPtr _strCmdName, VMCommand::VMCommandHandler _pHandler, s32 _iMinParamCount, const VMCommand::ParamList* _defaultParamList)
 {
 	if(_strCmdName == NULL || !strcmp(_strCmdName, ""))
 	{
@@ -14,7 +14,7 @@ Bool VMCommandCenter::RegisterCommand(StringPtr _strCmdName, VMCommand::VMComman
 		D_Output("[VMCommandCenter::RegisterCommand] duplicate command name\n");
 		return false;
 	}
-	VMCommand* newCommand = new VMCommand(_pHandler, _defaultParamList);
+	VMCommand* newCommand = new VMCommand(_pHandler, _iMinParamCount, _defaultParamList);
 	m_CommandMap.insert(std::pair<std::string, VMCommand*>(_strCmdName, newCommand));
 	return true;
 }

@@ -1,16 +1,15 @@
-#ifndef __TNETWORK_WINSOCKET__
-#define __TNETWORK_WINSOCKET__
+#ifndef __TNETWORK_UDTSOCKET__
+#define __TNETWORK_UDTSOCKET__
 
-
+#include "udt.h"
 #include "TNetwork_Socket.h"
 
 namespace TsiU
 {
-	class WinSocket : public Socket
+	class UDTSocket : public Socket
 	{
 	public:
-		WinSocket();
-
+		UDTSocket();
 		virtual s32 Create(u32 _ulProtoType, Bool _bIsAsync);
 		virtual s32 SetAddress(const Char* _poAddress, u16 _ulPort, Bool _bIsBroadCast = false);
 		virtual s32 Destroy();
@@ -27,24 +26,20 @@ namespace TsiU
 
 		virtual const Char* GetIPAddress();
 		virtual u16			GetPort();
-		
-		virtual Bool bIsValid();
+		virtual Bool		bIsValid();
 
 	private:
-		s32 _AcceptInitFrom(SOCKET _sock, const SOCKADDR_IN* _Addr, Bool _bIsAsync);
+		s32 _AcceptInitFrom(UDTSOCKET _sock, const SOCKADDR_IN* _Addr, Bool _bIsAsync);
 
 	private:
+		UDTSOCKET	m_UDTSock;
 		u32			m_ulProtoType;
 		Bool		m_bIsAsync;
 		TIMEVAL		m_TimeOut;
-	
-		SOCKET		m_Sock;
 		SOCKADDR_IN m_Addr;
-
-		FD_SET		m_fdRead;
-		FD_SET		m_fdWrite;
+		UDT::UDSET		m_fdRead;
+		UDT::UDSET		m_fdWrite;
 	};
 }
-
 
 #endif
