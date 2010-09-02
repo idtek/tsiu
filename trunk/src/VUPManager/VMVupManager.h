@@ -29,7 +29,37 @@ private:
 class ListeningRunner : public IThreadRunner
 {
 public:
-	ListeningRunner
+	ListeningRunner(u16 _uiPort);
+
+	virtual u32		Run();
+	virtual void	NotifyQuit();
+
+public:
+	UDTSOCKET	m_pListeningSocket;
+	u16			m_uiPort;
+};
+
+template <typename T>
+class VMThreadSafeContainer
+{
+public:
+	T& RetrieveContrainer(){
+		if(m_HasRetrievedOnce)
+			return m_Container;
+
+		m_Mutex.Lock();
+		m_HasRetrievedOnce = true;
+		return m_Container;
+	}
+	void ReleaseContrainer(){
+		m_Mutex.UnLock();
+		m_HasRetrievedOnce = false;
+	}
+
+private:
+	T		m_Container;
+	Mutex	m_Mutex;
+	Bool	m_HasRetrievedOnce;
 };
 #endif
 
@@ -105,6 +135,10 @@ public:
 
 	void			SetParameter(StringPtr _pOption, const VMCommandParamHolder& _param);
 
+#ifdef USE_UDT_LIB
+	void			AddClientSocket(UDTSOCKET _pNewSocket);
+#endif
+
 	friend class MyCanvas;
 
 private:
@@ -115,15 +149,15 @@ private:
 private:
 	VUPMap						m_poVupMap;
 
+	Socket*						m_pSendSocket;
+	MemPool<UDP_PACKWrapper>*	m_pUDPPackBuffer;
 #ifndef USE_UDT_LIB
 	Socket*						m_pRecvSocket;
-	Socket*						m_pSendSocket;
-#else
-	UDTSOCKET					m_pListeningSocket;
-	std::vector<UDTSOCKET>		m_pClientSocket;
-#endif
 	Thread*						m_pRecvThread;
-	MemPool<UDP_PACKWrapper>*	m_pUDPPackBuffer;
+#else
+	Thread*		m_ListeningThread;
+	VMThreadSafeContainer<std::vector<UDTSOCKET>>	m_pClientSockets;
+#endif
 
 	RDVPointList				m_poRDVList;
 	RDVPointRunningInfo			m_RDVRunningInfo;

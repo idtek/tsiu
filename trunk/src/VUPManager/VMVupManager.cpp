@@ -4,6 +4,7 @@
 #include <time.h>
 
 //--------------------------------------------------------------------------
+#ifndef USE_UDT_LIB
 RecvUDPRunner::RecvUDPRunner(Socket* _pRecvSock, MemPool<UDP_PACKWrapper>* _pMempool)
 	:m_pRecvSocket(_pRecvSock)
 	,m_pUDPPackBuffer(_pMempool)
@@ -36,7 +37,7 @@ void RecvUDPRunner::NotifyQuit()
 {
 	m_bRequestStop = true;
 }
-
+#endif
 
 //--------------------------------------------------------------------------------------------
 s32 VMVupManager::AddVup(const VMCommand::ParamList& _paramList)
@@ -125,11 +126,18 @@ s32 VMVupManager::SetParameter(const VMCommand::ParamList& _paramList)
 
 //--------------------------------------------------------------------------------------------
 VMVupManager::VMVupManager()
+#ifndef USE_UDT_LIB
 	: m_pRecvThread(NULL)
 	, m_pRecvSocket(NULL)
 	, m_pSendSocket(NULL)
 	, m_pUDPPackBuffer(NULL)
+#endif
 {
+
+#ifdef USE_UDT_LIB
+	UDT::startup();
+#endif
+
 	VMCommandCenter::GetPtr()->RegisterCommand("addvup",		VMVupManager::AddVup,		3);
 	VMCommandCenter::GetPtr()->RegisterCommand("updatevup",		VMVupManager::UpdateVup,	3);
 	VMCommandCenter::GetPtr()->RegisterCommand("removevup",		VMVupManager::RemoveVup,	1);
@@ -146,6 +154,7 @@ VMVupManager::VMVupManager()
 
 VMVupManager::~VMVupManager()
 {
+#ifndef USE_UDT_LIB
 	m_pRecvThread->Stop(1000);
 	D_SafeDelete(m_pRecvThread);
 
@@ -156,6 +165,9 @@ VMVupManager::~VMVupManager()
 	D_SafeDelete(m_pSendSocket);
 
 	D_SafeDelete(m_pUDPPackBuffer);
+#else
+	UDT::cleanup();
+#endif
 }
 
 Bool VMVupManager::AddVup(VMVup* _newVUP)
@@ -337,7 +349,10 @@ Bool VMVupManager::_InitParameter()
 void VMVupManager::Create()
 {
 	if(!_InitParameter())
+	{
+		D_Output("read configuration file failed\n");
 		return;
+	}
 
 #ifndef USE_UDT_LIB
 	//Init network
@@ -352,10 +367,6 @@ void VMVupManager::Create()
 	m_pSendSocket = new WinSocket;
 	iRet = m_pSendSocket->Create(E_NETWORK_PROTO_UDP, false);
 	D_CHECK(!iRet);
-#else
-	m_pListeningSocket = UDT::socket(AF_INET, SOCK_DGRAM, 0);
-
-#endif
 	//iRet = m_pSendSocket->SetAddress(NULL, 52346);
 	//D_CHECK(!iRet);
 
@@ -367,16 +378,20 @@ void VMVupManager::Create()
 	m_pRecvThread = new Thread(new RecvUDPRunner(m_pRecvSocket, m_pUDPPackBuffer));
 	Bool bRet = m_pRecvThread->Start();
 	D_CHECK(bRet);
-
 	Refresh();
+#else
+	m_ListeningThread = new Thread(new ListeningRunner(m_uiServerPort));
+	Bool bRet = m_ListeningThread->Start();
+	D_CHECK(bRet);
+#endif
 }
 void VMVupManager::Tick(f32 _fDeltaTime)
 {
 	//Handle udp pack
-	_HandleUdpPack();
+	//_HandleUdpPack();
 
 	//Check rdv point
-	_UpdateRDVPoint();
+	//_UpdateRDVPoint();
 
 	//Update List
 	Event evt((EventType_t)E_ET_UIUpdateList);
@@ -510,3 +525,61 @@ void VMVupManager::_HandleUdpPack()
 		delete[] poPacArray;
 	}
 }
+#ifdef USE_UDT_LIB
+ListeningRunner::ListeningRunner(u16 _uiPort)
+	:m_uiPort(_uiPort)
+{
+}
+
+u32 ListeningRunner::Run()
+{
+	m_pListeningSocket = UDT::socket(AF_INET, SOCK_DGRAM, 0);
+	if(m_pListeningSocket == UDT::INVALID_SOCK)
+	{
+		D_Output("create m_pListeningSocket failed: %s\n", UDT::getlasterror().getErrorMessage());
+		return 1;
+	}
+	sockaddr_in addrinfo;
+	addrinfo.sin_family = AF_INET;
+	addrinfo.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
+	addrinfo.sin_port = htons(m_uiPort);
+	if(UDT::ERROR == UDT::bind(m_pListeningSocket, (struct sockaddr*)&addrinfo, sizeof(addrinfo)))
+	{
+		D_Output("bind m_pListeningSocket failed: %s\n", UDT::getlasterror().getErrorMessage());
+		return 1;
+	}
+	if(UDT::ERROR == UDT::listen(m_pListeningSocket, 10))
+	{
+		D_Output("listen m_pListeningSocket failed: %s\n", UDT::getlasterror().getErrorMessage());
+		return 1;
+	}
+
+	sockaddr_in clientaddr;
+	int addrlen = sizeof(clientaddr);
+	UDTSOCKET pClientSocket;
+	while (true)
+	{
+		if(UDT::INVALID_SOCK == (pClientSocket = UDT::accept(m_pListeningSocket, (sockaddr*)&clientaddr, &addrlen)))
+		{
+			D_Output("accept m_pListeningSocket failed: %s\n", UDT::getlasterror().getErrorMessage());
+			return 1;
+		}
+		D_Output("get client connection from %s:%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
+		VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
+		pMan->AddClientSocket(pClientSocket);
+	}
+	UDT::close(m_pListeningSocket);
+	return 0;
+}
+void ListeningRunner::NotifyQuit()
+{
+}
+
+void VMVupManager::AddClientSocket(UDTSOCKET _pNewSocket)
+{
+	D_CHECK(_pNewSocket != UDT::ERROR);
+	std::vector<UDTSOCKET>& pClientArray = m_pClientSockets.RetrieveContrainer();
+	pClientArray.push_back(_pNewSocket);
+	m_pClientSockets.ReleaseContrainer();
+}
+#endif

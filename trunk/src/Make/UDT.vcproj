@@ -43,7 +43,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;UDT_EXPORTS;TRACE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				SmallerTypeCheck="true"
+				SmallerTypeCheck="false"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				BrowseInformation="1"

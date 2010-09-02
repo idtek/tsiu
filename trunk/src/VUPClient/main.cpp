@@ -1,6 +1,7 @@
 #include "VCExportHeader.h"
 #include "VCGlobalDef.h"
 #include "tinyxml.h"
+#include "udt.h"
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -20,6 +21,10 @@ namespace{
 	u16					g_uiServerPort	= 51001;
 	u16					g_uiStartPort	= 50000;
 	u16					g_uiEndPort		= 50050;
+
+#ifdef USE_UDT_LIB
+	UDTSOCKET			g_ClientSocket = UDT::INVALID_SOCK;
+#endif
 
 	u16 _GeneratePort(u16 _uiCurrentPort){
 		if(_uiCurrentPort >= g_uiEndPort)
@@ -63,6 +68,7 @@ namespace{
 };
 
 //--------------------------------------------------------------------------------
+#ifndef USE_UDT_LIB
 class RecvUDPRunner : public IThreadRunner
 {
 public:
@@ -105,16 +111,21 @@ void RecvUDPRunner::NotifyQuit()
 {
 	m_bRequestStop = true;
 }
+#endif
 //----------------------------------------------------------------------------------
 VUPClientAdapter::VUPClientAdapter()
 	: m_HasConnectedToManager(false) 
 {
+#ifndef USE_UDT_LIB
 	WSADATA wsaData;
 	s32 sRet = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if(sRet)
 	{
 		D_FatalError("Network init failed\n");
 	}
+#else
+	UDT::startup();
+#endif
 	for(int i = 0; i < EPT_Num; ++i)
 	{
 		m_PackFunctions[i] = NULL;
@@ -123,7 +134,11 @@ VUPClientAdapter::VUPClientAdapter()
 }
 VUPClientAdapter::~VUPClientAdapter()
 {
+#ifndef USE_UDT_LIB
 	WSACleanup();
+#else
+	UDT::cleanup();
+#endif
 }
 bool VUPClientAdapter::Init(unsigned int _uiPassport)
 {
@@ -131,7 +146,7 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	if(!isOK)
 	{
 		D_Output("read configuration file failed\n");
-		return false;
+		//return false;
 	}
 
 	//Init status
@@ -143,6 +158,7 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	m_PackFunctions[EPT_C2M_ReportClientRunningStatus]	= &VUPClientAdapter::_PACK_ReportClientRunningStatus;
 	m_PackFunctions[EPT_C2M_ReportClientTesingPhase]	= &VUPClientAdapter::_PACK_ReportClientTesingPhase;
 
+#ifndef USE_UDT_LIB
 	g_pRecvSocket = new WinSocket;
 	s32 iRet = g_pRecvSocket->Create(E_NETWORK_PROTO_UDP, false);
 	D_CHECK(!iRet);
@@ -180,7 +196,23 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	g_pRecvThread = new Thread(new RecvUDPRunner(g_pRecvSocket, g_pUDPPackBuffer));
 	Bool bRet = g_pRecvThread->Start();
 	D_CHECK(bRet);
-
+#else
+	g_ClientSocket = UDT::socket(AF_INET, SOCK_DGRAM, 0);
+	if(g_ClientSocket == UDT::INVALID_SOCK)
+	{
+		D_Output("create socket failed: %s\n", UDT::getlasterror().getErrorMessage());
+		return 0;
+	}
+	sockaddr_in addrinfo;
+	addrinfo.sin_family = AF_INET;
+	addrinfo.sin_addr.S_un.S_addr = inet_addr(g_strServerIP.c_str());
+	addrinfo.sin_port = htons(g_uiServerPort);
+	if(UDT::ERROR == UDT::connect(g_ClientSocket, (struct sockaddr*)&addrinfo, sizeof(addrinfo)))
+	{
+		D_Output("connect failed: %s\n", UDT::getlasterror().getErrorMessage());
+		return 0;
+	}
+#endif
 	return true;
 }
 bool VUPClientAdapter::RegisterMe()
@@ -240,8 +272,8 @@ void VUPClientAdapter::RegisterUDPPackHandler(unsigned char _uiType, UdpPackHand
 
 bool VUPClientAdapter::Tick()
 {
-	_HandleWatchedValue();
-	_HandleRecvPack();
+	//_HandleWatchedValue();
+	//_HandleRecvPack();
 	return true;
 }
 void VUPClientAdapter::_HandleRecvPack()
@@ -340,4 +372,11 @@ void VUPClientAdapter::_PACK_ReportClientRunningStatus(UDP_PACK* outPack, Watche
 
 	outPack->m_unValue.m_ReportClientRunningStatusParam.m_uiPassPort = m_uiPassport;
 	outPack->m_unValue.m_ReportClientRunningStatusParam.m_uiStatus = m_uiStatus;
+}
+
+void VUPClientAdapter::_InternalSend(UDP_PACK* _pOutPack, int _iPackLen)
+{
+#ifndef USE_UDT_LIB
+#else
+#endif
 }
