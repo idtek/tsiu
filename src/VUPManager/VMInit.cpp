@@ -6,7 +6,37 @@
 
 //--------------------------------------------------------------------------------
 Engine*		g_poEngine	= NULL;
-//--------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
+void WatchedInfos::Init()
+{
+#define ADD_WATCHVALUE(name, init) { \
+	WatchedInfoValue wiValue;\
+	wiValue.m_ShowingName = name;\
+	wiValue.m_Value = init;\
+	m_Values.insert(std::pair<std::string, WatchedInfoValue>(name, wiValue));\
+	}\
+
+	ADD_WATCHVALUE("0.Total VUPs", "0");
+	for(s32 i = 0; i < EVupStatus_Num; ++i)
+	{
+		ADD_WATCHVALUE(VMVup::kStatus[i].GetName(), "0");
+	}
+	for(s32 i = 0; i < ETestPhase_Num; ++i)
+	{
+		ADD_WATCHVALUE(VMVup::kTestPhase[i].GetName(), "0");
+	}
+}
+void WatchedInfos::UpdateValue(StringPtr _strName, s32 _iValue)
+{	
+
+}
+void WatchedInfos::UpdateValue(StringPtr _strName, StringPtr _strValue)
+{
+}
+void WatchedInfos::UpdateValue(StringPtr _strName, f32 _fValue)
+{
+}
+//----------------n----------------------------------------------------------------------
 FXDEFMAP(MyCanvas) MyCanvasMap[]={
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_SENDCOMMAND,					MyCanvas::onCmdSendCommand),
 	FXMAPFUNC(SEL_KEYPRESS,		MyCanvas::ID_SENDCOMMAND,					MyCanvas::onKeyPress)
@@ -18,7 +48,7 @@ MyCanvas::MyCanvas()
 	flags |= FLAG_ENABLED;
 	m_CurrentCommand = -1;
 }
-
+						  \
 MyCanvas::MyCanvas(FX::FXComposite *p, 
 				   FX::FXObject *tgt, 
 				   FX::FXSelector sel, 
@@ -42,30 +72,72 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	m_Command = new FXTextField(matrix, 1, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
 	new FXButton(matrix, "Send", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
 
-	FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poGroupV2,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-	FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY,0,0,0,0, 2,2,2,2);
-	table->setBackColor(FXRGB(255,255,255));
-	table->setVisibleRows(20);
-	table->setVisibleColumns(6);
-	table->setTableSize(0, 6);
-	table->setCellColor(0,0,FXRGB(255,240,240));
-	table->setCellColor(1,0,FXRGB(240,255,240));
-	table->setCellColor(0,1,FXRGB(255,240,240));
-	table->setCellColor(1,1,FXRGB(240,255,240));
-	for(s32 i = 0; i < 6; ++i)
-	{
-		table->setColumnWidth(i, 120);
-	}
-	table->setRowHeaderWidth(0);
-	table->setColumnText(0, "ID");
-	table->setColumnText(1, "Status");
-	table->setColumnText(2, "Testing Phase");
-	table->setColumnText(3, "IP");
-	table->setColumnText(4, "Port");
-	table->setColumnText(5, "Group");
-	table->setSelBackColor(FXRGB(128,128,128));
+	FXSplitter *poSplitterH		= new FXSplitter(poGroupV2,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|LAYOUT_FILL_Y|SPLITTER_HORIZONTAL);
+	FXHorizontalFrame *poGroupV21	= new FXHorizontalFrame(poSplitterH,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 0, 760);
+	FXHorizontalFrame *poGroupV22	= new FXHorizontalFrame(poSplitterH,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-	m_VUPTable = table;
+	
+	{
+		FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poGroupV21,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+		FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY,0,0,0,0, 2,2,2,2);
+		table->setBackColor(FXRGB(255,255,255));
+		table->setVisibleRows(20);
+		table->setVisibleColumns(6);
+		table->setTableSize(0, 6);
+		table->setCellColor(0,0,FXRGB(255,240,240));
+		table->setCellColor(1,0,FXRGB(240,255,240));
+		table->setCellColor(0,1,FXRGB(255,240,240));
+		table->setCellColor(1,1,FXRGB(240,255,240));
+		for(s32 i = 0; i < 6; ++i)
+		{
+			table->setColumnWidth(i, 120);
+		}
+		table->setRowHeaderWidth(0);
+		table->setColumnText(0, "ID");
+		table->setColumnText(1, "Status");
+		table->setColumnText(2, "Testing Phase");
+		table->setColumnText(3, "IP");
+		table->setColumnText(4, "Port");
+		table->setColumnText(5, "Group");
+		table->setSelBackColor(FXRGB(128,128,128));
+
+		m_VUPTable = table;
+	}
+
+	{
+		FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poGroupV22,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+		FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY,0,0,0,0, 2,2,2,2);
+		table->setBackColor(FXRGB(255,255,255));
+		table->setVisibleRows(20);
+		table->setVisibleColumns(2);
+		table->setTableSize(0, 2);
+		table->setCellColor(0,0,FXRGB(220,220,220));
+		table->setCellColor(1,0,FXRGB(255,255,255));
+		table->setCellColor(0,1,FXRGB(220,220,220));
+		table->setCellColor(1,1,FXRGB(255,255,255));
+		table->setColumnWidth(0, 150);
+		table->setColumnWidth(1, 100);
+		table->setRowHeaderWidth(0);
+		table->setColumnText(0, "Name");
+		table->setColumnText(1, "Value");
+		table->setSelBackColor(FXRGB(128,128,128));
+		m_Summary = table;
+
+		m_WatchedInfo.Init();
+		m_Summary->insertRows(0, m_WatchedInfo.m_Values.size());
+		s32 iRow = 0;
+		WatchedInfos::WatchedValueMapInterator it;
+		for(it = m_WatchedInfo.m_Values.begin(); it != m_WatchedInfo.m_Values.end(); ++it)
+		{
+			const WatchedInfos::WatchedInfoValue& value = (*it).second;
+			m_Summary->setItemText(iRow, 0, value.m_ShowingName.c_str());
+			m_Summary->setItemJustify(iRow, 0, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+			m_Summary->setItemText(iRow, 1, value.m_Value.c_str());
+			m_Summary->setItemJustify(iRow, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+			iRow++;
+		}
+	}
 
 	//Register event handler
 	GameEngine::GetGameEngine()->GetEventMod()->RegisterHandler(

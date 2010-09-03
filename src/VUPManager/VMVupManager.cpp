@@ -480,6 +480,9 @@ void VMVupManager::Tick(f32 _fDeltaTime)
 	//Check rdv point
 	_UpdateRDVPoint();
 
+	//Update summary info
+	_UpdateSummary();
+
 	//Update List
 	Event evt((EventType_t)E_ET_UIUpdateList);
 	evt.AddParam((void*)this);
@@ -507,6 +510,10 @@ void VMVupManager::_UpdateRDVPoint()
 	}
 }	
 
+void VMVupManager::_UpdateSummary()
+{
+
+}
 //#pragma optimize("", off)
 void VMVupManager::_HandleUdpPack()
 {
