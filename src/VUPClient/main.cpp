@@ -12,8 +12,11 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 }
 
 namespace{
+
+#ifndef USE_UDT_LIB
 	Socket*				g_pRecvSocket	 = NULL;
 	Socket*				g_pSendSocket	 = NULL;
+#endif
 	Thread*				g_pRecvThread	 = NULL;
 	MemPool<UDP_PACK>*	g_pUDPPackBuffer = NULL;
 
@@ -23,7 +26,7 @@ namespace{
 	u16					g_uiEndPort		= 50050;
 
 #ifdef USE_UDT_LIB
-	UDTSOCKET			g_ClientSocket = UDT::INVALID_SOCK;
+	UDTSOCKET			g_pRecvSocket = UDT::INVALID_SOCK;
 #endif
 
 	u16 _GeneratePort(u16 _uiCurrentPort){
@@ -68,21 +71,33 @@ namespace{
 };
 
 //--------------------------------------------------------------------------------
-#ifndef USE_UDT_LIB
 class RecvUDPRunner : public IThreadRunner
 {
 public:
+#ifndef USE_UDT_LIB
 	RecvUDPRunner(Socket* _pRecvSock, MemPool<UDP_PACK>* _pMempool);
+#else
+	RecvUDPRunner(UDTSOCKET _pRecvSock, MemPool<UDP_PACK>* _pMempool);
+#endif
 	virtual u32		Run();
 	virtual void	NotifyQuit();
 
 private:
 	MemPool<UDP_PACK>*	m_pUDPPackBuffer;
+#ifndef USE_UDT_LIB
 	Socket*				m_pRecvSocket;
+#else
+	UDTSOCKET			m_pRecvSocket;
+#endif
 	Bool				m_bRequestStop;
 };
+#ifndef USE_UDT_LIB
 RecvUDPRunner::RecvUDPRunner(Socket* _pRecvSock, MemPool<UDP_PACK>* _pMempool)
 	:m_pRecvSocket(_pRecvSock)
+#else
+RecvUDPRunner::RecvUDPRunner(UDTSOCKET _pRecvSock, MemPool<UDP_PACK>* _pMempool)
+	:m_pRecvSocket(_pRecvSock)
+#endif
 	,m_pUDPPackBuffer(_pMempool)
 	,m_bRequestStop(false)
 {
@@ -95,12 +110,26 @@ u32 RecvUDPRunner::Run()
 		if(m_bRequestStop)
 			return 0;
 
+#ifndef USE_UDT_LIB
 		if(!m_pRecvSocket || !m_pRecvSocket->bIsValid())
 			return 1;
 
 		UDP_PACK pack;
 		s32 iRet = m_pRecvSocket->RecvFrom((Char*)&pack, sizeof(UDP_PACK));
 		if(!iRet)
+#else
+		if(m_pRecvSocket == UDT::INVALID_SOCK)
+			return 1;
+
+		UDP_PACK pack;
+		s32 iRet = UDT::recvmsg(m_pRecvSocket, (char*)&pack, sizeof(UDP_PACK));
+		if(iRet == UDT::ERROR)
+		{
+			D_Output("recvmsg failed(%d): %s\n", m_pRecvSocket, UDT::getlasterror().getErrorMessage());
+			return 1;
+		}
+		else
+#endif
 		{
 			m_pUDPPackBuffer->InsertUDPData(pack);
 		}
@@ -111,7 +140,7 @@ void RecvUDPRunner::NotifyQuit()
 {
 	m_bRequestStop = true;
 }
-#endif
+
 //----------------------------------------------------------------------------------
 VUPClientAdapter::VUPClientAdapter()
 	: m_HasConnectedToManager(false) 
@@ -137,6 +166,7 @@ VUPClientAdapter::~VUPClientAdapter()
 #ifndef USE_UDT_LIB
 	WSACleanup();
 #else
+	UDT::close(g_pRecvSocket);
 	UDT::cleanup();
 #endif
 }
@@ -157,6 +187,10 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	//Init pack func
 	m_PackFunctions[EPT_C2M_ReportClientRunningStatus]	= &VUPClientAdapter::_PACK_ReportClientRunningStatus;
 	m_PackFunctions[EPT_C2M_ReportClientTesingPhase]	= &VUPClientAdapter::_PACK_ReportClientTesingPhase;
+
+	//Init mem pool
+	g_pUDPPackBuffer = new MemPool<UDP_PACK>();
+	g_pUDPPackBuffer->SetMaxSize(1000);
 
 #ifndef USE_UDT_LIB
 	g_pRecvSocket = new WinSocket;
@@ -187,47 +221,77 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	D_CHECK(!iRet);
 	iRet = g_pSendSocket->SetAddress(g_strServerIP.c_str(), g_uiServerPort);
 	D_CHECK(!iRet);
-
-	//Init mem pool
-	g_pUDPPackBuffer = new MemPool<UDP_PACK>();
-	g_pUDPPackBuffer->SetMaxSize(1000);
-
-	//Init recv thread
-	g_pRecvThread = new Thread(new RecvUDPRunner(g_pRecvSocket, g_pUDPPackBuffer));
-	Bool bRet = g_pRecvThread->Start();
-	D_CHECK(bRet);
 #else
-	g_ClientSocket = UDT::socket(AF_INET, SOCK_DGRAM, 0);
-	if(g_ClientSocket == UDT::INVALID_SOCK)
+	g_pRecvSocket = UDT::socket(AF_INET, SOCK_DGRAM, 0);
+	if(g_pRecvSocket == UDT::INVALID_SOCK)
 	{
 		D_Output("create socket failed: %s\n", UDT::getlasterror().getErrorMessage());
 		return 0;
 	}
+	
+	//Decrease
+	s32 delayConnect = ::GetCurrentProcessId();
+	s32 delayInterval = delayConnect % 10 * 500;
+	s32 lastTickCount = ::GetTickCount();
+	while(1){
+		s32 tickCount = ::GetTickCount();
+		if(tickCount - lastTickCount > delayInterval)
+			break;
+		else
+			Sleep(10);
+	}
+
 	sockaddr_in addrinfo;
 	addrinfo.sin_family = AF_INET;
 	addrinfo.sin_addr.S_un.S_addr = inet_addr(g_strServerIP.c_str());
 	addrinfo.sin_port = htons(g_uiServerPort);
-	if(UDT::ERROR == UDT::connect(g_ClientSocket, (struct sockaddr*)&addrinfo, sizeof(addrinfo)))
+	while(1)
 	{
-		D_Output("connect failed: %s\n", UDT::getlasterror().getErrorMessage());
-		return 0;
+		if(UDT::ERROR == UDT::connect(g_pRecvSocket, (struct sockaddr*)&addrinfo, sizeof(addrinfo)))
+		{
+			D_Output("connected failed: %s, waiting for reconnecting \n", UDT::getlasterror().getErrorMessage());
+			Sleep(5000);
+		}
+		else
+		{
+			D_Output("connected successfully: %s:%d \n", g_strServerIP.c_str(), g_uiServerPort);
+			break;
+		}
 	}
 #endif
+	//Init recv thread
+	g_pRecvThread = new Thread(new RecvUDPRunner(g_pRecvSocket, g_pUDPPackBuffer));
+	Bool bRet = g_pRecvThread->Start();
+	D_CHECK(bRet);
+
 	return true;
 }
 bool VUPClientAdapter::RegisterMe()
 {
-	if(g_pSendSocket &&
-	   g_pSendSocket->bIsValid())
+#ifndef USE_UDT_LIB
+	D_CHECK(g_pSendSocket && g_pSendSocket->bIsValid())
+#else
+	D_CHECK(g_pRecvSocket != UDT::INVALID_SOCK)
+#endif
 	{
 		UDP_PACK pack;
 		pack.m_uiType = EPT_C2M_ClientRegister;
 		pack.m_unValue.m_ClientRegisterParam.m_uiPassPort	= m_uiPassport;
 		pack.m_unValue.m_ClientRegisterParam.m_uiPort		= m_uiPort;
 		pack.m_unValue.m_ClientRegisterParam.m_uiStatus		= m_uiStatus;
-		pack.m_unValue.m_ClientRegisterParam.m_uiStatus		= m_uiPassport;
+		pack.m_unValue.m_ClientRegisterParam.m_uiTestPhase	= m_uiTestPhase;
+
+#ifndef USE_UDT_LIB
 		g_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
 		return true;
+#else
+		s32 iRet = UDT::sendmsg(g_pRecvSocket, (const Char*)&pack, sizeof(UDP_PACK));
+		if(iRet == UDT::ERROR)
+		{
+			D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+			return false;
+		}
+#endif
 	}
 	return false;
 }
@@ -259,7 +323,17 @@ void VUPClientAdapter::ReachRDVPoint(unsigned short _uiRDVPointID, unsigned shor
 	pack.m_unValue.m_ReachRDVPointParam.m_uiRDVPointID	= _uiRDVPointID;
 	pack.m_unValue.m_ReachRDVPointParam.m_uiTimeout		= _uiTimeout;
 	pack.m_unValue.m_ReachRDVPointParam.m_uiExpected	= _uiExpected;
+
+#ifndef USE_UDT_LIB
 	g_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
+#else
+	s32 iRet = UDT::sendmsg(g_pRecvSocket, (const Char*)&pack, sizeof(UDP_PACK));
+	if(iRet == UDT::ERROR)
+	{
+		D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+		return;
+	}
+#endif
 }
 
 void VUPClientAdapter::RegisterUDPPackHandler(unsigned char _uiType, UdpPackHandler _pPackHandler)
@@ -272,8 +346,8 @@ void VUPClientAdapter::RegisterUDPPackHandler(unsigned char _uiType, UdpPackHand
 
 bool VUPClientAdapter::Tick()
 {
-	//_HandleWatchedValue();
-	//_HandleRecvPack();
+	_HandleWatchedValue();
+	_HandleRecvPack();
 	return true;
 }
 void VUPClientAdapter::_HandleRecvPack()
@@ -310,7 +384,16 @@ void VUPClientAdapter::_HandleRecvPack()
 					pack.m_unValue.m_ClientRegisterParam.m_uiPort		= m_uiPort;
 					pack.m_unValue.m_ClientRegisterParam.m_uiStatus		= m_uiStatus;
 					pack.m_unValue.m_ClientRegisterParam.m_uiTestPhase	= m_uiTestPhase;
+#ifndef USE_UDT_LIB
 					g_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
+#else
+					s32 iRet = UDT::sendmsg(g_pRecvSocket, (const Char*)&pack, sizeof(UDP_PACK));
+					if(iRet == UDT::ERROR)
+					{
+						D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+						break;
+					}
+#endif
 					break;
 				}
 			case EPT_M2C_KillClient:
@@ -353,7 +436,17 @@ void VUPClientAdapter::_HandleWatchedValue()
 			{
 				D_CHECK(0);
 			}
+
+#ifndef USE_UDT_LIB
 			g_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
+#else
+			s32 iRet = UDT::sendmsg(g_pRecvSocket, (const Char*)&pack, sizeof(UDP_PACK));
+			if(iRet == UDT::ERROR)
+			{
+				D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+				continue;
+			}
+#endif
 		}
 	}
 }
@@ -372,11 +465,4 @@ void VUPClientAdapter::_PACK_ReportClientRunningStatus(UDP_PACK* outPack, Watche
 
 	outPack->m_unValue.m_ReportClientRunningStatusParam.m_uiPassPort = m_uiPassport;
 	outPack->m_unValue.m_ReportClientRunningStatusParam.m_uiStatus = m_uiStatus;
-}
-
-void VUPClientAdapter::_InternalSend(UDP_PACK* _pOutPack, int _iPackLen)
-{
-#ifndef USE_UDT_LIB
-#else
-#endif
 }

@@ -8,8 +8,13 @@ class VMVup;
 
 struct UDP_PACKWrapper{
 	UDP_PACK	m_InnerData;
+
+#ifndef USE_UDT_LIB
 	std::string	m_SrcIPAddress;
 	u16			m_SrcPort;
+#else
+	UDTSOCKET	m_ClientSocket;
+#endif
 };
 
 #ifndef USE_UDT_LIB
@@ -26,40 +31,67 @@ private:
 	Bool						m_bRequestStop;
 };
 #else
-class ListeningRunner : public IThreadRunner
-{
-public:
-	ListeningRunner(u16 _uiPort);
 
-	virtual u32		Run();
-	virtual void	NotifyQuit();
+class VMVupManager;
 
-public:
-	UDTSOCKET	m_pListeningSocket;
-	u16			m_uiPort;
-};
 
 template <typename T>
 class VMThreadSafeContainer
 {
 public:
-	T& RetrieveContrainer(){
-		if(m_HasRetrievedOnce)
-			return m_Container;
-
-		m_Mutex.Lock();
-		m_HasRetrievedOnce = true;
+	VMThreadSafeContainer()
+	{
+	}
+	const T& GetContrainer() const{
 		return m_Container;
 	}
-	void ReleaseContrainer(){
+	T& RetrieveContrainer(){
+		//D_Output("0x%x Lock\n", (int)&m_Mutex);
+		m_Mutex.Lock();
+		return m_Container;
+	}
+	const T& RetrieveContrainer() const{
+		//D_Output("0x%x Lock\n", (int)&m_Mutex);
+		m_Mutex.Lock();
+		return m_Container;
+	}
+	void ReleaseContrainer() const{
+		//D_Output("0x%x UnLock\n", (int)&m_Mutex);
 		m_Mutex.UnLock();
-		m_HasRetrievedOnce = false;
 	}
 
 private:
-	T		m_Container;
-	Mutex	m_Mutex;
-	Bool	m_HasRetrievedOnce;
+	T				m_Container;
+	mutable Mutex	m_Mutex;
+};
+
+class ListeningRunner : public IThreadRunner
+{
+public:
+	ListeningRunner(VMVupManager* _pVUPMan, u16 _uiPort);
+
+	virtual u32		Run();
+	virtual void	NotifyQuit();
+
+public:
+	UDTSOCKET		m_pListeningSocket;
+	u16				m_uiPort;
+	VMVupManager*	m_pMan;
+	Bool			m_bRequestStop;
+};
+
+class WorkingRunner : public IThreadRunner
+{
+public:
+	WorkingRunner(VMVupManager* _pVUPMan, MemPool<UDP_PACKWrapper>* _pMempool);
+
+	virtual u32		Run();
+	virtual void	NotifyQuit();
+
+private:
+	VMVupManager*				m_pMan;
+	MemPool<UDP_PACKWrapper>*	m_pUDPPackBuffer;
+	Bool						m_bRequestStop;
 };
 #endif
 
@@ -136,27 +168,33 @@ public:
 	void			SetParameter(StringPtr _pOption, const VMCommandParamHolder& _param);
 
 #ifdef USE_UDT_LIB
-	void			AddClientSocket(UDTSOCKET _pNewSocket);
+	void											AddClientSocket(UDTSOCKET _pNewSocket);
+	VMThreadSafeContainer<std::vector<UDTSOCKET>>&	GetClientSocket(){	return m_pClientSockets;	}
+	Bool											AddVupBySocket(VMVup* _newVUP);
+	Bool											LostConnection(UDTSOCKET _pLostConnection);
+	VMVup*											FindVupBySocket(s32 _id);
 #endif
 
 	friend class MyCanvas;
 
 private:
-	Bool _InitParameter();
-	void _HandleUdpPack();
-	void _UpdateRDVPoint();
+	Bool		_InitParameter();
+	void		_HandleUdpPack();
+	void		_UpdateRDVPoint();
 
 private:
-	VUPMap						m_poVupMap;
-
-	Socket*						m_pSendSocket;
-	MemPool<UDP_PACKWrapper>*	m_pUDPPackBuffer;
+	MemPool<UDP_PACKWrapper>*		m_pUDPPackBuffer;
 #ifndef USE_UDT_LIB
+	VUPMap						m_poVupMap;
 	Socket*						m_pRecvSocket;
+	Socket*						m_pSendSocket;
 	Thread*						m_pRecvThread;
 #else
-	Thread*		m_ListeningThread;
+	Thread*											m_ListeningThread;
+	Thread*											m_WorkingThread;
 	VMThreadSafeContainer<std::vector<UDTSOCKET>>	m_pClientSockets;
+	VMThreadSafeContainer<VUPMap>					m_poVupMapByPassport;
+	VMThreadSafeContainer<VUPMap>					m_poVupMapBySocket;
 #endif
 
 	RDVPointList				m_poRDVList;

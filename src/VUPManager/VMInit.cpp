@@ -137,8 +137,15 @@ void MyCanvas::onUpdateList(const Event* _poEvent)
 
 	s32 iRow = 0;
 	Char zValue[32] = {0};
+
+#ifndef USE_UDT_LIB
 	VMVupManager::VUPMapConstIterator it = pManager->m_poVupMap.begin();
 	for(;it != pManager->m_poVupMap.end(); ++it)
+#else
+	const VMVupManager::VUPMap& vupMap = pManager->m_poVupMapByPassport.GetContrainer();
+	VMVupManager::VUPMapConstIterator it = vupMap.begin();
+	for(;it != vupMap.end(); ++it)
+#endif	
 	{
 		if(iRow >= m_VUPTable->getNumRows())
 		{
@@ -169,6 +176,9 @@ void MyCanvas::onUpdateList(const Event* _poEvent)
 
 		iRow++;
 	}
+//#ifndef USE_UDT_LIB
+//	pManager->m_poVupMapByPassport.ReleaseContrainer();
+//#endif
 	if(iRow < m_VUPTable->getNumRows())
 	{
 		m_VUPTable->removeRows(iRow, m_VUPTable->getNumRows() - iRow);

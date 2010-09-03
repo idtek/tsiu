@@ -47,6 +47,11 @@ public:
 	D_Inline u8			GetCurrentTestPhase()	const	{	return m_uiCurrentTestPhase;	}
 	D_Inline s32		GetGroup()				const	{	return m_iGroup;				}
 
+
+	D_Inline void		SetUniqueID(s32 _uid)
+	{
+		m_iUniqueID = _uid;
+	}
 	D_Inline void		SetGroup(s32 _group)
 	{	
 		m_iGroup = _group;
@@ -66,6 +71,17 @@ public:
 		else
 			m_uiCurrentTestPhase = _phase;
 	}
+	
+#ifdef USE_UDT_LIB
+	D_Inline void SetClientSocket(UDTSOCKET _pSocket)
+	{
+		m_ClientSocket = _pSocket;
+	}
+	D_Inline UDTSOCKET GetClientSocket() const
+	{
+		return m_ClientSocket;
+	}
+#endif
 
 private:
 	s32				m_iUniqueID;
@@ -74,6 +90,10 @@ private:
 	u16				m_uiPort;
 	std::string		m_strIPAddress;
 	s32				m_iGroup;
+
+#ifdef USE_UDT_LIB
+	UDTSOCKET		m_ClientSocket;
+#endif
 };
 
 #endif

@@ -8,7 +8,8 @@ int main(int argc, char* argv[])
 {
 	VUPClientAdapter* vcAdapter = new VUPClientAdapter;
 	vcAdapter->Init(::GetCurrentProcessId());
-	//vcAdapter->RegisterMe();
+	vcAdapter->RegisterMe();
+	//delete vcAdapter;
 
 	while(1)
 	{
