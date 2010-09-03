@@ -1,0 +1,6 @@
+<config>
+	<serverip>10.192.84.23</serverip>
+	<serverport>51001</serverport>
+	<clientstartport>50000</clientstartport>
+	<clientendport>50050</clientendport>
+</config>
