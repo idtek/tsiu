@@ -181,6 +181,7 @@ private:
 	Bool		_InitParameter();
 	void		_HandleUdpPack();
 	void		_UpdateRDVPoint();
+	void		_UpdateSummary();
 
 private:
 	MemPool<UDP_PACKWrapper>*		m_pUDPPackBuffer;

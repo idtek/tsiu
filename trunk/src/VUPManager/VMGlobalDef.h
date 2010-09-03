@@ -19,9 +19,26 @@ enum{
 	E_ET_UIUpdateList = E_ET_User,
 };
 //--------------------------------------------------------------------------
+struct WatchedInfos
+{	
+	struct WatchedInfoValue
+	{
+		std::string m_ShowingName;
+		std::string m_Value;
+	};
+	void Init();
+	void UpdateValue(StringPtr _strName, s32 _iValue);
+	void UpdateValue(StringPtr _strName, StringPtr _strValue);
+	void UpdateValue(StringPtr _strName, f32 _fValue);
+
+	typedef std::map<std::string, WatchedInfoValue>				WatchedValueMap;
+	typedef std::map<std::string, WatchedInfoValue>::iterator	WatchedValueMapInterator;
+
+	WatchedValueMap m_Values;
+};
+//--------------------------------------------------------------------------
 class MyCanvas : public FXCanvas {
 	FXDECLARE(MyCanvas)
-
 protected:
 	MyCanvas();
 
@@ -54,6 +71,9 @@ private:
 	s32					m_CurrentCommand;
 
 	FXTable*			m_VUPTable;
+	FXTable*			m_Summary;
+
+	WatchedInfos		m_WatchedInfo;
 };
 //---------------------------------------------------------------------------------------
 class GameEngine : public Engine
