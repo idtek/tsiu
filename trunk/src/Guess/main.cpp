@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 	GetLibSettings()->DefineMacro(E_LS_Has_GDI);
 	//GetLibSettings()->DefineMacro(E_LS_Has_GUI);
 
-	g_poEngine = new GameEngine(770, 577, "Guess", false);
+	g_poEngine = new GameEngine(1024, 768, "сно╥", false);
 
 	D_CHECK(g_poEngine);
 
