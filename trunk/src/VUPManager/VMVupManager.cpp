@@ -281,29 +281,29 @@ void VMVupManager::StartTesting(s32 _id)
 	VMVup* pVup = FindVup(_id);
 	if(!pVup)
 		return;
+	
+	if(pVup->GetGroup() >= 0)
+	{
+		struct __timeb64 timebuffer;
+		_ftime64(&timebuffer);
+		__int64 nowms = timebuffer.time * 1000 + timebuffer.millitm + m_Parameters.m_iDelayOfStartTime + pVup->GetGroup() * m_Parameters.m_iIntervalOfEachGroup;
 
-	struct __timeb64 timebuffer;
-	_ftime64(&timebuffer);
-	__int64 nowms = timebuffer.time * 1000 + timebuffer.millitm + m_Parameters.m_iDelayOfStartTime + pVup->GetGroup() * m_Parameters.m_iIntervalOfEachGroup;
-
-	UDP_PACK pack;
-	pack.m_uiType = EPT_M2C_StartTesting;
-	pack.m_unValue.m_StartTestingParam.m_uiBurstTime = nowms;
+		UDP_PACK pack;
+		pack.m_uiType = EPT_M2C_StartTesting;
+		pack.m_unValue.m_StartTestingParam.m_uiBurstTime = nowms;
 
 #ifndef USE_UDT_LIB
-	m_pSendSocket->SetAddress(pVup->GetIPAddress(), pVup->GetPort());
-	m_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
+		m_pSendSocket->SetAddress(pVup->GetIPAddress(), pVup->GetPort());
+		m_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
 #else
-	s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
-	if(iRet == UDT::ERROR)
-	{
-		D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
-		return;
-	}
-	else
-	{
-	}
+		s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
+		if(iRet == UDT::ERROR)
+		{
+			D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+			return;
+		}
 #endif
+	}
 }
 
 void VMVupManager::Refresh()
@@ -713,7 +713,7 @@ void VMVupManager::_HandleUdpPack()
 						}
 						else
 						{
-							vup->SetGroup(m_Parameters.m_iGroupNum);
+							vup->SetGroup(-1);
 						}
 					}
 					D_Output("running info: %d[%d/%d]\n", m_RDVRunningInfo.m_CurrentGoup, m_RDVRunningInfo.m_CurrentNumberOfVUPInGroup, m_Parameters.m_iVUPNumInEachGroup);
