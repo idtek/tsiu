@@ -125,43 +125,44 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	m_Command = new FXTextField(matrix, 1, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FILL_COLUMN);
 	new FXButton(matrix, "Send", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
 
-	FXSplitter *poSplitterH		= new FXSplitter(poGroupV2,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|LAYOUT_FILL_Y|SPLITTER_HORIZONTAL);
-	FXHorizontalFrame *poGroupV21	= new FXHorizontalFrame(poSplitterH,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 0, 820);
-	FXHorizontalFrame *poGroupV22	= new FXHorizontalFrame(poSplitterH,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-
-	
+	FXSplitter *poSplitterH		= new FXSplitter(poGroupV2,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|LAYOUT_FILL_Y|SPLITTER_REVERSED);
+	FXVerticalFrame *poGroupV21	= new FXVerticalFrame(poSplitterH,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+	FXVerticalFrame *poGroupV22	= new FXVerticalFrame(poSplitterH,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 	{
-		FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poGroupV21,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+		FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poGroupV21,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
 		FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY,0,0,0,0, 2,2,2,2);
 		table->setBackColor(FXRGB(255,255,255));
 		table->setVisibleRows(20);
-		table->setVisibleColumns(8);
-		table->setTableSize(0, 8);
+		table->setVisibleColumns(7);
+		table->setTableSize(0, 7);
 		table->setCellColor(0,0,FXRGB(255,240,240));
 		table->setCellColor(1,0,FXRGB(240,255,240));
 		table->setCellColor(0,1,FXRGB(255,240,240));
 		table->setCellColor(1,1,FXRGB(240,255,240));
-		for(s32 i = 0; i < 6; ++i)
+		for(s32 i = 0; i < 7; ++i)
 		{
 			table->setColumnWidth(i, 100);
 		}
 		table->setRowHeaderWidth(0);
 		table->setColumnText(0, "ID");
 		table->setColumnText(1, "Group");
-		table->setColumnText(2, "Status");
-		table->setColumnText(3, "Test Phase");
-		table->setColumnText(4, "Last Status");
-		table->setColumnText(5, "Last Test Phase");
-		table->setColumnText(6, "IP");
-		table->setColumnText(7, "Port");
+		table->setColumnWidth(1, 60);
+		table->setColumnText(2, "Current Phase");
+		table->setColumnWidth(2, 120);
+		table->setColumnText(3, "Last Result");
+		table->setColumnText(4, "Last Phase");
+		table->setColumnWidth(4, 120);
+		table->setColumnText(5, "IP");
+		table->setColumnWidth(5, 160);
+		table->setColumnText(6, "Port");
 		table->setSelBackColor(FXRGB(128,128,128));
 
 		m_VUPTable = table;
 	}
 
 	{
-		FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poGroupV22,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-		FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY,0,0,0,0, 2,2,2,2);
+		FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poGroupV22, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+		FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY|LAYOUT_FIX_WIDTH,0,0, 260,0, 2,2,2,2);
 		table->setBackColor(FXRGB(255,255,255));
 		table->setVisibleRows(20);
 		table->setVisibleColumns(2);
@@ -322,24 +323,21 @@ void MyCanvas::onUpdateList(const Event* _poEvent)
 		m_VUPTable->setItemText(iRow, 1, zValue);
 		m_VUPTable->setItemJustify(iRow, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		m_VUPTable->setItemText(iRow, 2, VMVup::kStatus[vup.GetCurrentStatus()].GetName());
+		m_VUPTable->setItemText(iRow, 2, VMVup::kTestPhase[vup.GetCurrentTestPhase()].GetName());
 		m_VUPTable->setItemJustify(iRow, 2, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		m_VUPTable->setItemText(iRow, 3, VMVup::kTestPhase[vup.GetCurrentTestPhase()].GetName());
+		m_VUPTable->setItemText(iRow, 3, VMVup::kStatus[vup.GetLastStaus()].GetName());
 		m_VUPTable->setItemJustify(iRow, 3, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		m_VUPTable->setItemText(iRow, 4, VMVup::kStatus[vup.GetLastStaus()].GetName());
-		m_VUPTable->setItemJustify(iRow, 4, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+		m_VUPTable->setItemText(iRow, 4, VMVup::kTestPhase[vup.GetLastTestPhase()].GetName());
+		m_VUPTable->setItemJustify(iRow,4, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		m_VUPTable->setItemText(iRow, 5, VMVup::kTestPhase[vup.GetLastTestPhase()].GetName());
+		m_VUPTable->setItemText(iRow, 5, vup.GetIPAddress());
 		m_VUPTable->setItemJustify(iRow, 5, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		m_VUPTable->setItemText(iRow, 6, vup.GetIPAddress());
-		m_VUPTable->setItemJustify(iRow, 6, FXTableItem::LEFT|FXTableItem::CENTER_Y);
-
 		sprintf(zValue, "%d", vup.GetPort());
-		m_VUPTable->setItemText(iRow, 7, zValue);
-		m_VUPTable->setItemJustify(iRow, 7, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+		m_VUPTable->setItemText(iRow, 6, zValue);
+		m_VUPTable->setItemJustify(iRow, 6, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
 		iRow++;
 	}

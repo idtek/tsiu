@@ -2,7 +2,9 @@
 #include "VMVup.h"
 #include "tinyxml.h"
 #include <time.h>
+#include <sys/timeb.h>
 #include <algorithm>
+
 
 //--------------------------------------------------------------------------
 #ifndef USE_UDT_LIB
@@ -217,13 +219,19 @@ VMVup* VMVupManager::FindVup(s32 _id)
 	VUPMapIterator it = m_poVupMap.find(_id);
 	if(it == m_poVupMap.end())
 #else
-	const VUPMap& vupMap = m_poVupMapByPassport.GetContrainer();
-	VUPMapConstIterator it = vupMap.find(_id);
+	VUPMap& vupMap = m_poVupMapByPassport.RetrieveContrainer();
+	VUPMapIterator it = vupMap.find(_id);
 	if(it == vupMap.end())
 #endif
 	{
+#ifdef USE_UDT_LIB
+		m_poVupMapByPassport.ReleaseContrainer();
+#endif
 		return NULL;
 	}
+#ifdef USE_UDT_LIB
+	m_poVupMapByPassport.ReleaseContrainer();
+#endif
 	return (*it).second;
 }
 const VMVup* VMVupManager::FindVup(s32 _id) const
@@ -274,12 +282,13 @@ void VMVupManager::StartTesting(s32 _id)
 	if(!pVup)
 		return;
 
-	int nowsecs = m_Parameters.m_iDelayOfStartTime + 
-				  pVup->GetGroup() * m_Parameters.m_iIntervalOfEachGroup;
+	struct __timeb64 timebuffer;
+	_ftime64(&timebuffer);
+	__int64 nowms = timebuffer.time * 1000 + timebuffer.millitm + m_Parameters.m_iDelayOfStartTime + pVup->GetGroup() * m_Parameters.m_iIntervalOfEachGroup;
 
 	UDP_PACK pack;
 	pack.m_uiType = EPT_M2C_StartTesting;
-	pack.m_unValue.m_StartTestingParam.m_uiBurstTime = nowsecs;
+	pack.m_unValue.m_StartTestingParam.m_uiBurstTime = nowms;
 
 #ifndef USE_UDT_LIB
 	m_pSendSocket->SetAddress(pVup->GetIPAddress(), pVup->GetPort());
@@ -290,6 +299,9 @@ void VMVupManager::StartTesting(s32 _id)
 	{
 		D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
 		return;
+	}
+	else
+	{
 	}
 #endif
 }
@@ -551,6 +563,9 @@ void VMVupManager::_UpdateRDVPoint()
 			}
 			m_RDVRunningInfo.Reset();
 			m_poRDVList.erase(it);
+
+			D_Output("start test~~~~~~~\n");
+			return;
 		}
 	}
 }	
@@ -612,19 +627,26 @@ void VMVupManager::_HandleUdpPack()
 #else
 					UDTSOCKET curSocket = poPackWrapper->m_ClientSocket;
 					VMVup* pVup = FindVupBySocket(curSocket);
-					pVup->SetUniqueID(poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort);
-					pVup->SetStatus(poPack->m_unValue.m_ClientRegisterParam.m_uiStatus);
-					pVup->SetTestPhase(poPack->m_unValue.m_ClientRegisterParam.m_uiTestPhase);
-					
-					AddVup(pVup);
-
-					UDP_PACK pack;
-					pack.m_uiType = EPT_M2C_ClientRegisterACK;
-					s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
-					if(iRet == UDT::ERROR)
+					if(pVup)
 					{
-						D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
-						break;
+						pVup->SetUniqueID(poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort);
+						pVup->SetStatus(poPack->m_unValue.m_ClientRegisterParam.m_uiStatus);
+						pVup->SetTestPhase(poPack->m_unValue.m_ClientRegisterParam.m_uiTestPhase);
+
+						AddVup(pVup);
+
+						UDP_PACK pack;
+						pack.m_uiType = EPT_M2C_ClientRegisterACK;
+						s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
+						if(iRet == UDT::ERROR)
+						{
+							D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+							break;
+						}
+					}
+					else
+					{
+						m_pUDPPackBuffer->InsertUDPData(*poPackWrapper);
 					}
 #endif
 				}
@@ -694,6 +716,7 @@ void VMVupManager::_HandleUdpPack()
 							vup->SetGroup(m_Parameters.m_iGroupNum);
 						}
 					}
+					D_Output("running info: %d[%d/%d]\n", m_RDVRunningInfo.m_CurrentGoup, m_RDVRunningInfo.m_CurrentNumberOfVUPInGroup, m_Parameters.m_iVUPNumInEachGroup);
 				}
 				break;
 			}
@@ -710,6 +733,7 @@ ListeningRunner::ListeningRunner(VMVupManager* _pVUPMan, u16 _uiPort)
 {
 }
 
+//#pragma optimize("", off)
 u32 ListeningRunner::Run()
 {
 	m_pListeningSocket = UDT::socket(AF_INET, SOCK_DGRAM, 0);
@@ -858,12 +882,14 @@ Bool VMVupManager::AddVupBySocket(VMVup* _newVUP)
 }
 VMVup* VMVupManager::FindVupBySocket(s32 _id)
 {
-	const VUPMap& vupMap = m_poVupMapBySocket.GetContrainer();
-	VUPMapConstIterator it = vupMap.find(_id);
+	VUPMap& vupMap = m_poVupMapBySocket.RetrieveContrainer();
+	VUPMapIterator it = vupMap.find(_id);
 	if(it == vupMap.end())
 	{
+		m_poVupMapBySocket.ReleaseContrainer();
 		return NULL;
 	}
+	m_poVupMapBySocket.ReleaseContrainer();
 	return (*it).second;
 }
 Bool VMVupManager::LostConnection(UDTSOCKET _pLostConnection)
