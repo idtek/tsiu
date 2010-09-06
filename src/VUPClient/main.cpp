@@ -291,9 +291,9 @@ bool VUPClientAdapter::RegisterMe()
 			D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
 			return false;
 		}
+		return true;
 #endif
 	}
-	return false;
 }
 
 void VUPClientAdapter::Watch(unsigned char _uiKey, const char* _zName, const int* _watchedvalue)

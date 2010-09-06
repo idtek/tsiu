@@ -125,6 +125,17 @@ s32 VMVupManager::SetParameter(const VMCommand::ParamList& _paramList)
 	return 0;
 }
 
+s32 VMVupManager::GetParameter(const VMCommand::ParamList& _paramList)
+{
+	VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
+	s32 optionCount = _paramList.Size();
+	for(s32 i = 0;  i < optionCount; ++i)
+	{
+		pMan->GetParameter(_paramList[i].ToString());
+	}
+	return 0;
+}
+
 //--------------------------------------------------------------------------------------------
 VMVupManager::VMVupManager()
 #ifndef USE_UDT_LIB
@@ -153,6 +164,7 @@ VMVupManager::VMVupManager()
 	VMCommandCenter::GetPtr()->RegisterCommand("killall",		VMVupManager::KillClient,	1, &defaultParam);
 
 	VMCommandCenter::GetPtr()->RegisterCommand("setp",			VMVupManager::SetParameter,	2);
+	VMCommandCenter::GetPtr()->RegisterCommand("getp",			VMVupManager::GetParameter,	1);
 }
 
 VMVupManager::~VMVupManager()
@@ -262,11 +274,8 @@ void VMVupManager::StartTesting(s32 _id)
 	if(!pVup)
 		return;
 
-	struct tm * nowtime;
-	__time64_t  thetime;
-	_time64(&thetime);
-	nowtime = _localtime64(&thetime);
-	int nowsecs = nowtime->tm_hour * 3600 + nowtime->tm_min * 60 + nowtime->tm_sec + m_Parameters.m_iDelayOfStartTime + pVup->GetGroup() * m_Parameters.m_iIntervalOfEachGroup;
+	int nowsecs = m_Parameters.m_iDelayOfStartTime + 
+				  pVup->GetGroup() * m_Parameters.m_iIntervalOfEachGroup;
 
 	UDP_PACK pack;
 	pack.m_uiType = EPT_M2C_StartTesting;
@@ -389,6 +398,34 @@ void VMVupManager::SetParameter(StringPtr _pOption, const VMCommandParamHolder& 
 	{
 		m_Parameters.m_iVUPNumInEachGroup = _param.ToInt();
 	}
+	else if(!strcmp(_pOption, "-hidesummaryifzero") || !strcmp(_pOption, "-hs"))
+	{
+		m_Parameters.m_iHideSummaryIfZero = _param.ToInt();
+	}
+}
+
+void VMVupManager::GetParameter(StringPtr _pOption)
+{
+	if(!strcmp(_pOption, "-groupnumber") || !strcmp(_pOption, "-gn"))
+	{
+		D_Output("[Group number] = %d\n", m_Parameters.m_iGroupNum);
+	}
+	else if(!strcmp(_pOption, "-interval") || !strcmp(_pOption, "-i"))
+	{
+		D_Output("[Interval of each group in ms] = %d\n", m_Parameters.m_iIntervalOfEachGroup);
+	}
+	else if(!strcmp(_pOption, "-delay") || !strcmp(_pOption, "-d"))
+	{
+		D_Output("[Delay of start time in ms] = %d\n", m_Parameters.m_iDelayOfStartTime);
+	}
+	else if(!strcmp(_pOption, "-vupsnumberingroup") || !strcmp(_pOption, "-vn"))
+	{
+		D_Output("[Max VUP number in each group] = %d\n", m_Parameters.m_iVUPNumInEachGroup);
+	}
+	else if(!strcmp(_pOption, "-hidesummaryifzero") || !strcmp(_pOption, "-hs"))
+	{
+		D_Output("[Hide summary if value is zero] = %d\n", m_Parameters.m_iHideSummaryIfZero);
+	}
 }
 
 Bool VMVupManager::_InitParameter()
@@ -441,6 +478,9 @@ void VMVupManager::Create()
 	m_pUDPPackBuffer = new MemPool<UDP_PACKWrapper>();
 	m_pUDPPackBuffer->SetMaxSize(1000);
 
+	//Init watched value
+	//m_WatchedInfo.Init();
+
 #ifndef USE_UDT_LIB
 	//Init network
 	m_pRecvSocket = new WinSocket;
@@ -484,9 +524,14 @@ void VMVupManager::Tick(f32 _fDeltaTime)
 	_UpdateSummary();
 
 	//Update List
-	Event evt((EventType_t)E_ET_UIUpdateList);
-	evt.AddParam((void*)this);
-	GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evt);
+	Event evtList((EventType_t)E_ET_UIUpdateList);
+	evtList.AddParam((void*)this);
+	GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evtList);
+
+	//Update Summary
+	Event evtSummary((EventType_t)E_ET_UIUpdateSummay);
+	evtSummary.AddParam((void*)this);
+	GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evtSummary);
 }
 
 void VMVupManager::_UpdateRDVPoint()
@@ -512,7 +557,25 @@ void VMVupManager::_UpdateRDVPoint()
 
 void VMVupManager::_UpdateSummary()
 {
-
+	Bool hideSummary = (m_Parameters.m_iHideSummaryIfZero > 0);
+	for(s32 i = 0; i < EVupStatus_Num; ++i)
+	{
+		m_WatchedInfo.UpdateValue(VMVup::kStatus[i].GetName(), VMVup::kStatusSummary[i], hideSummary);
+	}
+	for(s32 i = 0; i < ETestPhase_Num; ++i)
+	{
+		m_WatchedInfo.UpdateValue(VMVup::kTestPhase[i].GetName(), VMVup::kTestPhaseSummary[i], hideSummary);
+	}
+#ifndef USE_UDT_LIB
+	m_WatchedInfo.UpdateValue("0.Total VUPs", (s32)m_poVupMap.size(), hideSummary);
+#else
+	m_WatchedInfo.UpdateValue("0.Total VUPs", (s32)m_poVupMapByPassport.GetContrainer().size(), hideSummary);
+#endif
+	std::map<std::string, s32>::iterator it;
+	for(it = VMVup::kIpSummary.begin(); it != VMVup::kIpSummary.end(); ++it)
+	{
+		m_WatchedInfo.UpdateValue((*it).first.c_str(), (s32)(*it).second, hideSummary);
+	}
 }
 //#pragma optimize("", off)
 void VMVupManager::_HandleUdpPack()
@@ -697,7 +760,10 @@ u32 ListeningRunner::Run()
 		D_Output("get client connection from %s:%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 		m_pMan->AddClientSocket(pClientSocket);
 
-		VMVup* newVup = new VMVup(-1, inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
+		long addr = inet_addr(inet_ntoa(clientaddr.sin_addr));
+		struct hostent* pHostent = gethostbyaddr((char*)&addr, sizeof(long),  AF_INET); 
+
+		VMVup* newVup = new VMVup(-1, pHostent->h_name, ntohs(clientaddr.sin_port));
 		newVup->SetClientSocket(pClientSocket);
 		m_pMan->AddVupBySocket(newVup);
 	}
@@ -711,6 +777,7 @@ void ListeningRunner::NotifyQuit()
 //---------------------------------------------------------------------------------------------------------
 WorkingRunner::WorkingRunner(VMVupManager* _pVUPMan, MemPool<UDP_PACKWrapper>* _pMempool)
 	:m_pMan(_pVUPMan)
+	,m_bRequestStop(false)
 	,m_pUDPPackBuffer(_pMempool)
 {
 }

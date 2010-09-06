@@ -5,5 +5,6 @@
 	<broadcastip>10.255.255.255</broadcastip>
 	<commands>
 		<command>setp -groupnumber 3 -vupsnumberingroup 3 -delay 5 -interval 5</command>
+		<command>setp -hidesummaryifzero 0</command>	
 	</commands>
 </config>

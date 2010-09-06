@@ -31,13 +31,17 @@ const VMVup::VupStatus VMVup::kTestPhase[ETestPhase_Num]	= {
 	VMVup::VupStatus(ETestPhase_START_GAME,             	"2.Start Game"				),
 	VMVup::VupStatus(ETestPhase_SEND_GAME_RESULT,       	"2.Send Game Result"		),
 	VMVup::VupStatus(ETestPhase_LISTEN_TO_GAME_END,    		"2.Listen to Game End"		),
-	VMVup::VupStatus(ETestPhase_SLEEP_OP,               	"2.Operation(Sleep)"		),
-	VMVup::VupStatus(ETestPhase_IN_GAME_OP,             	"2.Operation(In Game)"		),
-	VMVup::VupStatus(ETestPhase_ON_TIMEOUT_OP,          	"2.Operation(On Timeout)"	),
-	VMVup::VupStatus(ETestPhase_CONTROL_OP,             	"2.Operation(Control)"		),
+	VMVup::VupStatus(ETestPhase_SLEEP_OP,               	"2.Op(Sleep)"				),
+	VMVup::VupStatus(ETestPhase_IN_GAME_OP,             	"2.Op(In Game)"				),
+	VMVup::VupStatus(ETestPhase_ON_TIMEOUT_OP,          	"2.Op(On Timeout)"			),
+	VMVup::VupStatus(ETestPhase_CONTROL_OP,             	"2.Op(Control)"				),
 	VMVup::VupStatus(ETestPhase_RDV_POINT,              	"2.RDV Point"				),
 	VMVup::VupStatus(ETestPhase_GET_GAME_RESULT,        	"2.Get Game Result"			)
 };
+
+s32 VMVup::kStatusSummary[EVupStatus_Num] = {0};
+s32 VMVup::kTestPhaseSummary[ETestPhase_Num] = {0};
+std::map<std::string, s32> VMVup::kIpSummary;
 
 VMVup::VMVup(s32 _id, const Char* _ipAddr, u16 _port)
 	: m_iUniqueID(_id)
@@ -47,14 +51,59 @@ VMVup::VMVup(s32 _id, const Char* _ipAddr, u16 _port)
 	, m_uiCurrentTestPhase(ETestPhase_INVALID)
 	, m_iGroup(-1)
 {
+	kStatusSummary[m_uiCurrentStatus]++;
+	kTestPhaseSummary[m_uiCurrentTestPhase]++;
+
+	std::map<std::string, s32>::iterator it = kIpSummary.find(_ipAddr);
+	if(it == kIpSummary.end())
+	{
+		kIpSummary.insert(std::pair<std::string, s32>(_ipAddr, 1));
+	}
+	else
+	{
+		(*it).second++;
+	}
 }
 
-VMVup& VMVup::operator = (const VMVup& _rhs)
+VMVup::~VMVup()
 {
-	if(this != &_rhs &&
-	   m_iUniqueID == _rhs.m_iUniqueID)
+	kStatusSummary[m_uiCurrentStatus]--;
+	kTestPhaseSummary[m_uiCurrentTestPhase]--;
+
+	std::map<std::string, s32>::iterator it = kIpSummary.find(m_strIPAddress);
+	if(it != kIpSummary.end())
 	{
-		m_uiCurrentStatus = _rhs.m_uiCurrentStatus;
+		(*it).second--;
 	}
-	return *this;
+}
+
+void VMVup::SetStatus(u8 _status)
+{
+	if(_status >= EVupStatus_Num)
+	{
+		D_CHECK(0);
+	}
+	else
+	{
+		m_uiLastStatus = m_uiCurrentStatus;
+		kStatusSummary[m_uiLastStatus]--;
+
+		m_uiCurrentStatus = _status;
+		kStatusSummary[m_uiCurrentStatus]++;
+	}
+}
+void VMVup::SetTestPhase(u8 _phase)
+{
+	if(_phase >= ETestPhase_Num)
+	{
+		D_CHECK(0);
+	}
+	else
+	{
+		m_uiLastTestPhase = m_uiCurrentTestPhase;
+		kTestPhaseSummary[m_uiLastTestPhase]--;
+
+		m_uiCurrentTestPhase = _phase;
+		kTestPhaseSummary[m_uiCurrentTestPhase]++;
+	}
 }

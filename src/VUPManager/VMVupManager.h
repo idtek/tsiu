@@ -134,10 +134,14 @@ class VMVupManager : public Object
 	};
 
 	struct ManagerParameter{
+		ManagerParameter()
+			: m_iHideSummaryIfZero(false)
+		{}
 		s32			m_iIntervalOfEachGroup;
 		s32			m_iDelayOfStartTime;
 		s32			m_iGroupNum;
 		s32			m_iVUPNumInEachGroup;
+		s32			m_iHideSummaryIfZero;
 	};
 
 public:
@@ -148,6 +152,7 @@ public:
 	static s32 Refresh(const VMCommand::ParamList& _paramList);
 	static s32 KillClient(const VMCommand::ParamList& _paramList);
 	static s32 SetParameter(const VMCommand::ParamList& _paramList);
+	static s32 GetParameter(const VMCommand::ParamList& _paramList);
 
 public:
 	VMVupManager();
@@ -166,6 +171,7 @@ public:
 	void			KillClient(s32 _id);
 
 	void			SetParameter(StringPtr _pOption, const VMCommandParamHolder& _param);
+	void			GetParameter(StringPtr _pOption);
 
 #ifdef USE_UDT_LIB
 	void											AddClientSocket(UDTSOCKET _pNewSocket);
@@ -185,6 +191,8 @@ private:
 
 private:
 	MemPool<UDP_PACKWrapper>*		m_pUDPPackBuffer;
+	WatchedInfos					m_WatchedInfo;
+
 #ifndef USE_UDT_LIB
 	VUPMap						m_poVupMap;
 	Socket*						m_pRecvSocket;

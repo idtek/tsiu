@@ -17,19 +17,26 @@ extern Engine*		g_poEngine;
 //-------------------------------------------------------------------------
 enum{
 	E_ET_UIUpdateList = E_ET_User,
+	E_ET_UIUpdateSummay,
 };
 //--------------------------------------------------------------------------
 struct WatchedInfos
 {	
 	struct WatchedInfoValue
 	{
+		WatchedInfoValue()
+			: m_Visible(false)
+			, m_ShowingName("")
+			, m_Value("")
+		{}
 		std::string m_ShowingName;
 		std::string m_Value;
+		Bool		m_Visible;
 	};
 	void Init();
-	void UpdateValue(StringPtr _strName, s32 _iValue);
-	void UpdateValue(StringPtr _strName, StringPtr _strValue);
-	void UpdateValue(StringPtr _strName, f32 _fValue);
+	void UpdateValue(StringPtr _strName, s32 _iValue, Bool _bHideSummay = false);
+	void UpdateValue(StringPtr _strName, StringPtr _strValue, Bool _bHideSummay = false);
+	void UpdateValue(StringPtr _strName, f32 _fValue, Bool _bHideSummay = false);
 
 	typedef std::map<std::string, WatchedInfoValue>				WatchedValueMap;
 	typedef std::map<std::string, WatchedInfoValue>::iterator	WatchedValueMapInterator;
@@ -52,8 +59,9 @@ public:
 		FXint w = 0,
 		FXint h = 0);
 
-public:
+private:
 	void onUpdateList(const Event* _poEvent);
+	void onUpdateSummay(const Event* _poEvent);
 
 public:
 	long onCmdSendCommand(FXObject* sender, FXSelector sel, void* ptr);
@@ -72,8 +80,6 @@ private:
 
 	FXTable*			m_VUPTable;
 	FXTable*			m_Summary;
-
-	WatchedInfos		m_WatchedInfo;
 };
 //---------------------------------------------------------------------------------------
 class GameEngine : public Engine

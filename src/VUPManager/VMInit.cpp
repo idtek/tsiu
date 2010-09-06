@@ -3,7 +3,7 @@
 #include "VMVupManager.h"
 #include "VMVup.h"
 #include <fxkeys.h>
-
+#include <sstream>
 //--------------------------------------------------------------------------------
 Engine*		g_poEngine	= NULL;
 //-----------------------------------------------------------------------------------------------
@@ -26,17 +26,70 @@ void WatchedInfos::Init()
 		ADD_WATCHVALUE(VMVup::kTestPhase[i].GetName(), "0");
 	}
 }
-void WatchedInfos::UpdateValue(StringPtr _strName, s32 _iValue)
+void WatchedInfos::UpdateValue(StringPtr _strName, s32 _iValue, Bool _bHideSummay)
 {	
+	std::stringstream str;
+	str << _iValue;
 
+	WatchedValueMapInterator it = m_Values.find(_strName);
+	if(it != m_Values.end())
+	{
+		(*it).second.m_Value = str.str();
+		(*it).second.m_Visible = _bHideSummay ? (_iValue != 0) : true;
+	}
+	else
+	{
+		if(_iValue != 0)
+		{
+			WatchedInfoValue wiValue;
+			wiValue.m_ShowingName = _strName;
+			wiValue.m_Value = str.str();
+			wiValue.m_Visible = _bHideSummay ? (_iValue != 0) : true;
+			m_Values.insert(std::pair<std::string, WatchedInfoValue>(_strName, wiValue));
+		}
+	}
 }
-void WatchedInfos::UpdateValue(StringPtr _strName, StringPtr _strValue)
+void WatchedInfos::UpdateValue(StringPtr _strName, StringPtr _strValue, Bool _bHideSummay)
 {
+	WatchedValueMapInterator it = m_Values.find(_strName);
+	if(it != m_Values.end())
+	{
+		(*it).second.m_Value = _strValue;
+		(*it).second.m_Visible = true;
+	}
+	else
+	{
+		WatchedInfoValue wiValue;
+		wiValue.m_ShowingName = _strName;
+		wiValue.m_Value = _strValue;
+		wiValue.m_Visible = true;
+		m_Values.insert(std::pair<std::string, WatchedInfoValue>(_strName, wiValue));
+	}
 }
-void WatchedInfos::UpdateValue(StringPtr _strName, f32 _fValue)
+void WatchedInfos::UpdateValue(StringPtr _strName, f32 _fValue, Bool _bHideSummay)
 {
+	std::stringstream str;
+	str << _fValue;
+
+	WatchedValueMapInterator it = m_Values.find(_strName);
+	if(it != m_Values.end())
+	{
+		(*it).second.m_Value = str.str();
+		(*it).second.m_Visible = _bHideSummay ? (_fValue > 0) : true;
+	}
+	else
+	{
+		if(_fValue > 0)
+		{
+			WatchedInfoValue wiValue;
+			wiValue.m_ShowingName = _strName;
+			wiValue.m_Value = str.str();
+			wiValue.m_Visible = _bHideSummay ? (_fValue > 0) : true;
+			m_Values.insert(std::pair<std::string, WatchedInfoValue>(_strName, wiValue));
+		}
+	}
 }
-//----------------n----------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
 FXDEFMAP(MyCanvas) MyCanvasMap[]={
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_SENDCOMMAND,					MyCanvas::onCmdSendCommand),
 	FXMAPFUNC(SEL_KEYPRESS,		MyCanvas::ID_SENDCOMMAND,					MyCanvas::onKeyPress)
@@ -73,7 +126,7 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	new FXButton(matrix, "Send", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
 
 	FXSplitter *poSplitterH		= new FXSplitter(poGroupV2,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|LAYOUT_FILL_Y|SPLITTER_HORIZONTAL);
-	FXHorizontalFrame *poGroupV21	= new FXHorizontalFrame(poSplitterH,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 0, 760);
+	FXHorizontalFrame *poGroupV21	= new FXHorizontalFrame(poSplitterH,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 0, 820);
 	FXHorizontalFrame *poGroupV22	= new FXHorizontalFrame(poSplitterH,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
 	
@@ -82,23 +135,25 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 		FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY,0,0,0,0, 2,2,2,2);
 		table->setBackColor(FXRGB(255,255,255));
 		table->setVisibleRows(20);
-		table->setVisibleColumns(6);
-		table->setTableSize(0, 6);
+		table->setVisibleColumns(8);
+		table->setTableSize(0, 8);
 		table->setCellColor(0,0,FXRGB(255,240,240));
 		table->setCellColor(1,0,FXRGB(240,255,240));
 		table->setCellColor(0,1,FXRGB(255,240,240));
 		table->setCellColor(1,1,FXRGB(240,255,240));
 		for(s32 i = 0; i < 6; ++i)
 		{
-			table->setColumnWidth(i, 120);
+			table->setColumnWidth(i, 100);
 		}
 		table->setRowHeaderWidth(0);
 		table->setColumnText(0, "ID");
-		table->setColumnText(1, "Status");
-		table->setColumnText(2, "Testing Phase");
-		table->setColumnText(3, "IP");
-		table->setColumnText(4, "Port");
-		table->setColumnText(5, "Group");
+		table->setColumnText(1, "Group");
+		table->setColumnText(2, "Status");
+		table->setColumnText(3, "Test Phase");
+		table->setColumnText(4, "Last Status");
+		table->setColumnText(5, "Last Test Phase");
+		table->setColumnText(6, "IP");
+		table->setColumnText(7, "Port");
 		table->setSelBackColor(FXRGB(128,128,128));
 
 		m_VUPTable = table;
@@ -123,26 +178,29 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 		table->setSelBackColor(FXRGB(128,128,128));
 		m_Summary = table;
 
-		m_WatchedInfo.Init();
-		m_Summary->insertRows(0, m_WatchedInfo.m_Values.size());
-		s32 iRow = 0;
-		WatchedInfos::WatchedValueMapInterator it;
-		for(it = m_WatchedInfo.m_Values.begin(); it != m_WatchedInfo.m_Values.end(); ++it)
-		{
-			const WatchedInfos::WatchedInfoValue& value = (*it).second;
-			m_Summary->setItemText(iRow, 0, value.m_ShowingName.c_str());
-			m_Summary->setItemJustify(iRow, 0, FXTableItem::LEFT|FXTableItem::CENTER_Y);
-			m_Summary->setItemText(iRow, 1, value.m_Value.c_str());
-			m_Summary->setItemJustify(iRow, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+		//m_WatchedInfo.Init();
+		//m_Summary->insertRows(0, m_WatchedInfo.m_Values.size());
+		//s32 iRow = 0;
+		//WatchedInfos::WatchedValueMapInterator it;
+		//for(it = m_WatchedInfo.m_Values.begin(); it != m_WatchedInfo.m_Values.end(); ++it)
+		//{
+		//	const WatchedInfos::WatchedInfoValue& value = (*it).second;
+		//	m_Summary->setItemText(iRow, 0, value.m_ShowingName.c_str());
+		//	m_Summary->setItemJustify(iRow, 0, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+		//	m_Summary->setItemText(iRow, 1, value.m_Value.c_str());
+		//	m_Summary->setItemJustify(iRow, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-			iRow++;
-		}
+		//	iRow++;
+		//}
 	}
 
 	//Register event handler
 	GameEngine::GetGameEngine()->GetEventMod()->RegisterHandler(
 		(EventType_t)(E_ET_UIUpdateList), 
 		new MEventHandler<MyCanvas>(this, &MyCanvas::onUpdateList));
+	GameEngine::GetGameEngine()->GetEventMod()->RegisterHandler(
+		(EventType_t)(E_ET_UIUpdateSummay), 
+		new MEventHandler<MyCanvas>(this, &MyCanvas::onUpdateSummay));
 }
 long MyCanvas::onKeyPress(FXObject* sender, FXSelector sel,void* ptr)
 {
@@ -202,7 +260,38 @@ long MyCanvas::onCmdSendCommand(FXObject* sender, FXSelector sel,void* ptr)
 
 	return 1;
 }
+void MyCanvas::onUpdateSummay(const Event* _poEvent)
+{
+	VMVupManager* pManager = static_cast<VMVupManager*>(_poEvent->GetParam<void*>(0));
 
+	s32 iRow = 0;
+
+	WatchedInfos::WatchedValueMapInterator it = pManager->m_WatchedInfo.m_Values.begin();
+	for(;it != pManager->m_WatchedInfo.m_Values.end(); ++it)
+	{
+		const WatchedInfos::WatchedInfoValue& wiValue = (*it).second;
+		if(wiValue.m_Visible)
+		{
+			if(iRow >= m_Summary->getNumRows())
+			{
+				m_Summary->insertRows(iRow);
+			}
+			m_Summary->setItemText(iRow, 0, wiValue.m_ShowingName.c_str());
+			m_Summary->setItemJustify(iRow, 0, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+			m_Summary->setItemText(iRow, 1, wiValue.m_Value.c_str());
+			m_Summary->setItemJustify(iRow, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+			iRow++;
+		}
+	}
+	if(iRow < m_Summary->getNumRows())
+	{
+		m_Summary->removeRows(iRow, m_Summary->getNumRows() - iRow);
+	}
+}
+
+//#pragma optimize("", off)
 void MyCanvas::onUpdateList(const Event* _poEvent)
 {
 	VMVupManager* pManager = static_cast<VMVupManager*>(_poEvent->GetParam<void*>(0));
@@ -229,22 +318,28 @@ void MyCanvas::onUpdateList(const Event* _poEvent)
 		m_VUPTable->setItemText(iRow, 0, zValue);
 		m_VUPTable->setItemJustify(iRow, 0, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		m_VUPTable->setItemText(iRow, 1, VMVup::kStatus[vup.GetCurrentStatus()].GetName());
+		sprintf(zValue, "%d", vup.GetGroup());
+		m_VUPTable->setItemText(iRow, 1, zValue);
 		m_VUPTable->setItemJustify(iRow, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		m_VUPTable->setItemText(iRow, 2, VMVup::kTestPhase[vup.GetCurrentTestPhase()].GetName());
+		m_VUPTable->setItemText(iRow, 2, VMVup::kStatus[vup.GetCurrentStatus()].GetName());
 		m_VUPTable->setItemJustify(iRow, 2, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		m_VUPTable->setItemText(iRow, 3, vup.GetIPAddress());
+		m_VUPTable->setItemText(iRow, 3, VMVup::kTestPhase[vup.GetCurrentTestPhase()].GetName());
 		m_VUPTable->setItemJustify(iRow, 3, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		sprintf(zValue, "%d", vup.GetPort());
-		m_VUPTable->setItemText(iRow, 4, zValue);
+		m_VUPTable->setItemText(iRow, 4, VMVup::kStatus[vup.GetLastStaus()].GetName());
 		m_VUPTable->setItemJustify(iRow, 4, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		sprintf(zValue, "%d", vup.GetGroup());
-		m_VUPTable->setItemText(iRow, 5, zValue);
+		m_VUPTable->setItemText(iRow, 5, VMVup::kTestPhase[vup.GetLastTestPhase()].GetName());
 		m_VUPTable->setItemJustify(iRow, 5, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+		m_VUPTable->setItemText(iRow, 6, vup.GetIPAddress());
+		m_VUPTable->setItemJustify(iRow, 6, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+		sprintf(zValue, "%d", vup.GetPort());
+		m_VUPTable->setItemText(iRow, 7, zValue);
+		m_VUPTable->setItemJustify(iRow, 7, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
 		iRow++;
 	}
