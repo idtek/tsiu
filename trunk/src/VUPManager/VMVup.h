@@ -35,18 +35,22 @@ public:
 	}
 	static const VupStatus kStatus[EVupStatus_Num];
 	static const VupStatus kTestPhase[ETestPhase_Num];
+	static s32 kStatusSummary[EVupStatus_Num];
+	static s32 kTestPhaseSummary[ETestPhase_Num];
+	static std::map<std::string, s32> kIpSummary;
 
 public:
 	VMVup(s32 _id, const Char* _ipAddr, u16 _port);
-	VMVup& operator = (const VMVup& _rhs);
-	
+	~VMVup();
+
 	D_Inline s32		GetUniqueID()			const	{	return m_iUniqueID;				}
 	D_Inline u8			GetCurrentStatus()		const	{	return m_uiCurrentStatus;		}
 	D_Inline u16		GetPort()				const	{	return m_uiPort;				}
 	D_Inline StringPtr	GetIPAddress()			const	{	return m_strIPAddress.c_str();	}
 	D_Inline u8			GetCurrentTestPhase()	const	{	return m_uiCurrentTestPhase;	}
 	D_Inline s32		GetGroup()				const	{	return m_iGroup;				}
-
+	D_Inline u8			GetLastStaus()			const	{	return m_uiLastStatus;			}
+	D_Inline u8			GetLastTestPhase()		const	{	return m_uiLastTestPhase;		}
 
 	D_Inline void		SetUniqueID(s32 _uid)
 	{
@@ -57,20 +61,8 @@ public:
 		m_iGroup = _group;
 	}
 
-	D_Inline void SetStatus(u8 _status)
-	{
-		if(_status >= EVupStatus_Num)
-			m_uiCurrentStatus = EVupStatus_Invalid;
-		else
-			m_uiCurrentStatus = _status;
-	}
-	D_Inline void SetTestPhase(u8 _phase)
-	{
-		if(_phase >= ETestPhase_Num)
-			m_uiCurrentTestPhase = ETestPhase_INVALID;
-		else
-			m_uiCurrentTestPhase = _phase;
-	}
+	void SetStatus(u8 _status);
+	void SetTestPhase(u8 _phase);
 	
 #ifdef USE_UDT_LIB
 	D_Inline void SetClientSocket(UDTSOCKET _pSocket)
@@ -87,6 +79,8 @@ private:
 	s32				m_iUniqueID;
 	u8				m_uiCurrentStatus;
 	u8				m_uiCurrentTestPhase;
+	u8				m_uiLastStatus;
+	u8				m_uiLastTestPhase;
 	u16				m_uiPort;
 	std::string		m_strIPAddress;
 	s32				m_iGroup;
