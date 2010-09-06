@@ -93,7 +93,7 @@ struct UDP_PACK
 			unsigned short	m_uiTimeout;
 		}m_ReachRDVPointParam;
 		struct{
-			int				m_uiBurstTime;
+			__int64			m_uiBurstTime;
 		}m_StartTestingParam;
 	}m_unValue;
 };

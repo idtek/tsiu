@@ -31,10 +31,10 @@ const VMVup::VupStatus VMVup::kTestPhase[ETestPhase_Num]	= {
 	VMVup::VupStatus(ETestPhase_START_GAME,             	"2.Start Game"				),
 	VMVup::VupStatus(ETestPhase_SEND_GAME_RESULT,       	"2.Send Game Result"		),
 	VMVup::VupStatus(ETestPhase_LISTEN_TO_GAME_END,    		"2.Listen to Game End"		),
-	VMVup::VupStatus(ETestPhase_SLEEP_OP,               	"2.Op(Sleep)"				),
-	VMVup::VupStatus(ETestPhase_IN_GAME_OP,             	"2.Op(In Game)"				),
-	VMVup::VupStatus(ETestPhase_ON_TIMEOUT_OP,          	"2.Op(On Timeout)"			),
-	VMVup::VupStatus(ETestPhase_CONTROL_OP,             	"2.Op(Control)"				),
+	VMVup::VupStatus(ETestPhase_SLEEP_OP,               	"2.Sleep"					),
+	VMVup::VupStatus(ETestPhase_IN_GAME_OP,             	"2.In Game"					),
+	VMVup::VupStatus(ETestPhase_ON_TIMEOUT_OP,          	"2.On Timeout"				),
+	VMVup::VupStatus(ETestPhase_CONTROL_OP,             	"2.Waiting"					),
 	VMVup::VupStatus(ETestPhase_RDV_POINT,              	"2.RDV Point"				),
 	VMVup::VupStatus(ETestPhase_GET_GAME_RESULT,        	"2.Get Game Result"			)
 };
