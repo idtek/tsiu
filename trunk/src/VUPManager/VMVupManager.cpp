@@ -93,14 +93,6 @@ s32 VMVupManager::RemoveVup(const VMCommand::ParamList& _paramList)
 	return 0;
 }
 
-s32 VMVupManager::StartTesting(const VMCommand::ParamList& _paramList)
-{
-	s32	iPassport = _paramList[0].ToInt();
-	VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
-	pMan->StartTesting(iPassport);
-	return 0;
-}
-
 s32 VMVupManager::Refresh(const VMCommand::ParamList& _paramList)
 {
 	VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
@@ -131,9 +123,53 @@ s32 VMVupManager::GetParameter(const VMCommand::ParamList& _paramList)
 {
 	VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
 	s32 optionCount = _paramList.Size();
+	if(optionCount == 0)
+	{
+		pMan->GetParameter(NULL);
+	}
+	else
+	{
+		for(s32 i = 0;  i < optionCount; ++i)
+		{
+			pMan->GetParameter(_paramList[i].ToString());
+		}
+	}
+	return 0;
+}
+
+s32 VMVupManager::SetRDVParameter(const VMCommand::ParamList& _paramList)
+{
+	VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
+	RDVPointParameter* pParam = pMan->AddRDVParam(_paramList[0].ToInt(), _paramList[1].ToInt());
+	if(!pParam)
+		return 1;
+
+	s32 optionCount = (_paramList.Size() - 2) / 2;
 	for(s32 i = 0;  i < optionCount; ++i)
 	{
-		pMan->GetParameter(_paramList[i].ToString());
+		pMan->SetRDVParameter(*pParam, _paramList[i * 2 + 2].ToString(), _paramList[i * 2 + 3]);
+	}
+	return 0;
+}
+
+s32 VMVupManager::GetRDVParameter(const VMCommand::ParamList& _paramList)
+{
+	VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
+	RDVPointParameter* pParam = pMan->FindRDVParam(_paramList[0].ToInt(), _paramList[1].ToInt());
+	if(!pParam)
+		return 1;
+
+	s32 optionCount = _paramList.Size() - 2;
+	if(optionCount == 0)
+	{
+		pMan->GetRDVParameter(*pParam, NULL);
+	}
+	else
+	{
+		for(s32 i = 0;  i < optionCount; ++i)
+		{
+			pMan->GetRDVParameter(*pParam, _paramList[i + 2].ToString());
+		}
 	}
 	return 0;
 }
@@ -157,7 +193,6 @@ VMVupManager::VMVupManager()
 	VMCommandCenter::GetPtr()->RegisterCommand("addvup",		VMVupManager::AddVup,		3);
 	VMCommandCenter::GetPtr()->RegisterCommand("updatevup",		VMVupManager::UpdateVup,	3);
 	VMCommandCenter::GetPtr()->RegisterCommand("removevup",		VMVupManager::RemoveVup,	1);
-	VMCommandCenter::GetPtr()->RegisterCommand("starttesting",	VMVupManager::StartTesting, 1);
 	VMCommandCenter::GetPtr()->RegisterCommand("refresh",		VMVupManager::Refresh,		0);
 	VMCommandCenter::GetPtr()->RegisterCommand("kill",			VMVupManager::KillClient,	1);
 
@@ -165,8 +200,10 @@ VMVupManager::VMVupManager()
 	defaultParam.PushBack(VMCommandParamHolder("-1"));
 	VMCommandCenter::GetPtr()->RegisterCommand("killall",		VMVupManager::KillClient,	1, &defaultParam);
 
-	VMCommandCenter::GetPtr()->RegisterCommand("setp",			VMVupManager::SetParameter,	2);
-	VMCommandCenter::GetPtr()->RegisterCommand("getp",			VMVupManager::GetParameter,	1);
+	VMCommandCenter::GetPtr()->RegisterCommand("setp",			VMVupManager::SetParameter,		2);
+	VMCommandCenter::GetPtr()->RegisterCommand("getp",			VMVupManager::GetParameter,		0);
+	VMCommandCenter::GetPtr()->RegisterCommand("setrdvp",		VMVupManager::SetRDVParameter,	4);
+	VMCommandCenter::GetPtr()->RegisterCommand("getrdvp",		VMVupManager::GetRDVParameter,	2);
 }
 
 VMVupManager::~VMVupManager()
@@ -180,17 +217,16 @@ VMVupManager::~VMVupManager()
 
 	m_pSendSocket->Destroy();
 	D_SafeDelete(m_pSendSocket);
-
-	D_SafeDelete(m_pUDPPackBuffer);
 #else
 	m_ListeningThread->Stop(1000);
 	D_SafeDelete(m_ListeningThread);
 
-	m_WorkingThread->Stop(1000);
+	m_WorkingThread->Stop(-1);
 	D_SafeDelete(m_WorkingThread);
 
 	UDT::cleanup();
 #endif
+	D_SafeDelete(m_pUDPPackBuffer);
 }
 
 Bool VMVupManager::AddVup(VMVup* _newVUP)
@@ -276,7 +312,7 @@ Bool VMVupManager::RemoveVup(s32 _id)
 	return true;
 }
 
-void VMVupManager::StartTesting(s32 _id)
+void VMVupManager::StartTesting(s32 _iDelayOfStartTime, s32 _iIntervalOfEachGroup, s32 _id)
 {
 	VMVup* pVup = FindVup(_id);
 	if(!pVup)
@@ -286,7 +322,7 @@ void VMVupManager::StartTesting(s32 _id)
 	{
 		struct __timeb64 timebuffer;
 		_ftime64(&timebuffer);
-		__int64 nowms = timebuffer.time * 1000 + timebuffer.millitm + m_Parameters.m_iDelayOfStartTime + pVup->GetGroup() * m_Parameters.m_iIntervalOfEachGroup;
+		__int64 nowms = timebuffer.time * 1000 + timebuffer.millitm + _iDelayOfStartTime + pVup->GetGroup() * _iIntervalOfEachGroup;
 
 		UDP_PACK pack;
 		pack.m_uiType = EPT_M2C_StartTesting;
@@ -362,12 +398,9 @@ void VMVupManager::KillClient(s32 _id)
 #ifndef USE_UDT_LIB
 		m_poVupMap.clear();
 #else
-		//vupMap.clear();
 		m_poVupMapByPassport.ReleaseContrainer();
 #endif
-
 		m_poRDVList.clear();
-		m_RDVRunningInfo.Reset();
 	}
 	else
 	{
@@ -392,51 +425,79 @@ void VMVupManager::KillClient(s32 _id)
 #endif
 	}
 }
+VMVupManager::RDVPointParameter* VMVupManager::FindRDVParam(s32 _iMajor, s32 _iMiner)
+{
+	s32 rdvID = _iMajor * 1000 + _iMiner;
+	RDVPointParameterListIterator itRDVPointParam = m_poRDVParam.find(rdvID);
+	if(itRDVPointParam != m_poRDVParam.end())
+	{
+		return &(*itRDVPointParam).second;
+	}
+	return NULL;
+}
+
+VMVupManager::RDVPointParameter* VMVupManager::AddRDVParam(s32 _iMajor, s32 _iMiner)
+{
+	RDVPointParameter* pParam = FindRDVParam(_iMajor, _iMiner);
+	if(pParam)
+		return pParam;
+
+	s32 rdvID = _iMajor * 1000 + _iMiner;
+	RDVPointParameterListIterator it = m_poRDVParam.insert(std::pair<RDVPointID, RDVPointParameter>(rdvID, RDVPointParameter())).first;
+	return &(*it).second;
+}
+void VMVupManager::SetRDVParameter(RDVPointParameter& _pRDVParam, StringPtr _pOption, const VMCommandParamHolder& _param)
+{
+	if(!_stricmp(_pOption, "-groupnumber") || !_stricmp(_pOption, "-gn"))
+	{
+		_pRDVParam.m_iGroupNum = _param.ToInt();
+	}
+	else if(!_stricmp(_pOption, "-interval") || !_stricmp(_pOption, "-i"))
+	{
+		_pRDVParam.m_iIntervalOfEachGroup = _param.ToInt();
+	}
+	else if(!_stricmp(_pOption, "-delay") || !_stricmp(_pOption, "-d"))
+	{
+		_pRDVParam.m_iDelayOfStartTime = _param.ToInt();
+	}
+	else if(!_stricmp(_pOption, "-vupsnumberingroup") || !_stricmp(_pOption, "-vn"))
+	{
+		_pRDVParam.m_iVUPNumInEachGroup = _param.ToInt();
+	}
+}
+void VMVupManager::GetRDVParameter(const RDVPointParameter& _pRDVParam, StringPtr _pOption) const
+{
+	if(!_pOption || !_stricmp(_pOption, "-groupnumber") || !_stricmp(_pOption, "-gn"))
+	{
+		D_Output("$groupnumber = %d\n", _pRDVParam.m_iGroupNum);
+	}
+	if(!_pOption || !_stricmp(_pOption, "-interval") || !_stricmp(_pOption, "-i"))
+	{
+		D_Output("$interval = %d\n", _pRDVParam.m_iIntervalOfEachGroup);
+	}
+	if(!_pOption || !_stricmp(_pOption, "-delay") || !_stricmp(_pOption, "-d"))
+	{
+		D_Output("$delay = %d\n", _pRDVParam.m_iDelayOfStartTime);
+	}
+	if(!_pOption || !_stricmp(_pOption, "-vupsnumberingroup") || !_stricmp(_pOption, "-vn"))
+	{
+		D_Output("$vupsnumberingroup = %d\n", _pRDVParam.m_iVUPNumInEachGroup);
+	}
+}
+
 void VMVupManager::SetParameter(StringPtr _pOption, const VMCommandParamHolder& _param)
 {
-	if(!strcmp(_pOption, "-groupnumber") || !strcmp(_pOption, "-gn"))
-	{
-		m_Parameters.m_iGroupNum = _param.ToInt();
-	}
-	else if(!strcmp(_pOption, "-interval") || !strcmp(_pOption, "-i"))
-	{
-		m_Parameters.m_iIntervalOfEachGroup = _param.ToInt();
-	}
-	else if(!strcmp(_pOption, "-delay") || !strcmp(_pOption, "-d"))
-	{
-		m_Parameters.m_iDelayOfStartTime = _param.ToInt();
-	}
-	else if(!strcmp(_pOption, "-vupsnumberingroup") || !strcmp(_pOption, "-vn"))
-	{
-		m_Parameters.m_iVUPNumInEachGroup = _param.ToInt();
-	}
-	else if(!strcmp(_pOption, "-hidesummaryifzero") || !strcmp(_pOption, "-hs"))
+	if(!_stricmp(_pOption, "-hidesummaryifzero") || !_stricmp(_pOption, "-hs"))
 	{
 		m_Parameters.m_iHideSummaryIfZero = _param.ToInt();
 	}
 }
 
-void VMVupManager::GetParameter(StringPtr _pOption)
+void VMVupManager::GetParameter(StringPtr _pOption) const
 {
-	if(!strcmp(_pOption, "-groupnumber") || !strcmp(_pOption, "-gn"))
+	if(!_pOption || !_stricmp(_pOption, "-hidesummaryifzero") || !_stricmp(_pOption, "-hs"))
 	{
-		D_Output("[Group number] = %d\n", m_Parameters.m_iGroupNum);
-	}
-	else if(!strcmp(_pOption, "-interval") || !strcmp(_pOption, "-i"))
-	{
-		D_Output("[Interval of each group in ms] = %d\n", m_Parameters.m_iIntervalOfEachGroup);
-	}
-	else if(!strcmp(_pOption, "-delay") || !strcmp(_pOption, "-d"))
-	{
-		D_Output("[Delay of start time in ms] = %d\n", m_Parameters.m_iDelayOfStartTime);
-	}
-	else if(!strcmp(_pOption, "-vupsnumberingroup") || !strcmp(_pOption, "-vn"))
-	{
-		D_Output("[Max VUP number in each group] = %d\n", m_Parameters.m_iVUPNumInEachGroup);
-	}
-	else if(!strcmp(_pOption, "-hidesummaryifzero") || !strcmp(_pOption, "-hs"))
-	{
-		D_Output("[Hide summary if value is zero] = %d\n", m_Parameters.m_iHideSummaryIfZero);
+		D_Output("$hidesummaryifzero = %d\n", m_Parameters.m_iHideSummaryIfZero);
 	}
 }
 
@@ -548,24 +609,35 @@ void VMVupManager::Tick(f32 _fDeltaTime)
 
 void VMVupManager::_UpdateRDVPoint()
 {
-	if(m_RDVRunningInfo.IsValid())
+	RDVPointListIterator it = m_poRDVList.begin();
+	while(it != m_poRDVList.end())
 	{
+		RDVPointInfo& info = (*it).second;
+		D_CHECK(info.m_RunningInfo.IsValid());
 		f32 fNow = GameEngine::GetGameEngine()->GetClockMod()->GetTotalElapsedSeconds();
-		RDVPointListIterator it = m_poRDVList.find(m_RDVRunningInfo.m_uiCurrentRunningID);
-		D_CHECK(it == m_poRDVList.end());
-		const RDVPointInfo& info = (*it).second;
-		if(m_RDVRunningInfo.m_ClientList.Size() >= info.m_uiExpectedNum ||
-		   fNow - m_RDVRunningInfo.m_fStartTime >= (f32)info.m_uiTimeOut)
+		if(info.m_RunningInfo.m_ClientList.Size() >= info.m_uiExpectedNum ||
+			fNow - info.m_RunningInfo.m_fStartTime >= (f32)info.m_uiTimeOut)
 		{
-			for(s32 i = 0; i < m_RDVRunningInfo.m_ClientList.Size(); ++i)
+			//Default value
+			s32 iDelayOfStartTime = 5000;
+			s32 iIntervalOfEachGroup = 0;
+			RDVPointParameterListIterator itRDVPointParam = m_poRDVParam.find(info.m_RunningInfo.m_uiCurrentRunningID);
+			if(itRDVPointParam != m_poRDVParam.end())
 			{
-				StartTesting(m_RDVRunningInfo.m_ClientList[i]);
+				RDVPointParameter& param = (*itRDVPointParam).second;
+				iDelayOfStartTime = param.m_iDelayOfStartTime;
+				iIntervalOfEachGroup = param.m_iIntervalOfEachGroup;
 			}
-			m_RDVRunningInfo.Reset();
-			m_poRDVList.erase(it);
-
-			D_Output("start test~~~~~~~\n");
-			return;
+			for(s32 i = 0; i < info.m_RunningInfo.m_ClientList.Size(); ++i)
+			{
+				StartTesting(iDelayOfStartTime, iIntervalOfEachGroup, info.m_RunningInfo.m_ClientList[i]);
+				D_Output("[RDV Point] release test of %d\n", info.m_RunningInfo.m_uiCurrentRunningID);
+			}
+			it = m_poRDVList.erase(it);
+		}
+		else
+		{
+			++it;
 		}
 	}
 }	
@@ -670,53 +742,73 @@ void VMVupManager::_HandleUdpPack()
 			case EPT_C2M_ReachRDVPoint:
 				{
 					u16 uiRDVPoint = poPack->m_unValue.m_ReachRDVPointParam.m_uiRDVPointID;
-					RDVPointListIterator it = m_poRDVList.find(uiRDVPoint);
-					if(it == m_poRDVList.end())
+					RDVPointListIterator itRDVPoint = m_poRDVList.find(uiRDVPoint);
+					if(itRDVPoint == m_poRDVList.end())
 					{
-						D_Output("add new rdv point: %d\n", uiRDVPoint);
+						D_Output("[RDV Point] new rdv point: %d\n", uiRDVPoint);
 						RDVPointInfo info;
-						info.m_uiID = uiRDVPoint;
-						info.m_uiExpectedNum = poPack->m_unValue.m_ReachRDVPointParam.m_uiExpected;
-						info.m_uiTimeOut = poPack->m_unValue.m_ReachRDVPointParam.m_uiTimeout;
-
-						m_poRDVList.insert(std::pair<RDVPointID, RDVPointInfo>(uiRDVPoint, info));
-
-						m_RDVRunningInfo.Reset();
-						m_RDVRunningInfo.m_bHasValidValue = true;
-						m_RDVRunningInfo.m_uiCurrentRunningID = uiRDVPoint;
-						m_RDVRunningInfo.m_fStartTime = GameEngine::GetGameEngine()->GetClockMod()->GetTotalElapsedSeconds();
-						m_RDVRunningInfo.m_ClientList.PushBack(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
+						info.m_uiID								= uiRDVPoint;
+						info.m_uiExpectedNum					= poPack->m_unValue.m_ReachRDVPointParam.m_uiExpected;
+						info.m_uiTimeOut						= poPack->m_unValue.m_ReachRDVPointParam.m_uiTimeout;
+						info.m_RunningInfo.m_bHasValidValue		= true;
+						info.m_RunningInfo.m_uiCurrentRunningID = uiRDVPoint;
+						info.m_RunningInfo.m_fStartTime			= GameEngine::GetGameEngine()->GetClockMod()->GetTotalElapsedSeconds();
+						itRDVPoint = m_poRDVList.insert(std::pair<RDVPointID, RDVPointInfo>(uiRDVPoint, info)).first;
 					}
 					else
 					{
-						D_CHECK(m_RDVRunningInfo.m_bHasValidValue);
-						D_CHECK(m_RDVRunningInfo.m_uiCurrentRunningID == uiRDVPoint);
-						m_RDVRunningInfo.m_ClientList.PushBack(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
-
-						D_Output("reach: %d\n", poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
+						RDVPointInfo& pi = (*itRDVPoint).second;
+						D_CHECK(pi.m_RunningInfo.m_bHasValidValue);
+						D_CHECK(pi.m_RunningInfo.m_uiCurrentRunningID == uiRDVPoint);
+						D_CHECK(pi.m_uiExpectedNum == poPack->m_unValue.m_ReachRDVPointParam.m_uiExpected);
+						D_CHECK(pi.m_uiTimeOut == poPack->m_unValue.m_ReachRDVPointParam.m_uiTimeout);
 					}
-					if(m_RDVRunningInfo.m_CurrentNumberOfVUPInGroup + 1 > m_Parameters.m_iVUPNumInEachGroup)
+					RDVPointRunningInfo& runningInfo = (*itRDVPoint).second.m_RunningInfo;
+					runningInfo.m_ClientList.PushBack(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
+
+					RDVPointParameterListIterator itRDVPointParam = m_poRDVParam.find(uiRDVPoint);
+					if(itRDVPointParam == m_poRDVParam.end())
 					{	
-						m_RDVRunningInfo.m_CurrentGoup++;
-						m_RDVRunningInfo.m_CurrentNumberOfVUPInGroup = 1;
+						//use default
+						VMVup* vup = FindVup(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
+						if(vup)
+						{
+							vup->SetGroup(0);
+							vup->SetRDVPointID(uiRDVPoint);
+							
+							runningInfo.m_CurrentGoup = 0;
+							runningInfo.m_CurrentNumberOfVUPInGroup++;
+							
+							D_Output("[RDV Point] add vup to: 0[%d/-]\n", runningInfo.m_CurrentNumberOfVUPInGroup);
+						}
 					}
 					else
 					{
-						m_RDVRunningInfo.m_CurrentNumberOfVUPInGroup++;
-					}
-					VMVup* vup = FindVup(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
-					if(vup)
-					{
-						if(m_RDVRunningInfo.m_CurrentGoup < m_Parameters.m_iGroupNum)
-						{
-							vup->SetGroup(m_RDVRunningInfo.m_CurrentGoup);
+						const RDVPointParameter& param = (*itRDVPointParam).second;
+						if(runningInfo.m_CurrentNumberOfVUPInGroup + 1 > param.m_iVUPNumInEachGroup)
+						{	
+							runningInfo.m_CurrentGoup++;
+							runningInfo.m_CurrentNumberOfVUPInGroup = 1;
 						}
 						else
 						{
-							vup->SetGroup(-1);
+							runningInfo.m_CurrentNumberOfVUPInGroup++;
+						}
+						VMVup* vup = FindVup(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
+						if(vup)
+						{
+							if(runningInfo.m_CurrentGoup < param.m_iGroupNum)
+							{
+								vup->SetGroup(runningInfo.m_CurrentGoup);
+							}
+							else
+							{
+								vup->SetGroup(-1);
+							}
+							vup->SetRDVPointID(uiRDVPoint);
+							D_Output("[RDV Point] add vup to: %d[%d/%d]\n", runningInfo.m_CurrentGoup, runningInfo.m_CurrentNumberOfVUPInGroup, param.m_iVUPNumInEachGroup);
 						}
 					}
-					D_Output("running info: %d[%d/%d]\n", m_RDVRunningInfo.m_CurrentGoup, m_RDVRunningInfo.m_CurrentNumberOfVUPInGroup, m_Parameters.m_iVUPNumInEachGroup);
 				}
 				break;
 			}
@@ -808,11 +900,13 @@ WorkingRunner::WorkingRunner(VMVupManager* _pVUPMan, MemPool<UDP_PACKWrapper>* _
 u32 WorkingRunner::Run()
 {
 	VMThreadSafeContainer<std::vector<UDTSOCKET>>& clientSocketContainer = m_pMan->GetClientSocket(); 
-	std::vector<UDTSOCKET> rfds, efds;
+	std::vector<UDTSOCKET>* rfds = NULL, *efds = NULL;
+	rfds = new std::vector<UDTSOCKET>;
+	efds = new std::vector<UDTSOCKET>;
 	while(!m_bRequestStop)
 	{
 		std::vector<UDTSOCKET>& clientSocket = clientSocketContainer.RetrieveContrainer();
-		s32 iRet = UDT::selectEx(clientSocket, &rfds, NULL, &efds, 0);
+		s32 iRet = UDT::selectEx(clientSocket, rfds, NULL, efds, 0);
 		clientSocketContainer.ReleaseContrainer();
 		
 		if(iRet == UDT::ERROR)
@@ -828,8 +922,8 @@ u32 WorkingRunner::Run()
 		{
 			//Handle rfds
 			UDP_PACKWrapper recvPacket;
-			std::vector<UDTSOCKET>::const_iterator itRead = rfds.begin();
-			for(itRead = rfds.begin(); itRead != rfds.end(); ++itRead)
+			std::vector<UDTSOCKET>::const_iterator itRead = rfds->begin();
+			for(itRead = rfds->begin(); itRead != rfds->end(); ++itRead)
 			{
 				UDTSOCKET readSocket = *itRead;
 				D_CHECK(readSocket != UDT::INVALID_SOCK);
@@ -843,14 +937,17 @@ u32 WorkingRunner::Run()
 				m_pUDPPackBuffer->InsertUDPData(recvPacket);
 			}
 			//Handle efds
-			std::vector<UDTSOCKET>::const_iterator itExpect = efds.begin();
-			for(itExpect = efds.begin(); itExpect != efds.end(); ++itExpect)
+			std::vector<UDTSOCKET>::const_iterator itExpect = efds->begin();
+			for(itExpect = efds->begin(); itExpect != efds->end(); ++itExpect)
 			{
 				UDTSOCKET expectSocket = *itExpect;
 				m_pMan->LostConnection(expectSocket);
 			}
 		}
 	}
+	//TJQ: crash if clean up these vector, don't know why
+	//delete rfds;
+	//delete efds;
 	return 0;
 }
 void WorkingRunner::NotifyQuit()

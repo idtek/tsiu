@@ -1,11 +1,11 @@
 #include "VMVup.h"
 
 const VMVup::VupStatus VMVup::kStatus[EVupStatus_Num]	= {
-	VMVup::VupStatus(EVupStatus_Invalid,	"1.Invalid"),
-	VMVup::VupStatus(EVupStatus_Ready,		"1.Ready"),
-	VMVup::VupStatus(EVupStatus_Running,	"1.Running"),
-	VMVup::VupStatus(EVupStatus_Success,	"1.Success"),
-	VMVup::VupStatus(EVupStatus_Failed,		"1.Failed")
+	VMVup::VupStatus(EVupStatus_Invalid,	"1.Invalid"	),
+	VMVup::VupStatus(EVupStatus_Ready,		"1.Ready"	),
+	VMVup::VupStatus(EVupStatus_Running,	"1.Running"	),
+	VMVup::VupStatus(EVupStatus_Success,	"1.Success"	),
+	VMVup::VupStatus(EVupStatus_Failed,		"1.Failed"	)
 };
 
 const VMVup::VupStatus VMVup::kTestPhase[ETestPhase_Num]	= {
@@ -50,6 +50,12 @@ VMVup::VMVup(s32 _id, const Char* _ipAddr, u16 _port)
 	, m_uiCurrentStatus(EVupStatus_Invalid)
 	, m_uiCurrentTestPhase(ETestPhase_INVALID)
 	, m_iGroup(-1)
+	, m_iRDVPointID(0)
+	, m_uiLastStatus(EVupStatus_Invalid)
+	, m_uiLastTestPhase(ETestPhase_INVALID)
+#ifdef USE_UDT_LIB
+	, m_ClientSocket(UDT::INVALID_SOCK)
+#endif
 {
 	kStatusSummary[m_uiCurrentStatus]++;
 	kTestPhaseSummary[m_uiCurrentTestPhase]++;

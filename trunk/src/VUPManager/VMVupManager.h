@@ -101,15 +101,7 @@ class VMVupManager : public Object
 	typedef std::map<s32, VMVup*>::iterator			VUPMapIterator;
 	typedef std::map<s32, VMVup*>::const_iterator	VUPMapConstIterator;
 
-	typedef u16 RDVPointID;
-	struct RDVPointInfo{
-		RDVPointID	m_uiID;
-		u16			m_uiExpectedNum;
-		u16			m_uiTimeOut;
-	};
-	typedef std::map<RDVPointID, RDVPointInfo>				RDVPointList;
-	typedef std::map<RDVPointID, RDVPointInfo>::iterator	RDVPointListIterator;
-
+	typedef u16 RDVPointID;;
 	struct RDVPointRunningInfo{
 		RDVPointRunningInfo(){
 			Reset();
@@ -132,27 +124,42 @@ class VMVupManager : public Object
 		s32			m_CurrentGoup;
 		s32			m_CurrentNumberOfVUPInGroup;
 	};
+	struct RDVPointInfo{
+		RDVPointID			m_uiID;
+		u16					m_uiExpectedNum;
+		u16					m_uiTimeOut;
+		RDVPointRunningInfo	m_RunningInfo;
+	};
+	typedef std::map<RDVPointID, RDVPointInfo>				RDVPointList;
+	typedef std::map<RDVPointID, RDVPointInfo>::iterator	RDVPointListIterator;
+
+	struct RDVPointParameter
+	{
+		s32	m_iIntervalOfEachGroup;
+		s32	m_iDelayOfStartTime;
+		s32	m_iGroupNum;
+		s32	m_iVUPNumInEachGroup;
+	};
+	typedef std::map<RDVPointID, RDVPointParameter>				RDVPointParameterList;
+	typedef std::map<RDVPointID, RDVPointParameter>::iterator	RDVPointParameterListIterator;
 
 	struct ManagerParameter{
 		ManagerParameter()
 			: m_iHideSummaryIfZero(false)
 		{}
-		s32			m_iIntervalOfEachGroup;
-		s32			m_iDelayOfStartTime;
-		s32			m_iGroupNum;
-		s32			m_iVUPNumInEachGroup;
-		s32			m_iHideSummaryIfZero;
+		s32 m_iHideSummaryIfZero;
 	};
 
 public:
 	static s32 AddVup(const VMCommand::ParamList& _paramList);
 	static s32 UpdateVup(const VMCommand::ParamList& _paramList);
 	static s32 RemoveVup(const VMCommand::ParamList& _paramList);
-	static s32 StartTesting(const VMCommand::ParamList& _paramList);
 	static s32 Refresh(const VMCommand::ParamList& _paramList);
 	static s32 KillClient(const VMCommand::ParamList& _paramList);
 	static s32 SetParameter(const VMCommand::ParamList& _paramList);
 	static s32 GetParameter(const VMCommand::ParamList& _paramList);
+	static s32 SetRDVParameter(const VMCommand::ParamList& _paramList);
+	static s32 GetRDVParameter(const VMCommand::ParamList& _paramList);
 
 public:
 	VMVupManager();
@@ -166,12 +173,16 @@ public:
 	VMVup*			FindVup(s32 _id);
 	const VMVup*	FindVup(s32 _id) const;
 
-	void			StartTesting(s32 _id);
+	void			StartTesting(s32 _iDelayOfStartTime, s32 _iIntervalOfEachGroup, s32 _id);
 	void			Refresh();
 	void			KillClient(s32 _id);
 
-	void			SetParameter(StringPtr _pOption, const VMCommandParamHolder& _param);
-	void			GetParameter(StringPtr _pOption);
+	RDVPointParameter*	FindRDVParam(s32 _iMajor, s32 _iMiner);
+	RDVPointParameter*	AddRDVParam(s32 _iMajor, s32 _iMiner);
+	void				SetRDVParameter(RDVPointParameter& _pRDVParam, StringPtr _pOption, const VMCommandParamHolder& _param);
+	void				GetRDVParameter(const RDVPointParameter& _pRDVParam, StringPtr _pOption) const;
+	void				SetParameter(StringPtr _pOption, const VMCommandParamHolder& _param);
+	void				GetParameter(StringPtr _pOption) const;
 
 #ifdef USE_UDT_LIB
 	void											AddClientSocket(UDTSOCKET _pNewSocket);
@@ -207,7 +218,7 @@ private:
 #endif
 
 	RDVPointList				m_poRDVList;
-	RDVPointRunningInfo			m_RDVRunningInfo;
+	RDVPointParameterList		m_poRDVParam;
 
 	u16							m_uiServerPort;
 	u16							m_uiClientStartPort;
