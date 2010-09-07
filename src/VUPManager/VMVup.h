@@ -49,6 +49,7 @@ public:
 	D_Inline StringPtr	GetIPAddress()			const	{	return m_strIPAddress.c_str();	}
 	D_Inline u8			GetCurrentTestPhase()	const	{	return m_uiCurrentTestPhase;	}
 	D_Inline s32		GetGroup()				const	{	return m_iGroup;				}
+	D_Inline s32		GetRDVPointID()			const	{	return m_iRDVPointID;			}
 	D_Inline u8			GetLastStaus()			const	{	return m_uiLastStatus;			}
 	D_Inline u8			GetLastTestPhase()		const	{	return m_uiLastTestPhase;		}
 
@@ -59,6 +60,10 @@ public:
 	D_Inline void		SetGroup(s32 _group)
 	{	
 		m_iGroup = _group;
+	}
+	D_Inline void		SetRDVPointID(s32 _rdvid)
+	{	
+		m_iRDVPointID = _rdvid;
 	}
 
 	void SetStatus(u8 _status);
@@ -84,6 +89,7 @@ private:
 	u16				m_uiPort;
 	std::string		m_strIPAddress;
 	s32				m_iGroup;
+	s32				m_iRDVPointID;
 
 #ifdef USE_UDT_LIB
 	UDTSOCKET		m_ClientSocket;

@@ -25,6 +25,7 @@ Bool VMCommandCenter::ExecuteFromString(StringPtr _cmd)
 	Char tmp[VMCommand::kMaxCommandLength];
 	strncpy(tmp, _cmd, VMCommand::kMaxCommandLength);
 	token = strtok(tmp, " ");
+	token = strlwr(token);
 	VMCommandMapIterator it = m_CommandMap.find(token);
 	if(it == m_CommandMap.end())
 	{
@@ -46,8 +47,12 @@ Bool VMCommandCenter::ExecuteFromString(StringPtr _cmd)
 	s32 iRet = rc.Execute(paramList);
 	if(iRet)
 	{
-		D_Output("[VMCommandCenter::Parse] Error occurs when executing command\n");
+		D_Output("[CMD] executing command failed: %s\n", _cmd);
 		return false;
+	}
+	else
+	{
+		//D_Output("[CMD] execute command successfully: %s\n", _cmd);
 	}
 	return true;
 }

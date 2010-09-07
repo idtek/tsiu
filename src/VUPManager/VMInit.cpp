@@ -255,6 +255,11 @@ long MyCanvas::onCmdSendCommand(FXObject* sender, FXSelector sel,void* ptr)
 		Bool bRet = vmCenter->ExecuteFromString(commandStr.text());
 		if(!bRet)
 		{
+			FXMessageBox::error(g_poEngine->GetRenderMod()->GetGUIMainWindow(), MBOX_OK, "Error Executing Command", "Error occurs: %s", commandStr);
+		}
+		else
+		{
+			FXMessageBox::information(g_poEngine->GetRenderMod()->GetGUIMainWindow(), MBOX_OK, "Executing Command", "Executing successfully: %s", commandStr);
 		}
 	}
 	m_Command->selectAll();
@@ -305,6 +310,12 @@ void MyCanvas::onUpdateList(const Event* _poEvent)
 	for(;it != pManager->m_poVupMap.end(); ++it)
 #else
 	const VMVupManager::VUPMap& vupMap = pManager->m_poVupMapByPassport.GetContrainer();
+	s32 rowInTable = m_VUPTable->getNumRows();
+	s32 sizeInMap = (s32)vupMap.size();
+	if(sizeInMap > rowInTable)
+	{
+		m_VUPTable->insertRows(iRow, sizeInMap - rowInTable);
+	}
 	VMVupManager::VUPMapConstIterator it = vupMap.begin();
 	for(;it != vupMap.end(); ++it)
 #endif	
@@ -319,7 +330,7 @@ void MyCanvas::onUpdateList(const Event* _poEvent)
 		m_VUPTable->setItemText(iRow, 0, zValue);
 		m_VUPTable->setItemJustify(iRow, 0, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		sprintf(zValue, "%d", vup.GetGroup());
+		sprintf(zValue, "(%d, %d)%d", vup.GetRDVPointID() / 1000, vup.GetRDVPointID() % 1000, vup.GetGroup());
 		m_VUPTable->setItemText(iRow, 1, zValue);
 		m_VUPTable->setItemJustify(iRow, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
