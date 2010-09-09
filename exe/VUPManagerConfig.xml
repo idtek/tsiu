@@ -4,7 +4,7 @@
 	<clientendport>50050</clientendport>
 	<broadcastip>10.255.255.255</broadcastip>
 	<commands>
-		<command>setrdvp 1 1 -groupnumber 3 -vupsnumberingroup 3 -delay 5000 -interval 5000</command>
+		<command>setrdvp 1 1 -groupnumber 3 -vupsnumberingroup 4 -delay 2000 -interval 100</command>
 		<command>setp -hidesummaryifzero 0</command>
 	</commands>
 </config>

@@ -415,33 +415,67 @@ void MyCanvas::onUpdateGroup(const Event* _poEvent)
 			for(s32 i = 0; i < gi.m_Groups.size(); ++i)
 			{
 				const VMSummary::GroupInfoData& data = gi.m_Groups[i];
-				sprintf(zValue, "Group%d(%d/%d)", i, data.m_iCurVUPsInGroup, data.m_iMaxVUPsInGroup);
-				m_GroupList->setItemText(pChild, zValue);
-
-				iMaxVUPs += data.m_iMaxVUPsInGroup;
-
-				if(pChild->getNumChildren() != data.m_iMaxVUPsInGroup)
+				if(data.m_iMaxVUPsInGroup == -1)
 				{
-					m_GroupList->removeItems(pChild->getFirst(), pChild->getLast());
-					for(s32 j = 0; j < data.m_iMaxVUPsInGroup; ++j)
+					sprintf(zValue, "Group%d(%d/%d)", i, data.m_iCurVUPsInGroup, iTotalVUPs);
+					m_GroupList->setItemText(pChild, zValue);
+					
+					iMaxVUPs = iTotalVUPs;
+
+					if(pChild->getNumChildren() > data.m_iCurVUPsInGroup)
 					{
-						m_GroupList->appendItem(pChild, "<Empty>");
+						s32 removeCnt = pChild->getNumChildren() - data.m_iCurVUPsInGroup;
+						for(s32 j = 0; j < removeCnt; ++j)
+						{
+							m_GroupList->removeItem(pChild->getLast());
+						}
+					}
+					else if(pChild->getNumChildren() < data.m_iCurVUPsInGroup)
+					{
+						s32 addCnt = data.m_iCurVUPsInGroup - pChild->getNumChildren();
+						for(s32 j = 0; j < addCnt; ++j)
+						{
+							m_GroupList->appendItem(pChild, "<Empty>");
+						}
+					}
+					FXTreeItem* pVUP = pChild->getFirst();
+					for(s32 j = 0; j < data.m_VUPsPassport.size(); ++j)
+					{
+						sprintf(zValue, "VUP(%d)", data.m_VUPsPassport[j]);
+						m_GroupList->setItemText(pVUP, zValue);
+						pVUP = pVUP->getNext();
 					}
 				}
-				D_CHECK(data.m_VUPsPassport.size() <= data.m_iMaxVUPsInGroup);
-				FXTreeItem* pVUP = pChild->getFirst();
-				for(s32 j = 0; j < data.m_VUPsPassport.size(); ++j)
+				else
 				{
-					sprintf(zValue, "VUP(%d)", data.m_VUPsPassport[j]);
-					m_GroupList->setItemText(pVUP, zValue);
-					pVUP = pVUP->getNext();
+					sprintf(zValue, "Group%d(%d/%d)", i, data.m_iCurVUPsInGroup, data.m_iMaxVUPsInGroup);
+					m_GroupList->setItemText(pChild, zValue);
+
+					iMaxVUPs += data.m_iMaxVUPsInGroup;
+
+					if(pChild->getNumChildren() != data.m_iMaxVUPsInGroup)
+					{
+						m_GroupList->removeItems(pChild->getFirst(), pChild->getLast());
+						for(s32 j = 0; j < data.m_iMaxVUPsInGroup; ++j)
+						{
+							m_GroupList->appendItem(pChild, "<Empty>");
+						}
+					}
+					D_CHECK(data.m_VUPsPassport.size() <= data.m_iMaxVUPsInGroup);
+					FXTreeItem* pVUP = pChild->getFirst();
+					for(s32 j = 0; j < data.m_VUPsPassport.size(); ++j)
+					{
+						sprintf(zValue, "VUP(%d)", data.m_VUPsPassport[j]);
+						m_GroupList->setItemText(pVUP, zValue);
+						pVUP = pVUP->getNext();
+					}
+					for(s32 j = data.m_VUPsPassport.size(); j < data.m_iMaxVUPsInGroup; ++j)
+					{
+						m_GroupList->setItemText(pVUP, "<Empty>");
+						pVUP = pVUP->getNext();
+					}
+					pChild = pChild->getNext();
 				}
-				for(s32 j = data.m_VUPsPassport.size(); j < data.m_iMaxVUPsInGroup; ++j)
-				{
-					m_GroupList->setItemText(pVUP, "<Empty>");
-					pVUP = pVUP->getNext();
-				}
-				pChild = pChild->getNext();
 			}
 			sprintf(zValue, "Groups Overview(%d/%d)", iTotalVUPs, iMaxVUPs);
 			m_GroupList->setItemText(pSummary, zValue);
@@ -514,7 +548,7 @@ void MyCanvas::onUpdateList(const Event* _poEvent)
 		m_VUPTable->setItemText(iRow, 0, zValue);
 		m_VUPTable->setItemJustify(iRow, 0, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		sprintf(zValue, "(%d, %d)%d", vup.GetRDVPointID() / 1000, vup.GetRDVPointID() % 1000, vup.GetGroup());
+		sprintf(zValue, "(%d, %d)%d", Protocal::GetRDVPointMajor(vup.GetRDVPointID()), Protocal::GetRDVPointMajor(vup.GetRDVPointID()), vup.GetGroup());
 		m_VUPTable->setItemText(iRow, 1, zValue);
 		m_VUPTable->setItemJustify(iRow, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 

@@ -78,7 +78,7 @@ VMVup::~VMVup()
 		guParam.m_MaxNumberInGroup = 0;		//ignore
 		guParam.m_MyGroup = m_iGroup;
 		guParam.m_VUPsPassport = m_iUniqueID;
-		VMSummary::GetPtr()->UpdateGroupInfo(m_iRDVPointID / 1000, m_iRDVPointID % 1000, 0, guParam);
+		VMSummary::GetPtr()->UpdateGroupInfo(Protocal::GetRDVPointMajor(GetRDVPointID()), Protocal::GetRDVPointMajor(GetRDVPointID()), 0, guParam);
 	}
 #ifdef USE_UDT_LIB
 	if(m_ClientSocket != UDT::INVALID_SOCK)
