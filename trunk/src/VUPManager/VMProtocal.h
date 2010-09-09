@@ -98,4 +98,20 @@ struct UDP_PACK
 	}m_unValue;
 };
 
+namespace Protocal
+{
+	inline unsigned short GetRDVPointMajor(unsigned short _rdvPoint)
+	{
+		return _rdvPoint / 1000;
+	}
+	inline unsigned short GetRDVPointMinor(unsigned short _rdvPoint)
+	{
+		return _rdvPoint % 1000;
+	}
+	inline unsigned short GetRDVPointID(unsigned short _majorid, unsigned short _minorid )
+	{
+		return _majorid * 1000 + _minorid;
+	}
+}
+
 #endif
