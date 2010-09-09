@@ -160,6 +160,7 @@ public:
 	static s32 GetParameter(const VMCommand::ParamList& _paramList);
 	static s32 SetRDVParameter(const VMCommand::ParamList& _paramList);
 	static s32 GetRDVParameter(const VMCommand::ParamList& _paramList);
+	static s32 FindVUP(const VMCommand::ParamList& _paramList);
 
 public:
 	VMVupManager();
@@ -199,6 +200,9 @@ private:
 	void		_HandleUdpPack();
 	void		_UpdateRDVPoint();
 	void		_UpdateSummary();
+
+	//Event handler
+	void onAgentLeave(const Event* _poEvent);
 
 private:
 	MemPool<UDP_PACKWrapper>*		m_pUDPPackBuffer;

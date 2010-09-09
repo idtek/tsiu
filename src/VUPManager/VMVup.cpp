@@ -1,4 +1,5 @@
 #include "VMVup.h"
+#include "VMSummary.h"
 
 const VMVup::VupStatus VMVup::kStatus[EVupStatus_Num]	= {
 	VMVup::VupStatus(EVupStatus_Invalid,	"1.Invalid"	),
@@ -39,12 +40,8 @@ const VMVup::VupStatus VMVup::kTestPhase[ETestPhase_Num]	= {
 	VMVup::VupStatus(ETestPhase_GET_GAME_RESULT,        	"2.Get Game Result"			)
 };
 
-s32 VMVup::kStatusSummary[EVupStatus_Num] = {0};
-s32 VMVup::kTestPhaseSummary[ETestPhase_Num] = {0};
-std::map<std::string, s32> VMVup::kIpSummary;
-
-VMVup::VMVup(s32 _id, const Char* _ipAddr, u16 _port)
-	: m_iUniqueID(_id)
+VMVup::VMVup(const Char* _ipAddr, u16 _port)
+	: m_iUniqueID(-1)
 	, m_strIPAddress(_ipAddr)
 	, m_uiPort(_port)
 	, m_uiCurrentStatus(EVupStatus_Invalid)
@@ -57,59 +54,97 @@ VMVup::VMVup(s32 _id, const Char* _ipAddr, u16 _port)
 	, m_ClientSocket(UDT::INVALID_SOCK)
 #endif
 {
-	kStatusSummary[m_uiCurrentStatus]++;
-	kTestPhaseSummary[m_uiCurrentTestPhase]++;
-
-	std::map<std::string, s32>::iterator it = kIpSummary.find(_ipAddr);
-	if(it == kIpSummary.end())
-	{
-		kIpSummary.insert(std::pair<std::string, s32>(_ipAddr, 1));
-	}
-	else
-	{
-		(*it).second++;
-	}
 }
 
 VMVup::~VMVup()
 {
-	kStatusSummary[m_uiCurrentStatus]--;
-	kTestPhaseSummary[m_uiCurrentTestPhase]--;
-
-	std::map<std::string, s32>::iterator it = kIpSummary.find(m_strIPAddress);
-	if(it != kIpSummary.end())
+	if(HasRegistered())
 	{
-		(*it).second--;
+		//Update Summary
+		VMSummary::SummaryUpdateParam suParam;
+		suParam.m_UpdateType = VMSummary::SummaryUpdateParam::ESummaryUpdateType_VUP |
+							   VMSummary::SummaryUpdateParam::ESummaryUpdateType_Status |
+							   VMSummary::SummaryUpdateParam::ESummaryUpdateType_TestPhase;
+		suParam.m_AddorRemove = false;
+		suParam.m_LastStatus = m_uiCurrentStatus;
+		suParam.m_CurStatus = -1;
+		suParam.m_LastTestPhase = m_uiCurrentTestPhase;
+		suParam.m_CurTestPhase = -1;
+		VMSummary::GetPtr()->UpdateSummary(m_strIPAddress.c_str(), suParam);
+
+		//Update Summary
+		VMSummary::GroupUpdateParam guParam;
+		guParam.m_AddorRemove = false;
+		guParam.m_MaxNumberInGroup = 0;		//ignore
+		guParam.m_MyGroup = m_iGroup;
+		guParam.m_VUPsPassport = m_iUniqueID;
+		VMSummary::GetPtr()->UpdateGroupInfo(m_iRDVPointID / 1000, m_iRDVPointID % 1000, 0, guParam);
 	}
+#ifdef USE_UDT_LIB
+	if(m_ClientSocket != UDT::INVALID_SOCK)
+		UDT::close(m_ClientSocket);
+#endif
 }
 
 void VMVup::SetStatus(u8 _status)
 {
-	if(_status >= EVupStatus_Num)
+	if(_status >= EVupStatus_Num || _status < 0)
 	{
 		D_CHECK(0);
 	}
 	else
 	{
-		m_uiLastStatus = m_uiCurrentStatus;
-		kStatusSummary[m_uiLastStatus]--;
+		D_CHECK(HasRegistered());
 
+		m_uiLastStatus = m_uiCurrentStatus;
 		m_uiCurrentStatus = _status;
-		kStatusSummary[m_uiCurrentStatus]++;
+
+		//Update Summary
+		VMSummary::SummaryUpdateParam suParam;
+		suParam.m_UpdateType = VMSummary::SummaryUpdateParam::ESummaryUpdateType_Status;
+		suParam.m_LastStatus = m_uiLastStatus;
+		suParam.m_CurStatus = m_uiCurrentStatus;
+		VMSummary::GetPtr()->UpdateSummary(m_strIPAddress.c_str(), suParam);
 	}
 }
 void VMVup::SetTestPhase(u8 _phase)
 {
-	if(_phase >= ETestPhase_Num)
+	if(_phase >= ETestPhase_Num || _phase < 0)
 	{
 		D_CHECK(0);
 	}
 	else
 	{
-		m_uiLastTestPhase = m_uiCurrentTestPhase;
-		kTestPhaseSummary[m_uiLastTestPhase]--;
+		D_CHECK(HasRegistered());
 
+		m_uiLastTestPhase = m_uiCurrentTestPhase;
 		m_uiCurrentTestPhase = _phase;
-		kTestPhaseSummary[m_uiCurrentTestPhase]++;
+
+		//Update Summary
+		VMSummary::SummaryUpdateParam suParam;
+		suParam.m_UpdateType = VMSummary::SummaryUpdateParam::ESummaryUpdateType_TestPhase;
+		suParam.m_LastTestPhase = m_uiLastTestPhase;
+		suParam.m_CurTestPhase = m_uiCurrentTestPhase;
+		VMSummary::GetPtr()->UpdateSummary(m_strIPAddress.c_str(), suParam);
 	}
+}
+void VMVup::SetUniqueID(s32 _uid)
+{
+	m_iUniqueID = _uid;
+
+	//Update Summary
+	VMSummary::SummaryUpdateParam suParam;
+	suParam.m_UpdateType = VMSummary::SummaryUpdateParam::ESummaryUpdateType_VUP;
+	suParam.m_AddorRemove = true;
+	VMSummary::GetPtr()->UpdateSummary(m_strIPAddress.c_str(), suParam);
+}
+void VMVup::SetGroup(s32 _group)
+{	
+	D_CHECK(HasRegistered());
+	m_iGroup = _group;
+}
+void VMVup::SetRDVPointID(s32 _rdvid)
+{	
+	D_CHECK(HasRegistered());
+	m_iRDVPointID = _rdvid;
 }

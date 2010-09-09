@@ -25,7 +25,7 @@ Bool VMCommandCenter::ExecuteFromString(StringPtr _cmd)
 	Char tmp[VMCommand::kMaxCommandLength];
 	strncpy(tmp, _cmd, VMCommand::kMaxCommandLength);
 	token = strtok(tmp, " ");
-	token = strlwr(token);
+	token = _strlwr(token);
 	VMCommandMapIterator it = m_CommandMap.find(token);
 	if(it == m_CommandMap.end())
 	{

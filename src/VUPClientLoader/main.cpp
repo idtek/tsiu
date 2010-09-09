@@ -11,11 +11,8 @@ int main(int argc, char* argv[])
 	vcAdapter->RegisterMe();
 	//delete vcAdapter;
 
-	while(1)
-	{
-		vcAdapter->Tick();
-		::Sleep(1000);
-	}
+	::Sleep(9999999);
+	
 	return 1;
 }
 

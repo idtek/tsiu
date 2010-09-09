@@ -35,12 +35,9 @@ public:
 	}
 	static const VupStatus kStatus[EVupStatus_Num];
 	static const VupStatus kTestPhase[ETestPhase_Num];
-	static s32 kStatusSummary[EVupStatus_Num];
-	static s32 kTestPhaseSummary[ETestPhase_Num];
-	static std::map<std::string, s32> kIpSummary;
 
 public:
-	VMVup(s32 _id, const Char* _ipAddr, u16 _port);
+	VMVup(const Char* _ipAddr, u16 _port);
 	~VMVup();
 
 	D_Inline s32		GetUniqueID()			const	{	return m_iUniqueID;				}
@@ -53,19 +50,12 @@ public:
 	D_Inline u8			GetLastStaus()			const	{	return m_uiLastStatus;			}
 	D_Inline u8			GetLastTestPhase()		const	{	return m_uiLastTestPhase;		}
 
-	D_Inline void		SetUniqueID(s32 _uid)
-	{
-		m_iUniqueID = _uid;
-	}
-	D_Inline void		SetGroup(s32 _group)
-	{	
-		m_iGroup = _group;
-	}
-	D_Inline void		SetRDVPointID(s32 _rdvid)
-	{	
-		m_iRDVPointID = _rdvid;
-	}
-
+	void SetUniqueID(s32 _uid);
+	
+	//TJQ:
+	//precondition: HasRegistered
+	void SetGroup(s32 _group);
+	void SetRDVPointID(s32 _rdvid);
 	void SetStatus(u8 _status);
 	void SetTestPhase(u8 _phase);
 	
@@ -79,6 +69,10 @@ public:
 		return m_ClientSocket;
 	}
 #endif
+	D_Inline Bool HasRegistered() const
+	{
+		return m_iUniqueID >= 0;
+	}
 
 private:
 	s32				m_iUniqueID;
