@@ -2,6 +2,8 @@
 #include "VCGlobalDef.h"
 #include "tinyxml.h"
 #include "udt.h"
+#include <time.h>
+#include <iostream>
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -13,6 +15,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
 namespace{
 
+	class OutRedirector;
+		
 #ifndef USE_UDT_LIB
 	Socket*				g_pRecvSocket	 = NULL;
 	Socket*				g_pSendSocket	 = NULL;
@@ -24,6 +28,11 @@ namespace{
 	u16					g_uiServerPort	= 51001;
 	u16					g_uiStartPort	= 50000;
 	u16					g_uiEndPort		= 50050;
+
+	std::string			g_strLogDir;
+
+	Bool				g_IsLogRedirected = false;
+	OutRedirector*		g_fp = NULL;
 
 #ifdef USE_UDT_LIB
 	UDTSOCKET			g_pRecvSocket = UDT::INVALID_SOCK;
@@ -62,12 +71,34 @@ namespace{
 		TiXmlElement* clientEndPort = clientStartPort->NextSiblingElement();
 		g_uiEndPort = atoi(clientEndPort->GetText());
 
-		D_Output("Client Parameter:\nServer IP: %s\nServer Port: %d\nClient Start Port = %d\nClient End Port = %d\n", g_strServerIP.c_str(), g_uiServerPort, g_uiStartPort, g_uiEndPort);
+		TiXmlElement* logDir = root->FirstChildElement("logdir");
+		g_strLogDir = logDir->GetText();
+
+		TiXmlElement* logRedirect = root->FirstChildElement("logredirect");
+		g_IsLogRedirected = (atoi(logRedirect->GetText()) != 0);
+
+		D_Output("Client Parameter:\nServer IP: %s\nServer Port: %d\nClient Start Port = %d\nClient End Port = %d\nLog Dir = %s\n", 
+			g_strServerIP.c_str(), g_uiServerPort, g_uiStartPort, g_uiEndPort, g_strLogDir.c_str());
 
 		delete pConfigFile;
 
 		return true;
 	}
+
+	class OutRedirector {
+	public:
+		OutRedirector(std::string filename) : _redirectedStream(filename.c_str()){
+			_oldBuf = std::cout.rdbuf(_redirectedStream.rdbuf());
+		}
+
+		~OutRedirector() {
+			_redirectedStream.close();
+			std::cout.rdbuf(_oldBuf);
+		}
+	private:
+		std::ofstream _redirectedStream;
+		std::streambuf *   _oldBuf;
+	};
 };
 
 //--------------------------------------------------------------------------------
@@ -125,7 +156,7 @@ u32 RecvUDPRunner::Run()
 		s32 iRet = UDT::recvmsg(m_pRecvSocket, (char*)&pack, sizeof(UDP_PACK));
 		if(iRet == UDT::ERROR)
 		{
-			D_Output("recvmsg failed(%d): %s\n", m_pRecvSocket, UDT::getlasterror().getErrorMessage());
+			std::cout<< "recvmsg failed(" << m_pRecvSocket << "): " << UDT::getlasterror().getErrorMessage() << std::endl;
 			return 1;
 		}
 		else
@@ -163,6 +194,11 @@ VUPClientAdapter::VUPClientAdapter()
 }
 VUPClientAdapter::~VUPClientAdapter()
 {
+	g_pRecvThread->Stop(1000);
+	D_SafeDelete(g_pRecvThread);
+	D_SafeDelete(g_pUDPPackBuffer);
+	D_SafeDelete(g_fp);
+
 #ifndef USE_UDT_LIB
 	WSACleanup();
 #else
@@ -177,6 +213,22 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	{
 		D_Output("read configuration file failed\n");
 		//return false;
+	}
+
+	if(g_IsLogRedirected)
+	{
+		struct tm * timeNow;
+		__time64_t  thetime;
+		_time64(&thetime);
+		timeNow = _localtime64(&thetime);
+
+		Char strLogName[MAX_PATH];
+		Char strHostName[255];
+		gethostname(strHostName, sizeof(strHostName));
+		sprintf(strLogName, "%s\\%s_%d_%d_%d_%d_%d_%d_%d.log", g_strLogDir.c_str(), strHostName, 
+			timeNow->tm_year + 1900, timeNow->tm_mon + 1, timeNow->tm_mday, timeNow->tm_hour, timeNow->tm_min, timeNow->tm_sec, ::GetCurrentProcessId());
+		D_Output("Out put log name: %s\n", strLogName);
+		g_fp = new OutRedirector(strLogName);
 	}
 
 	//Init status
@@ -241,6 +293,21 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 			Sleep(10);
 	}
 
+	//int mssSize = 750;
+	//if(UDT::ERROR == UDT::setsockopt(g_pRecvSocket, 0, UDT_MSS, (const char*)&mssSize, sizeof(int)))
+	//{
+	//	D_Output("setsockopt mss: %s\n", UDT::getlasterror().getErrorMessage());
+	//	return false;
+	//}
+	//linger l;
+	//l.l_linger = 1;
+	//l.l_onoff = 0;
+	//if(UDT::ERROR == UDT::setsockopt(g_pRecvSocket, 0, UDT_LINGER, (const int*)&l, sizeof(linger)))
+	//{
+	//	D_Output("setsockopt mss: %s\n", UDT::getlasterror().getErrorMessage());
+	//	return false;
+	//}
+
 	sockaddr_in addrinfo;
 	addrinfo.sin_family = AF_INET;
 	addrinfo.sin_addr.S_un.S_addr = inet_addr(g_strServerIP.c_str());
@@ -249,7 +316,7 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	{
 		if(UDT::ERROR == UDT::connect(g_pRecvSocket, (struct sockaddr*)&addrinfo, sizeof(addrinfo)))
 		{
-			D_Output("connected failed: %s, waiting for reconnecting \n", UDT::getlasterror().getErrorMessage());
+			std::cout << "connected failed: " << UDT::getlasterror().getErrorMessage() << ", waiting for reconnecting" << std::endl;
 			Sleep(5000);
 		}
 		else
@@ -288,7 +355,7 @@ bool VUPClientAdapter::RegisterMe()
 		s32 iRet = UDT::sendmsg(g_pRecvSocket, (const Char*)&pack, sizeof(UDP_PACK));
 		if(iRet == UDT::ERROR)
 		{
-			D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+			std::cout << "sendmsg failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
 			return false;
 		}
 		return true;
@@ -330,7 +397,7 @@ void VUPClientAdapter::ReachRDVPoint(unsigned short _uiRDVPointID, unsigned shor
 	s32 iRet = UDT::sendmsg(g_pRecvSocket, (const Char*)&pack, sizeof(UDP_PACK));
 	if(iRet == UDT::ERROR)
 	{
-		D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+		std::cout << "sendmsg failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
 		return;
 	}
 #endif
@@ -390,7 +457,7 @@ void VUPClientAdapter::_HandleRecvPack()
 					s32 iRet = UDT::sendmsg(g_pRecvSocket, (const Char*)&pack, sizeof(UDP_PACK));
 					if(iRet == UDT::ERROR)
 					{
-						D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+						std::cout << "sendmsg failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
 						break;
 					}
 #endif
@@ -443,7 +510,7 @@ void VUPClientAdapter::_HandleWatchedValue()
 			s32 iRet = UDT::sendmsg(g_pRecvSocket, (const Char*)&pack, sizeof(UDP_PACK));
 			if(iRet == UDT::ERROR)
 			{
-				D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+				std::cout << "sendmsg failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
 				continue;
 			}
 #endif

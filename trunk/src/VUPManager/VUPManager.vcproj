@@ -355,6 +355,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VMSummary.h"
+				>
+			</File>
+			<File
 				RelativePath=".\VMVup.cpp"
 				>
 			</File>
@@ -378,6 +382,10 @@
 			</File>
 			<File
 				RelativePath=".\VMProtocal.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VMSummary.cpp"
 				>
 			</File>
 			<File

@@ -4,6 +4,7 @@
 #include "VMVup.h"
 #include <fxkeys.h>
 #include <sstream>
+#include "VMSummary.h"
 //--------------------------------------------------------------------------------
 Engine*		g_poEngine	= NULL;
 //-----------------------------------------------------------------------------------------------
@@ -25,6 +26,10 @@ void WatchedInfos::Init()
 	{
 		ADD_WATCHVALUE(VMVup::kTestPhase[i].GetName(), "0");
 	}
+}
+void WatchedInfos::Clear()
+{
+	m_Values.clear();
 }
 void WatchedInfos::UpdateValue(StringPtr _strName, s32 _iValue, Bool _bHideSummay)
 {	
@@ -161,7 +166,16 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	}
 
 	{
-		FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poGroupV22, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+		FXTabBook* poTabBook = new FXTabBook(poGroupV22, this, 0, PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
+		poTabBook->setTabStyle(TABBOOK_BOTTOMTABS);
+		FXuint packing_hints = poTabBook->getPackingHints();
+		packing_hints |= PACK_UNIFORM_WIDTH;
+		poTabBook->setPackingHints(packing_hints);
+
+		FXTabItem* poTab = new FXTabItem(poTabBook, "Summary View" ,NULL);
+		poTab->setTabOrientation(TAB_BOTTOM);
+		FXHorizontalFrame* poTableFrame = new FXHorizontalFrame(poTabBook, FRAME_THICK|FRAME_RAISED);
+		FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poTableFrame, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
 		FXTable* table = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY|LAYOUT_FIX_WIDTH,0,0, 260,0, 2,2,2,2);
 		table->setBackColor(FXRGB(255,255,255));
 		table->setVisibleRows(20);
@@ -179,20 +193,19 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 		table->setSelBackColor(FXRGB(128,128,128));
 		m_Summary = table;
 
-		//m_WatchedInfo.Init();
-		//m_Summary->insertRows(0, m_WatchedInfo.m_Values.size());
-		//s32 iRow = 0;
-		//WatchedInfos::WatchedValueMapInterator it;
-		//for(it = m_WatchedInfo.m_Values.begin(); it != m_WatchedInfo.m_Values.end(); ++it)
-		//{
-		//	const WatchedInfos::WatchedInfoValue& value = (*it).second;
-		//	m_Summary->setItemText(iRow, 0, value.m_ShowingName.c_str());
-		//	m_Summary->setItemJustify(iRow, 0, FXTableItem::LEFT|FXTableItem::CENTER_Y);
-		//	m_Summary->setItemText(iRow, 1, value.m_Value.c_str());
-		//	m_Summary->setItemJustify(iRow, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+		poTab = new FXTabItem(poTabBook, "Agent View" ,NULL);
+		poTab->setTabOrientation(TAB_BOTTOM);
+		poTableFrame = new FXHorizontalFrame(poTabBook, FRAME_THICK|FRAME_RAISED);
+		poBoxframe = new FXHorizontalFrame(poTableFrame, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+		m_AgentList = new FXTreeList(poBoxframe,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_RIGHT|TREELIST_SHOWS_BOXES|TREELIST_SHOWS_LINES|TREELIST_EXTENDEDSELECT);
+		m_AgentList->appendItem(NULL, "Agents");
 
-		//	iRow++;
-		//}
+		poTab = new FXTabItem(poTabBook, "RDV Points View" ,NULL);
+		poTab->setTabOrientation(TAB_BOTTOM);
+		poTableFrame = new FXHorizontalFrame(poTabBook, FRAME_THICK|FRAME_RAISED);
+		poBoxframe = new FXHorizontalFrame(poTableFrame, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+		m_GroupList = new FXTreeList(poBoxframe,NULL,0,FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_TOP|LAYOUT_RIGHT|TREELIST_SHOWS_BOXES|TREELIST_SHOWS_LINES|TREELIST_EXTENDEDSELECT);
+		m_GroupList->appendItem(NULL, "RDV Points");
 	}
 
 	//Register event handler
@@ -200,8 +213,23 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 		(EventType_t)(E_ET_UIUpdateList), 
 		new MEventHandler<MyCanvas>(this, &MyCanvas::onUpdateList));
 	GameEngine::GetGameEngine()->GetEventMod()->RegisterHandler(
-		(EventType_t)(E_ET_UIUpdateSummay), 
-		new MEventHandler<MyCanvas>(this, &MyCanvas::onUpdateSummay));
+		(EventType_t)(E_ET_UIUpdateSummary), 
+		new MEventHandler<MyCanvas>(this, &MyCanvas::onUpdateSummary));
+	GameEngine::GetGameEngine()->GetEventMod()->RegisterHandler(
+		(EventType_t)(E_ET_UIUpdateAgent), 
+		new MEventHandler<MyCanvas>(this, &MyCanvas::onUpdateAgent));
+	GameEngine::GetGameEngine()->GetEventMod()->RegisterHandler(
+		(EventType_t)(E_ET_UIUpdateGroup), 
+		new MEventHandler<MyCanvas>(this, &MyCanvas::onUpdateGroup));
+	GameEngine::GetGameEngine()->GetEventMod()->RegisterHandler(
+		(EventType_t)(E_ET_AgentLeave), 
+		new MEventHandler<MyCanvas>(this, &MyCanvas::onAgentLeave));
+	GameEngine::GetGameEngine()->GetEventMod()->RegisterHandler(
+		(EventType_t)(E_ET_GroupSizeChanged), 
+		new MEventHandler<MyCanvas>(this, &MyCanvas::onGroupSizeChanged));
+	GameEngine::GetGameEngine()->GetEventMod()->RegisterHandler(
+		(EventType_t)(E_ET_FindVUP), 
+		new MEventHandler<MyCanvas>(this, &MyCanvas::onFindVUP));
 }
 long MyCanvas::onKeyPress(FXObject* sender, FXSelector sel,void* ptr)
 {
@@ -266,11 +294,167 @@ long MyCanvas::onCmdSendCommand(FXObject* sender, FXSelector sel,void* ptr)
 
 	return 1;
 }
-void MyCanvas::onUpdateSummay(const Event* _poEvent)
+
+void MyCanvas::onFindVUP(const Event* _poEvent)
+{
+	s32 iPassportID = _poEvent->GetParam<s32>(0);
+	s32 nIndex = -1;
+	s32 jMin = 0;
+	s32 jMax = m_VUPTable->getNumRows() - 1;
+	s32 jCur = (jMin+jMax)/2;
+	do
+	{
+		s32 iCurPassportID = atoi(m_VUPTable->getItemText(jCur, 0).text());
+		if(iCurPassportID > iPassportID) 
+		{
+			jMax = jCur;
+		}
+		else if(iCurPassportID < iPassportID)
+		{
+			jMin =jCur;
+		}
+		else if(iCurPassportID == iPassportID)
+		{
+			nIndex = jCur;
+			break;
+		}
+		jCur = (jMin + jMax)/2;
+	}while(jMax - jMin > 1);
+	m_VUPTable->selectRow(nIndex);
+}
+
+void MyCanvas::onAgentLeave(const Event* _poEvent)
+{	
+	StringPtr pName = static_cast<StringPtr>(_poEvent->GetParam<void*>(0));
+	FXTreeItem* pItem = m_AgentList->findItem(pName);
+	if(pItem)
+	{
+		m_AgentList->removeItem(pItem);
+	}
+}
+//#pragma optimize("", off)
+void MyCanvas::onUpdateAgent(const Event* _poEvent)
+{
+	VMSummary* pSummary = static_cast<VMSummary*>(_poEvent->GetParam<void*>(0));
+	VMSummary::AgentSummaryMapIterator it = pSummary->m_AgentSummaryMap.begin();
+	for(;it != pSummary->m_AgentSummaryMap.end(); ++it)
+	{
+		const VMSummary::SummaryInfo& si = (*it).second;
+		FXTreeItem* pItem = m_AgentList->findItem((*it).first.c_str());
+		if(!pItem)
+		{
+			m_AgentList->expandTree(m_AgentList->getFirstItem());
+			pItem = m_AgentList->appendItem(m_AgentList->getFirstItem(), (*it).first.c_str());
+			for(s32 i = 0; i < VMSummary::SummaryInfo::kTotalSummaryInfo; ++i)
+				m_AgentList->appendItem(pItem, "<Unnamed>");
+		}
+		if(pItem)
+		{
+			D_CHECK(pItem->getNumChildren() == VMSummary::SummaryInfo::kTotalSummaryInfo);
+
+			FXTreeItem* pChild = pItem->getFirst();
+			
+			Char zValue[64] = {0};
+			sprintf(zValue, "%s(%d)", SUMMARYNAME_TOTALVUP, si.m_VupCnt);
+			m_AgentList->setItemText(pChild, zValue);
+			pChild = pChild->getNext();
+
+			for(s32 i = 1; i < EVupStatus_Num; ++i)
+			{
+				sprintf(zValue, "%s(%d)", VMVup::kStatus[i].GetName(), si.m_StatusCnt[i]);
+				m_AgentList->setItemText(pChild, zValue);
+				pChild = pChild->getNext();
+			}
+			for(s32 i = 1; i < ETestPhase_Num; ++i)
+			{
+				sprintf(zValue, "%s(%d)", VMVup::kTestPhase[i].GetName(), si.m_TestPhaseCnt[i]);
+				m_AgentList->setItemText(pChild, zValue);
+				pChild = pChild->getNext();
+			}
+		}
+	}
+}
+
+void MyCanvas::onGroupSizeChanged(const Event* _poEvent)
+{
+	StringPtr pName = static_cast<StringPtr>(_poEvent->GetParam<void*>(0));
+	FXTreeItem* pItem = m_GroupList->findItem(pName);
+	if(pItem)
+	{
+		m_GroupList->removeItem(pItem);
+	}
+}
+
+void MyCanvas::onUpdateGroup(const Event* _poEvent)
+{
+	VMSummary* pSummary = static_cast<VMSummary*>(_poEvent->GetParam<void*>(0));
+	VMSummary::GroupInfoMapIterator it = pSummary->m_GroupInfoMap.begin();
+	for(;it != pSummary->m_GroupInfoMap.end(); ++it)
+	{
+		const VMSummary::GroupInfo& gi = (*it).second;
+		FXTreeItem* pItem = m_GroupList->findItem((*it).first.c_str());
+		if(!pItem)
+		{
+			m_GroupList->expandTree(m_GroupList->getFirstItem());
+			pItem = m_GroupList->appendItem(m_GroupList->getFirstItem(), (*it).first.c_str());
+			m_GroupList->appendItem(pItem, "Groups Overview");
+			for(s32 i = 0; i < gi.m_Groups.size(); ++i)
+			{	
+				m_GroupList->appendItem(pItem, "<Unnamed>");
+			}
+		}
+		if(pItem)
+		{
+			Char zValue[64] = {0};
+			FXTreeItem* pSummary = pItem->getFirst();
+			FXTreeItem* pChild = pSummary->getNext();
+
+			s32 iTotalVUPs = gi.m_TotalVups;
+			s32 iMaxVUPs = 0;
+
+			for(s32 i = 0; i < gi.m_Groups.size(); ++i)
+			{
+				const VMSummary::GroupInfoData& data = gi.m_Groups[i];
+				sprintf(zValue, "Group%d(%d/%d)", i, data.m_iCurVUPsInGroup, data.m_iMaxVUPsInGroup);
+				m_GroupList->setItemText(pChild, zValue);
+
+				iMaxVUPs += data.m_iMaxVUPsInGroup;
+
+				if(pChild->getNumChildren() != data.m_iMaxVUPsInGroup)
+				{
+					m_GroupList->removeItems(pChild->getFirst(), pChild->getLast());
+					for(s32 j = 0; j < data.m_iMaxVUPsInGroup; ++j)
+					{
+						m_GroupList->appendItem(pChild, "<Empty>");
+					}
+				}
+				D_CHECK(data.m_VUPsPassport.size() <= data.m_iMaxVUPsInGroup);
+				FXTreeItem* pVUP = pChild->getFirst();
+				for(s32 j = 0; j < data.m_VUPsPassport.size(); ++j)
+				{
+					sprintf(zValue, "VUP(%d)", data.m_VUPsPassport[j]);
+					m_GroupList->setItemText(pVUP, zValue);
+					pVUP = pVUP->getNext();
+				}
+				for(s32 j = data.m_VUPsPassport.size(); j < data.m_iMaxVUPsInGroup; ++j)
+				{
+					m_GroupList->setItemText(pVUP, "<Empty>");
+					pVUP = pVUP->getNext();
+				}
+				pChild = pChild->getNext();
+			}
+			sprintf(zValue, "Groups Overview(%d/%d)", iTotalVUPs, iMaxVUPs);
+			m_GroupList->setItemText(pSummary, zValue);
+		}
+	}
+}
+
+void MyCanvas::onUpdateSummary(const Event* _poEvent)
 {
 	VMVupManager* pManager = static_cast<VMVupManager*>(_poEvent->GetParam<void*>(0));
 
 	s32 iRow = 0;
+	Char zValue[64] = {0};
 
 	WatchedInfos::WatchedValueMapInterator it = pManager->m_WatchedInfo.m_Values.begin();
 	for(;it != pManager->m_WatchedInfo.m_Values.end(); ++it)
@@ -303,7 +487,7 @@ void MyCanvas::onUpdateList(const Event* _poEvent)
 	VMVupManager* pManager = static_cast<VMVupManager*>(_poEvent->GetParam<void*>(0));
 
 	s32 iRow = 0;
-	Char zValue[32] = {0};
+	Char zValue[64] = {0};
 
 #ifndef USE_UDT_LIB
 	VMVupManager::VUPMapConstIterator it = pManager->m_poVupMap.begin();
@@ -366,6 +550,7 @@ GameEngine::GameEngine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool 
 	:Engine(_uiWidth, _uiHeight, _strTitle, _bIsWindow, 60)
 {
 	VMCommandCenter::Create();
+	VMSummary::Create();
 }
 //-------------------------------------------------------------------------------------------------------------------------------
 void GameEngine::DoInit()
@@ -377,9 +562,11 @@ void GameEngine::DoInit()
 
 	//Add Object
 	GameEngine::GetGameEngine()->GetSceneMod()->AddObject("VUMMan", new VMVupManager);
+	GameEngine::GetGameEngine()->GetSceneMod()->AddObject("VUMSummary", new VMSummaryUpdater);
 }
 
 void GameEngine::DoUnInit()
 {
+	VMSummary::Destroy();
 	VMCommandCenter::Destroy();
 }

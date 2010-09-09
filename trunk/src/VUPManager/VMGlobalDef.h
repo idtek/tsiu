@@ -17,8 +17,15 @@ extern Engine*		g_poEngine;
 //-------------------------------------------------------------------------
 enum{
 	E_ET_UIUpdateList = E_ET_User,
-	E_ET_UIUpdateSummay,
+	E_ET_UIUpdateSummary,
+	E_ET_UIUpdateAgent,
+	E_ET_UIUpdateGroup,
+	E_ET_AgentLeave,
+	E_ET_GroupSizeChanged,
+	E_ET_FindVUP
 };
+
+#define SUMMARYNAME_TOTALVUP	"0.Total VUPs"
 //--------------------------------------------------------------------------
 struct WatchedInfos
 {	
@@ -34,6 +41,7 @@ struct WatchedInfos
 		Bool		m_Visible;
 	};
 	void Init();
+	void Clear();
 	void UpdateValue(StringPtr _strName, s32 _iValue, Bool _bHideSummay = false);
 	void UpdateValue(StringPtr _strName, StringPtr _strValue, Bool _bHideSummay = false);
 	void UpdateValue(StringPtr _strName, f32 _fValue, Bool _bHideSummay = false);
@@ -61,7 +69,12 @@ public:
 
 private:
 	void onUpdateList(const Event* _poEvent);
-	void onUpdateSummay(const Event* _poEvent);
+	void onUpdateSummary(const Event* _poEvent);
+	void onUpdateAgent(const Event* _poEvent);	
+	void onUpdateGroup(const Event* _poEvent);
+	void onAgentLeave(const Event* _poEvent);
+	void onGroupSizeChanged(const Event* _poEvent);
+	void onFindVUP(const Event* _poEvent);
 
 public:
 	long onCmdSendCommand(FXObject* sender, FXSelector sel, void* ptr);
@@ -80,6 +93,9 @@ private:
 
 	FXTable*			m_VUPTable;
 	FXTable*			m_Summary;
+
+	FXTreeList*			m_AgentList;
+	FXTreeList*			m_GroupList;
 };
 //---------------------------------------------------------------------------------------
 class GameEngine : public Engine
