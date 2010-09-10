@@ -49,6 +49,7 @@ public:
 	D_Inline s32		GetRDVPointID()			const	{	return m_iRDVPointID;			}
 	D_Inline u8			GetLastStaus()			const	{	return m_uiLastStatus;			}
 	D_Inline u8			GetLastTestPhase()		const	{	return m_uiLastTestPhase;		}
+	D_Inline StringPtr	GetViewKey()			const	{	return m_strViewKey.c_str();	}
 
 	void SetUniqueID(s32 _uid);
 	
@@ -58,6 +59,7 @@ public:
 	void SetRDVPointID(s32 _rdvid);
 	void SetStatus(u8 _status);
 	void SetTestPhase(u8 _phase);
+	void SetViewKey(StringPtr _viewKey);
 	
 #ifdef USE_UDT_LIB
 	D_Inline void SetClientSocket(UDTSOCKET _pSocket)
@@ -84,6 +86,7 @@ private:
 	std::string		m_strIPAddress;
 	s32				m_iGroup;
 	s32				m_iRDVPointID;
+	std::string		m_strViewKey;
 
 #ifdef USE_UDT_LIB
 	UDTSOCKET		m_ClientSocket;

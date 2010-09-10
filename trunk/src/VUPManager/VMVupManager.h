@@ -97,6 +97,25 @@ private:
 
 class VMVupManager : public Object
 {
+public:
+	enum{
+		ESort_Passport,
+		ESort_RDVPoint,
+		ESort_CurPhase,
+		ESort_LastStatus,
+		ESort_LastPhase,
+		ESort_IP,
+		ESort_Port,
+
+		ESort_Num,
+		ESort_Invalid = ESort_Num
+	};
+	enum{
+		ESort_Up,
+		ESort_Down
+	};
+
+private:
 	typedef std::map<s32, VMVup*>					VUPMap;
 	typedef std::map<s32, VMVup*>::iterator			VUPMapIterator;
 	typedef std::map<s32, VMVup*>::const_iterator	VUPMapConstIterator;
@@ -111,8 +130,10 @@ class VMVupManager : public Object
 			m_uiCurrentRunningID = (RDVPointID)-1;
 			m_fStartTime = 0.f;
 			m_ClientList.Clear();
-			m_CurrentGoup = 0;
-			m_CurrentNumberOfVUPInGroup = 0;
+			m_GroupList.Clear();
+			m_bIsGroupFull = false;
+			//m_CurrentGoup = 0;
+			//m_CurrentNumberOfVUPInGroup = 0;
 		}
 		Bool IsValid() const{
 			return m_bHasValidValue;
@@ -121,8 +142,10 @@ class VMVupManager : public Object
 		Bool		m_bHasValidValue;
 		f32			m_fStartTime;
 		Array<s32>	m_ClientList;
-		s32			m_CurrentGoup;
-		s32			m_CurrentNumberOfVUPInGroup;
+		Array<s32>  m_GroupList;
+		Bool		m_bIsGroupFull;
+		//s32			m_CurrentGoup;
+		//s32			m_CurrentNumberOfVUPInGroup;
 	};
 	struct RDVPointInfo{
 		RDVPointID			m_uiID;
@@ -146,9 +169,31 @@ class VMVupManager : public Object
 	struct ManagerParameter{
 		ManagerParameter()
 			: m_iHideSummaryIfZero(false)
-		{}
-		s32 m_iHideSummaryIfZero;
+			, m_iFreezeList(true)
+			, m_iSortUpOrDown(ESort_Up)
+		{
+			for(s32 i = 0; i < ESort_Num; ++i)
+			{
+				m_iSortOrder[i] = ESort_Invalid;
+				m_Filters[i].m_bActiveFilter = false;
+			}
+		}
+		s32					m_iHideSummaryIfZero;
+		s32					m_iSortOrder[ESort_Num];
+		s32					m_iSortUpOrDown;
+		struct ViewFilter{
+			Bool			m_bActiveFilter;
+			std::string		m_strFilterName;
+		};
+		ViewFilter			m_Filters[ESort_Num];
+		s32					m_iFreezeList;
 	};
+
+	typedef std::map<std::string, VMVup*>							VUPViewMap;
+	typedef std::map<std::string, VMVup*>::iterator					VUPViewMapIterator;
+	typedef std::map<std::string, VMVup*>::const_iterator			VUPViewMapConstIterator;
+	typedef std::map<std::string, VMVup*>::reverse_iterator			VUPViewMapRIterator;
+	typedef std::map<std::string, VMVup*>::const_reverse_iterator	VUPViewMapRConstIterator;
 
 public:
 	static s32 AddVup(const VMCommand::ParamList& _paramList);
@@ -161,6 +206,8 @@ public:
 	static s32 SetRDVParameter(const VMCommand::ParamList& _paramList);
 	static s32 GetRDVParameter(const VMCommand::ParamList& _paramList);
 	static s32 FindVUP(const VMCommand::ParamList& _paramList);
+	static s32 Sort(const VMCommand::ParamList& _paramList);
+	static s32 Filter(const VMCommand::ParamList& _paramList);
 
 public:
 	VMVupManager();
@@ -174,7 +221,7 @@ public:
 	VMVup*			FindVup(s32 _id);
 	const VMVup*	FindVup(s32 _id) const;
 
-	void			StartTesting(s32 _iDelayOfStartTime, s32 _iIntervalOfEachGroup, s32 _id);
+	void			StartTesting(VMVup* _curVUP, __int64 _startTime);
 	void			Refresh();
 	void			KillClient(s32 _id);
 
@@ -184,6 +231,11 @@ public:
 	void				GetRDVParameter(const RDVPointParameter& _pRDVParam, StringPtr _pOption) const;
 	void				SetParameter(StringPtr _pOption, const VMCommandParamHolder& _param);
 	void				GetParameter(StringPtr _pOption) const;
+	void				SetSortOrder(s32 _iOrder, StringPtr _pOrder);
+	void				SetSortUpOrDwon(StringPtr _pOrder);
+	std::string 		GetViewKey(const VMVup* _curVUP) const;
+	void				RefreshViewMap();
+	void				SetFilter(StringPtr _pOrder, StringPtr _pName);
 
 #ifdef USE_UDT_LIB
 	void											AddClientSocket(UDTSOCKET _pNewSocket);
@@ -200,9 +252,11 @@ private:
 	void		_HandleUdpPack();
 	void		_UpdateRDVPoint();
 	void		_UpdateSummary();
+	void		_UpdateViewMap();
 
 	//Event handler
 	void onAgentLeave(const Event* _poEvent);
+	void onVUPInfoChange(const Event* _poEvent);
 
 private:
 	MemPool<UDP_PACKWrapper>*		m_pUDPPackBuffer;
@@ -219,6 +273,8 @@ private:
 	VMThreadSafeContainer<std::vector<UDTSOCKET>>	m_pClientSockets;
 	VMThreadSafeContainer<VUPMap>					m_poVupMapByPassport;
 	VMThreadSafeContainer<VUPMap>					m_poVupMapBySocket;
+	VMThreadSafeContainer<VUPViewMap>				m_poVupViewMap;
+	VMThreadSafeContainer<std::set<VMVup*>>			m_poDirtyVUP;
 #endif
 
 	RDVPointList				m_poRDVList;

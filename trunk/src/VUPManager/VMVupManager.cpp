@@ -5,6 +5,7 @@
 #include <sys/timeb.h>
 #include <algorithm>
 #include "VMSummary.h"
+#include <sstream>
 
 //--------------------------------------------------------------------------
 #ifndef USE_UDT_LIB
@@ -187,6 +188,31 @@ s32 VMVupManager::FindVUP(const VMCommand::ParamList& _paramList)
 	return 0;
 }
 
+s32 VMVupManager::Sort(const VMCommand::ParamList& _paramList)
+{
+	VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
+	pMan->SetSortOrder(0, NULL);
+	pMan->SetSortUpOrDwon(_paramList[0].ToString());
+	s32 optionCount = _paramList.Size() - 1;
+	for(s32 i = 0;  i < optionCount; ++i)
+	{
+		pMan->SetSortOrder(i, _paramList[i + 1].ToString());
+	}
+	pMan->RefreshViewMap();
+	return 0;
+}
+s32 VMVupManager::Filter(const VMCommand::ParamList& _paramList)
+{
+	VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
+	pMan->SetFilter(NULL, NULL);
+	s32 optionCount = _paramList.Size() / 2;
+	for(s32 i = 0;  i < optionCount; ++i)
+	{
+		pMan->SetFilter(_paramList[i * 2].ToString(), _paramList[i * 2 + 1].ToString());
+	}
+	return 0;
+}
+
 //--------------------------------------------------------------------------------------------
 VMVupManager::VMVupManager()
 #ifndef USE_UDT_LIB
@@ -218,6 +244,8 @@ VMVupManager::VMVupManager()
 	VMCommandCenter::GetPtr()->RegisterCommand("setrdvp",		VMVupManager::SetRDVParameter,	4);
 	VMCommandCenter::GetPtr()->RegisterCommand("getrdvp",		VMVupManager::GetRDVParameter,	2);
 	VMCommandCenter::GetPtr()->RegisterCommand("find",			VMVupManager::FindVUP,			1);
+	VMCommandCenter::GetPtr()->RegisterCommand("sort",			VMVupManager::Sort,				1);
+	VMCommandCenter::GetPtr()->RegisterCommand("filter",		VMVupManager::Filter,			0);
 }
 
 VMVupManager::~VMVupManager()
@@ -257,9 +285,68 @@ Bool VMVupManager::AddVup(VMVup* _newVUP)
 #else
 		m_poVupMapByPassport.RetrieveContrainer().insert(std::pair<s32, VMVup*>(_newVUP->GetUniqueID(), _newVUP));
 		m_poVupMapByPassport.ReleaseContrainer();
+
+		std::string viewKey = GetViewKey(_newVUP);
+		_newVUP->SetViewKey(viewKey.c_str());
+		m_poVupViewMap.RetrieveContrainer().insert(std::pair<std::string, VMVup*>(viewKey, _newVUP));
+		m_poVupViewMap.ReleaseContrainer();
 #endif
 	}
 	return true;
+}
+
+std::string VMVupManager::GetViewKey(const VMVup* _curVUP) const
+{
+	std::stringstream ss;
+	for(s32 i = 0; i < ESort_Num; ++i)
+	{
+		if(m_Parameters.m_iSortOrder[i] != ESort_Invalid)
+		{
+			switch(m_Parameters.m_iSortOrder[i])
+			{
+			case ESort_Passport:
+				ss << _curVUP->GetUniqueID() << "$$";
+				break;
+			case ESort_IP:
+				ss << _curVUP->GetIPAddress() << "$$";
+				break;
+			case ESort_CurPhase:
+				ss << VMVup::kTestPhase[_curVUP->GetCurrentTestPhase()].GetName() << "$$";
+				break;
+			case ESort_LastPhase:
+				ss << VMVup::kTestPhase[_curVUP->GetLastTestPhase()].GetName() << "$$";
+				break;
+			case ESort_LastStatus:
+				ss << VMVup::kStatus[_curVUP->GetLastStaus()].GetName() << "$$";
+				break;
+			case ESort_Port:
+				ss << _curVUP->GetPort() << "$$";
+				break;
+			case ESort_RDVPoint:
+				ss << _curVUP->GetRDVPointID() << "_" << _curVUP->GetGroup() << "$$";
+				break;
+			}
+		}
+	}
+	ss << _curVUP->GetUniqueID();
+	return ss.str();
+}
+
+void VMVupManager::RefreshViewMap()
+{
+	VUPViewMap& vupViewMap =  m_poVupViewMap.RetrieveContrainer();
+	vupViewMap.clear();
+
+	const VUPMap& vupMap = m_poVupMapByPassport.GetContrainer();
+	VUPMapConstIterator it = vupMap.begin();
+	for(;it != vupMap.end(); ++it)
+	{
+		VMVup* vup = (*it).second;
+		std::string viewKey = GetViewKey(vup);
+		vup->SetViewKey(viewKey.c_str());
+		m_poVupViewMap.RetrieveContrainer().insert(std::pair<std::string, VMVup*>(viewKey, vup));
+	}
+	m_poVupViewMap.ReleaseContrainer();
 }
 
 VMVup* VMVupManager::FindVup(s32 _id)
@@ -315,44 +402,60 @@ Bool VMVupManager::RemoveVup(s32 _id)
 #endif
 		return false;
 	}
-	delete (*it).second;
 #ifndef USE_UDT_LIB
 	m_poVupMap.erase(it);
 #else
+	VMVup* delVup = (*it).second;
+
+	std::set<VMVup*>& dirtyMap = m_poDirtyVUP.RetrieveContrainer();
+	std::set<VMVup*>::iterator itSet = dirtyMap.begin();
+	for(;itSet != dirtyMap.end(); ++itSet)
+	{
+		VMVup* curVUP = (*itSet);
+		if(curVUP == delVup)
+		{
+			dirtyMap.erase(itSet);
+			break;
+		}
+	}
+	m_poDirtyVUP.ReleaseContrainer();
+
+	VUPViewMap& vupViewMap = m_poVupViewMap.RetrieveContrainer();
+	VUPViewMapIterator itView = vupViewMap.find(delVup->GetViewKey());
+	if(itView != vupViewMap.end())
+	{
+		vupViewMap.erase(itView);
+	}
 	vupMap.erase(it);
+	m_poVupViewMap.ReleaseContrainer();
 	m_poVupMapByPassport.ReleaseContrainer();
 #endif
+	delete delVup;
+
 	return true;
 }
 
-void VMVupManager::StartTesting(s32 _iDelayOfStartTime, s32 _iIntervalOfEachGroup, s32 _id)
+void VMVupManager::StartTesting(VMVup* _curVUP, __int64 _startTime)
 {
-	VMVup* pVup = FindVup(_id);
-	if(!pVup)
-		return;
-	
-	if(pVup->GetGroup() >= 0)
-	{
-		struct __timeb64 timebuffer;
-		_ftime64(&timebuffer);
-		__int64 nowms = timebuffer.time * 1000 + timebuffer.millitm + _iDelayOfStartTime + pVup->GetGroup() * _iIntervalOfEachGroup;
+	VMVup* pVup = _curVUP;
+	D_CHECK(pVup);
+	__int64 nowms = _startTime;
 
-		UDP_PACK pack;
-		pack.m_uiType = EPT_M2C_StartTesting;
-		pack.m_unValue.m_StartTestingParam.m_uiBurstTime = nowms;
+	UDP_PACK pack;
+	pack.m_uiType = EPT_M2C_StartTesting;
+	pack.m_unValue.m_StartTestingParam.m_uiBurstTime = nowms;
 
 #ifndef USE_UDT_LIB
-		m_pSendSocket->SetAddress(pVup->GetIPAddress(), pVup->GetPort());
-		m_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
+	m_pSendSocket->SetAddress(pVup->GetIPAddress(), pVup->GetPort());
+	m_pSendSocket->SendTo((const Char*)&pack, sizeof(UDP_PACK));
 #else
-		s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
-		if(iRet == UDT::ERROR)
-		{
-			D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
-			return;
-		}
-#endif
+	s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
+	if(iRet == UDT::ERROR)
+	{
+		D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+		return;
 	}
+#endif
 }
 
 void VMVupManager::Refresh()
@@ -504,6 +607,10 @@ void VMVupManager::SetParameter(StringPtr _pOption, const VMCommandParamHolder& 
 	{
 		m_Parameters.m_iHideSummaryIfZero = _param.ToInt();
 	}
+	else if(!_stricmp(_pOption, "-freezelist") || !_stricmp(_pOption, "-fl"))
+	{
+		m_Parameters.m_iFreezeList = _param.ToInt();
+	}
 }
 
 void VMVupManager::GetParameter(StringPtr _pOption) const
@@ -511,6 +618,112 @@ void VMVupManager::GetParameter(StringPtr _pOption) const
 	if(!_pOption || !_stricmp(_pOption, "-hidesummaryifzero") || !_stricmp(_pOption, "-hs"))
 	{
 		D_Output("$hidesummaryifzero = %d\n", m_Parameters.m_iHideSummaryIfZero);
+	}
+	if(!_pOption || !_stricmp(_pOption, "-freezelist") || !_stricmp(_pOption, "-fl"))
+	{
+		D_Output("$freezelist = %d\n", m_Parameters.m_iFreezeList);
+	}
+}
+
+void VMVupManager::SetSortOrder(s32 _iOrder, StringPtr _pOrder)
+{
+	if(!_pOrder)
+	{
+		for(s32 i = 0; i < ESort_Num; ++i)
+		{
+			m_Parameters.m_iSortOrder[i] = ESort_Invalid;
+		}
+	}
+	else
+	{
+		if(!_stricmp(_pOrder, "-passport"))
+		{
+			m_Parameters.m_iSortOrder[_iOrder] = ESort_Passport;
+		}
+		else if(!_stricmp(_pOrder, "-ip"))
+		{
+			m_Parameters.m_iSortOrder[_iOrder] = ESort_IP;
+		}
+		else if(!_stricmp(_pOrder, "-port"))
+		{
+			m_Parameters.m_iSortOrder[_iOrder] = ESort_Port;
+		}
+		else if(!_stricmp(_pOrder, "-rdvpoint"))
+		{
+			m_Parameters.m_iSortOrder[_iOrder] = ESort_RDVPoint;
+		}
+		else if(!_stricmp(_pOrder, "-curphase"))
+		{
+			m_Parameters.m_iSortOrder[_iOrder] = ESort_CurPhase;
+		}
+		else if(!_stricmp(_pOrder, "-lastphase"))
+		{
+			m_Parameters.m_iSortOrder[_iOrder] = ESort_LastPhase;
+		}
+		else if(!_stricmp(_pOrder, "-laststatus"))
+		{
+			m_Parameters.m_iSortOrder[_iOrder] = ESort_LastStatus;
+		}
+	}
+}
+void VMVupManager::SetSortUpOrDwon(StringPtr _pOrder)
+{
+	if(!_stricmp(_pOrder, "up") || !_stricmp(_pOrder, "u"))
+	{
+		m_Parameters.m_iSortUpOrDown = ESort_Up;
+	}
+	else if(!_stricmp(_pOrder, "down") || !_stricmp(_pOrder, "d"))
+	{
+		m_Parameters.m_iSortUpOrDown = ESort_Down;
+	}
+}
+
+void VMVupManager::SetFilter(StringPtr _pOrder, StringPtr _pName)
+{
+	if(!_pOrder)
+	{
+		for(s32 i = 0; i < ESort_Num; ++i)
+		{
+			m_Parameters.m_Filters[i].m_bActiveFilter = false;
+		}
+	}
+	else
+	{
+		s32 setType = ESort_Invalid;
+
+		if(!_stricmp(_pOrder, "-passport"))
+		{
+			setType = ESort_Passport;
+		}
+		else if(!_stricmp(_pOrder, "-ip"))
+		{
+			setType = ESort_IP;
+		}
+		else if(!_stricmp(_pOrder, "-port"))
+		{
+			setType = ESort_Port;
+		}
+		else if(!_stricmp(_pOrder, "-rdvpoint"))
+		{
+			setType = ESort_RDVPoint;
+		}
+		else if(!_stricmp(_pOrder, "-curphase"))
+		{
+			setType = ESort_CurPhase;
+		}
+		else if(!_stricmp(_pOrder, "-lastphase"))
+		{
+			setType = ESort_LastPhase;
+		}
+		else if(!_stricmp(_pOrder, "-laststatus"))
+		{
+			setType = ESort_LastStatus;
+		}
+		if(setType != ESort_Invalid)
+		{
+			m_Parameters.m_Filters[setType].m_bActiveFilter = true;
+			m_Parameters.m_Filters[setType].m_strFilterName = _pName;
+		}
 	}
 }
 
@@ -601,6 +814,10 @@ void VMVupManager::Create()
 	GameEngine::GetGameEngine()->GetEventMod()->RegisterHandler(
 		(EventType_t)(E_ET_AgentLeave), 
 		new MEventHandler<VMVupManager>(this, &VMVupManager::onAgentLeave));
+
+	GameEngine::GetGameEngine()->GetEventMod()->RegisterHandler(
+		(EventType_t)(E_ET_VUPInfoUpdate), 
+		new MEventHandler<VMVupManager>(this, &VMVupManager::onVUPInfoChange));
 }
 void VMVupManager::Tick(f32 _fDeltaTime)
 {
@@ -612,6 +829,9 @@ void VMVupManager::Tick(f32 _fDeltaTime)
 
 	//Update summary info
 	_UpdateSummary();
+
+	//Update view
+	_UpdateViewMap();
 
 	//Update List
 	Event evtList((EventType_t)E_ET_UIUpdateList);
@@ -632,6 +852,13 @@ void VMVupManager::onAgentLeave(const Event* _poEvent)
 	{
 		m_WatchedInfo.m_Values.erase(it);
 	}
+}
+
+void VMVupManager::onVUPInfoChange(const Event* _poEvent)
+{
+	VMVup* pVup = static_cast<VMVup*>(_poEvent->GetParam<void*>(0));
+	m_poDirtyVUP.RetrieveContrainer().insert(pVup);
+	m_poDirtyVUP.ReleaseContrainer();
 }
 
 void VMVupManager::_UpdateRDVPoint()
@@ -658,17 +885,23 @@ void VMVupManager::_UpdateRDVPoint()
 				iIntervalOfEachGroup = param.m_iIntervalOfEachGroup;
 				iMaxGroupNum = param.m_iGroupNum;
 			}
-			for(s32 i = 0; i < info.m_RunningInfo.m_ClientList.Size(); ++i)
-			{
-				StartTesting(iDelayOfStartTime, iIntervalOfEachGroup, info.m_RunningInfo.m_ClientList[i]);
-				//D_Output("[RDV Point] release test of %d\n", info.m_RunningInfo.m_uiCurrentRunningID);
-			}
-			
 			struct __timeb64 timebuffer;
 			_ftime64(&timebuffer);
+			__int64 curTime = timebuffer.time * 1000 + timebuffer.millitm;
+
+			for(s32 i = 0; i < info.m_RunningInfo.m_ClientList.Size(); ++i)
+			{
+				VMVup* pVup = FindVup(info.m_RunningInfo.m_ClientList[i]);
+				if(!pVup)
+					continue;
+				if(pVup->GetGroup() >= 0)
+				{
+					StartTesting(pVup, curTime + iDelayOfStartTime + pVup->GetGroup() * iIntervalOfEachGroup);
+				}
+			}
 			for(s32 i = 0; i < iMaxGroupNum; ++i)
 			{
-				__int64 nowms = timebuffer.time * 1000 + timebuffer.millitm + iDelayOfStartTime + i * iIntervalOfEachGroup;
+				__int64 nowms = curTime + iDelayOfStartTime + i * iIntervalOfEachGroup;
 				__int64 nows = nowms / 1000;
 				char timeline[26];
 				ctime_s(timeline, 26, &(nows));
@@ -684,6 +917,31 @@ void VMVupManager::_UpdateRDVPoint()
 		}
 	}
 }	
+void VMVupManager::_UpdateViewMap()
+{
+	std::set<VMVup*>& dirtyMap = m_poDirtyVUP.RetrieveContrainer();
+	if(!m_Parameters.m_iFreezeList)
+	{
+		VUPViewMap& vupViewMap =  m_poVupViewMap.RetrieveContrainer();
+		std::set<VMVup*>::iterator itSet = dirtyMap.begin();
+		for(;itSet != dirtyMap.end(); ++itSet)
+		{
+			VMVup* curVUP = (*itSet);
+			std::string oldViewKey = curVUP->GetViewKey();
+			VUPViewMapIterator itView = vupViewMap.find(oldViewKey);
+			if(itView != vupViewMap.end())
+			{
+				vupViewMap.erase(itView);
+			}
+			std::string viewKey = GetViewKey(curVUP);
+			curVUP->SetViewKey(viewKey.c_str());
+			vupViewMap.insert(std::pair<std::string, VMVup*>(viewKey, curVUP));
+		}
+		m_poVupViewMap.ReleaseContrainer();
+	}
+	dirtyMap.clear();
+	m_poDirtyVUP.ReleaseContrainer();
+}
 
 void VMVupManager::_UpdateSummary()
 {
@@ -703,6 +961,11 @@ void VMVupManager::_HandleUdpPack()
 			UDP_PACK* poPack = &(poPackWrapper->m_InnerData);
 			switch(poPack->m_uiType)
 			{
+			case EPT_C2M_LostConnection:
+				{
+					LostConnection(poPackWrapper->m_ClientSocket);
+				}
+				break;
 			case EPT_C2M_ClientRegister:
 				{
 #ifndef USE_UDT_LIB
@@ -778,7 +1041,26 @@ void VMVupManager::_HandleUdpPack()
 						info.m_RunningInfo.m_bHasValidValue		= true;
 						info.m_RunningInfo.m_uiCurrentRunningID = uiRDVPoint;
 						info.m_RunningInfo.m_fStartTime			= GameEngine::GetGameEngine()->GetClockMod()->GetTotalElapsedSeconds();
+						info.m_RunningInfo.m_bIsGroupFull		= false;
+
 						itRDVPoint = m_poRDVList.insert(std::pair<RDVPointID, RDVPointInfo>(uiRDVPoint, info)).first;
+
+						RDVPointRunningInfo& runningInfo = (*itRDVPoint).second.m_RunningInfo;
+						RDVPointParameterListIterator itRDVPointParam = m_poRDVParam.find(Protocal::GetRDVPointID(Protocal::GetRDVPointMajor(uiRDVPoint), 0));
+						if(itRDVPointParam != m_poRDVParam.end())
+						{
+							const RDVPointParameter& param = (*itRDVPointParam).second;
+							runningInfo.m_GroupList.ReSize(param.m_iGroupNum);
+							for(s32 i = 0; i < runningInfo.m_GroupList.Size(); ++i)
+							{
+								runningInfo.m_GroupList[i] = 0;
+							}
+						}
+						else
+						{
+							runningInfo.m_GroupList.ReSize(1);
+							runningInfo.m_GroupList[0] = 0;
+						}
 					}
 					else
 					{
@@ -801,10 +1083,10 @@ void VMVupManager::_HandleUdpPack()
 							vup->SetGroup(0);
 							vup->SetRDVPointID(uiRDVPoint);
 							
-							runningInfo.m_CurrentGoup = 0;
-							runningInfo.m_CurrentNumberOfVUPInGroup++;
+							runningInfo.m_GroupList[0]++;
 							
-							D_Output("[RDV Point] add vup to: 0[%d/-1]\n", runningInfo.m_CurrentNumberOfVUPInGroup);
+							D_Output("[RDV Point] add vup %d to: 0[%d/-1]\n", 
+								poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort, runningInfo.m_GroupList[0]);
 
 							VMSummary::GroupUpdateParam guParam;
 							guParam.m_AddorRemove = true;
@@ -817,35 +1099,58 @@ void VMVupManager::_HandleUdpPack()
 					else
 					{
 						const RDVPointParameter& param = (*itRDVPointParam).second;
-						if(runningInfo.m_CurrentNumberOfVUPInGroup + 1 > param.m_iVUPNumInEachGroup)
-						{	
-							runningInfo.m_CurrentGoup++;
-							runningInfo.m_CurrentNumberOfVUPInGroup = 1;
-						}
-						else
-						{
-							runningInfo.m_CurrentNumberOfVUPInGroup++;
-						}
 						VMVup* vup = FindVup(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
 						if(vup)
 						{
-							if(runningInfo.m_CurrentGoup < param.m_iGroupNum)
-							{
-								vup->SetGroup(runningInfo.m_CurrentGoup);
+							//Set RDV Point
+							vup->SetRDVPointID(uiRDVPoint);
 
+							//Set Group
+							Bool bShouldFindAEmptyGroup = true;
+							s32 iOriginalGroup = vup->GetGroup();
+							vup->SetGroup(-1);
+
+							if(!runningInfo.m_bIsGroupFull)
+							{
+								if(iOriginalGroup >= 0 && iOriginalGroup < runningInfo.m_GroupList.Size())
+								{
+									if(runningInfo.m_GroupList[iOriginalGroup] < param.m_iVUPNumInEachGroup)
+									{
+										runningInfo.m_GroupList[iOriginalGroup]++;
+										vup->SetGroup(iOriginalGroup);
+										bShouldFindAEmptyGroup = false;
+									}
+								}
+								if(bShouldFindAEmptyGroup)
+								{
+									s32 idx = 0;
+									for(idx = 0; idx < runningInfo.m_GroupList.Size(); ++idx)
+									{
+										if(runningInfo.m_GroupList[idx] < param.m_iVUPNumInEachGroup)
+										{
+											runningInfo.m_GroupList[idx]++;
+											vup->SetGroup(idx);
+											break;
+										}
+									}
+									if(idx == runningInfo.m_GroupList.Size())
+									{
+										runningInfo.m_bIsGroupFull = true;
+									}
+								}
+							}
+							if(vup->GetGroup() >= 0)
+							{
 								VMSummary::GroupUpdateParam guParam;
 								guParam.m_AddorRemove = true;
 								guParam.m_MaxNumberInGroup = param.m_iVUPNumInEachGroup;
-								guParam.m_MyGroup = runningInfo.m_CurrentGoup;
+								guParam.m_MyGroup = vup->GetGroup();
 								guParam.m_VUPsPassport = poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort;
 								VMSummary::GetPtr()->UpdateGroupInfo(Protocal::GetRDVPointMajor(uiRDVPoint), Protocal::GetRDVPointMinor(uiRDVPoint), param.m_iGroupNum, guParam);
+
+								D_Output("[RDV Point] add vup %d to: %d[%d/%d]\n", 
+									poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort, vup->GetGroup(), runningInfo.m_GroupList[vup->GetGroup()], param.m_iVUPNumInEachGroup);
 							}
-							else
-							{
-								vup->SetGroup(-1);
-							}
-							vup->SetRDVPointID(uiRDVPoint);
-							D_Output("[RDV Point] add vup to: %d[%d/%d]\n", runningInfo.m_CurrentGoup, runningInfo.m_CurrentNumberOfVUPInGroup, param.m_iVUPNumInEachGroup);
 						}
 					}
 				}
@@ -980,7 +1285,10 @@ u32 WorkingRunner::Run()
 			for(itExpect = efds->begin(); itExpect != efds->end(); ++itExpect)
 			{
 				UDTSOCKET expectSocket = *itExpect;
-				m_pMan->LostConnection(expectSocket);
+				recvPacket.m_ClientSocket = expectSocket;
+				recvPacket.m_InnerData.m_uiType = EPT_C2M_LostConnection;
+				m_pUDPPackBuffer->InsertUDPData(recvPacket);
+				//m_pMan->LostConnection(expectSocket);
 			}
 		}
 	}

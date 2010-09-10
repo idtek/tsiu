@@ -8,6 +8,7 @@ enum
 	EPT_C2M_ReportClientRunningStatus,
 	EPT_C2M_ReportClientTesingPhase,
 	EPT_C2M_ReachRDVPoint,
+	EPT_C2M_LostConnection,
 
 	EPT_M2C_ClientRegisterACK,
 	EPT_M2C_StartTesting,

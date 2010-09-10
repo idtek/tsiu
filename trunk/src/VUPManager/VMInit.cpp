@@ -5,6 +5,7 @@
 #include <fxkeys.h>
 #include <sstream>
 #include "VMSummary.h"
+#include <algorithm>
 //--------------------------------------------------------------------------------
 Engine*		g_poEngine	= NULL;
 //-----------------------------------------------------------------------------------------------
@@ -515,64 +516,120 @@ void MyCanvas::onUpdateSummary(const Event* _poEvent)
 	}
 }
 
+struct ViewMapWrapper
+{
+	FXTable*	m_VUPTable;
+	s32			m_Row;
+	MyCanvas*	m_MyCanvas;
+
+	ViewMapWrapper (MyCanvas* canvas, FXTable* table) 
+		: m_MyCanvas(canvas)
+		, m_VUPTable(table)
+		, m_Row(0)
+	{}
+	s32 GetRow() const 
+	{
+		return m_Row;
+	}
+	template<class Item> void operator ()(Item it)
+	{
+		Char zValue[64] = {0};
+		if(m_Row >= m_VUPTable->getNumRows())
+		{
+			m_VUPTable->insertRows(m_Row);
+		}
+		const VMVup& vup = *(it.second);
+
+		sprintf(zValue, "%d", vup.GetUniqueID());
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_Passport, zValue))
+			return;
+		m_VUPTable->setItemText(m_Row, 0, zValue);
+		m_VUPTable->setItemJustify(m_Row, 0, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+		sprintf(zValue, "(%d, %d)%d", Protocal::GetRDVPointMajor(vup.GetRDVPointID()), Protocal::GetRDVPointMinor(vup.GetRDVPointID()), vup.GetGroup());
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_RDVPoint, zValue))
+			return;
+		m_VUPTable->setItemText(m_Row, 1, zValue);
+		m_VUPTable->setItemJustify(m_Row, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_CurPhase, VMVup::kTestPhase[vup.GetCurrentTestPhase()].GetName()))
+			return;
+		m_VUPTable->setItemText(m_Row, 2, VMVup::kTestPhase[vup.GetCurrentTestPhase()].GetName());
+		m_VUPTable->setItemJustify(m_Row, 2, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_LastStatus, VMVup::kStatus[vup.GetLastStaus()].GetName()))
+			return;
+		m_VUPTable->setItemText(m_Row, 3, VMVup::kStatus[vup.GetLastStaus()].GetName());
+		m_VUPTable->setItemJustify(m_Row, 3, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_LastPhase, VMVup::kTestPhase[vup.GetLastTestPhase()].GetName()))
+			return;
+		m_VUPTable->setItemText(m_Row, 4, VMVup::kTestPhase[vup.GetLastTestPhase()].GetName());
+		m_VUPTable->setItemJustify(m_Row,4, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_IP, vup.GetIPAddress()))
+			return;
+		m_VUPTable->setItemText(m_Row, 5, vup.GetIPAddress());
+		m_VUPTable->setItemJustify(m_Row, 5, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+
+		sprintf(zValue, "%d", vup.GetPort());
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_Port, zValue))
+			return;
+		m_VUPTable->setItemText(m_Row, 6, zValue);
+		m_VUPTable->setItemJustify(m_Row, 6, FXTableItem::LEFT|FXTableItem::CENTER_Y);
+		
+		m_Row++;
+	}
+};
+
+Bool MyCanvas::bCheckFilter(s32 _iType, StringPtr _strShower)
+{
+	if(_iType >= 0 && _iType < VMVupManager::ESort_Num)
+	{
+		VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
+		if(pMan->m_Parameters.m_Filters[_iType].m_bActiveFilter)
+		{
+			StringPtr pRet = strstr(_strShower, pMan->m_Parameters.m_Filters[_iType].m_strFilterName.c_str());
+			if(pRet)
+				return true;
+			else
+				return false;
+		}
+	}
+	return true;
+}
 //#pragma optimize("", off)
 void MyCanvas::onUpdateList(const Event* _poEvent)
 {
 	VMVupManager* pManager = static_cast<VMVupManager*>(_poEvent->GetParam<void*>(0));
 
 	s32 iRow = 0;
-	Char zValue[64] = {0};
 
 #ifndef USE_UDT_LIB
-	VMVupManager::VUPMapConstIterator it = pManager->m_poVupMap.begin();
-	for(;it != pManager->m_poVupMap.end(); ++it)
+	s32 rowInTable = m_VUPTable->getNumRows();
+	s32 sizeInMap = (s32)pManager->m_poVupMap.size();
+	if(sizeInMap > rowInTable)
+	{
+		m_VUPTable->insertRows(iRow, sizeInMap - rowInTable);
+	}
+	iRow = for_each(pManager->m_poVupMap.begin(), pManager->m_poVupMap.end(), ViewMapWrapper(this, m_VUPTable)).GetRow();
 #else
-	const VMVupManager::VUPMap& vupMap = pManager->m_poVupMapByPassport.GetContrainer();
+	const VMVupManager::VUPViewMap& vupMap = pManager->m_poVupViewMap.GetContrainer();
 	s32 rowInTable = m_VUPTable->getNumRows();
 	s32 sizeInMap = (s32)vupMap.size();
 	if(sizeInMap > rowInTable)
 	{
 		m_VUPTable->insertRows(iRow, sizeInMap - rowInTable);
 	}
-	VMVupManager::VUPMapConstIterator it = vupMap.begin();
-	for(;it != vupMap.end(); ++it)
-#endif	
+	if(pManager->m_Parameters.m_iSortUpOrDown == VMVupManager::ESort_Up)
 	{
-		if(iRow >= m_VUPTable->getNumRows())
-		{
-			m_VUPTable->insertRows(iRow);
-		}
-		const VMVup& vup = *((*it).second);
-
-		sprintf(zValue, "%d", vup.GetUniqueID());
-		m_VUPTable->setItemText(iRow, 0, zValue);
-		m_VUPTable->setItemJustify(iRow, 0, FXTableItem::LEFT|FXTableItem::CENTER_Y);
-
-		sprintf(zValue, "(%d, %d)%d", Protocal::GetRDVPointMajor(vup.GetRDVPointID()), Protocal::GetRDVPointMajor(vup.GetRDVPointID()), vup.GetGroup());
-		m_VUPTable->setItemText(iRow, 1, zValue);
-		m_VUPTable->setItemJustify(iRow, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
-
-		m_VUPTable->setItemText(iRow, 2, VMVup::kTestPhase[vup.GetCurrentTestPhase()].GetName());
-		m_VUPTable->setItemJustify(iRow, 2, FXTableItem::LEFT|FXTableItem::CENTER_Y);
-
-		m_VUPTable->setItemText(iRow, 3, VMVup::kStatus[vup.GetLastStaus()].GetName());
-		m_VUPTable->setItemJustify(iRow, 3, FXTableItem::LEFT|FXTableItem::CENTER_Y);
-
-		m_VUPTable->setItemText(iRow, 4, VMVup::kTestPhase[vup.GetLastTestPhase()].GetName());
-		m_VUPTable->setItemJustify(iRow,4, FXTableItem::LEFT|FXTableItem::CENTER_Y);
-
-		m_VUPTable->setItemText(iRow, 5, vup.GetIPAddress());
-		m_VUPTable->setItemJustify(iRow, 5, FXTableItem::LEFT|FXTableItem::CENTER_Y);
-
-		sprintf(zValue, "%d", vup.GetPort());
-		m_VUPTable->setItemText(iRow, 6, zValue);
-		m_VUPTable->setItemJustify(iRow, 6, FXTableItem::LEFT|FXTableItem::CENTER_Y);
-
-		iRow++;
+		iRow = for_each(vupMap.begin(), vupMap.end(), ViewMapWrapper(this, m_VUPTable)).GetRow();
 	}
-//#ifndef USE_UDT_LIB
-//	pManager->m_poVupMapByPassport.ReleaseContrainer();
-//#endif
+	else
+	{
+		iRow = for_each(vupMap.rbegin(), vupMap.rend(), ViewMapWrapper(this, m_VUPTable)).GetRow();
+	}
+#endif
 	if(iRow < m_VUPTable->getNumRows())
 	{
 		m_VUPTable->removeRows(iRow, m_VUPTable->getNumRows() - iRow);
