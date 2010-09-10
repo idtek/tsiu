@@ -344,7 +344,7 @@ void VMVupManager::RefreshViewMap()
 		VMVup* vup = (*it).second;
 		std::string viewKey = GetViewKey(vup);
 		vup->SetViewKey(viewKey.c_str());
-		m_poVupViewMap.RetrieveContrainer().insert(std::pair<std::string, VMVup*>(viewKey, vup));
+		vupViewMap.insert(std::pair<std::string, VMVup*>(viewKey, vup));
 	}
 	m_poVupViewMap.ReleaseContrainer();
 }
