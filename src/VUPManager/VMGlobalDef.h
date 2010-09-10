@@ -22,7 +22,8 @@ enum{
 	E_ET_UIUpdateGroup,
 	E_ET_AgentLeave,
 	E_ET_GroupSizeChanged,
-	E_ET_FindVUP
+	E_ET_FindVUP,
+	E_ET_VUPInfoUpdate,
 };
 
 #define SUMMARYNAME_TOTALVUP	"0.Total VUPs"
@@ -79,6 +80,8 @@ private:
 public:
 	long onCmdSendCommand(FXObject* sender, FXSelector sel, void* ptr);
 	long onKeyPress(FXObject* sender, FXSelector sel, void* ptr);
+
+	Bool bCheckFilter(s32 _iType, StringPtr _strShower);
 
 public:
 	enum {

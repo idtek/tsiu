@@ -50,6 +50,7 @@ VMVup::VMVup(const Char* _ipAddr, u16 _port)
 	, m_iRDVPointID(0)
 	, m_uiLastStatus(EVupStatus_Invalid)
 	, m_uiLastTestPhase(ETestPhase_INVALID)
+	, m_strViewKey()
 #ifdef USE_UDT_LIB
 	, m_ClientSocket(UDT::INVALID_SOCK)
 #endif
@@ -78,7 +79,7 @@ VMVup::~VMVup()
 		guParam.m_MaxNumberInGroup = 0;		//ignore
 		guParam.m_MyGroup = m_iGroup;
 		guParam.m_VUPsPassport = m_iUniqueID;
-		VMSummary::GetPtr()->UpdateGroupInfo(Protocal::GetRDVPointMajor(GetRDVPointID()), Protocal::GetRDVPointMajor(GetRDVPointID()), 0, guParam);
+		VMSummary::GetPtr()->UpdateGroupInfo(Protocal::GetRDVPointMajor(GetRDVPointID()), Protocal::GetRDVPointMinor(GetRDVPointID()), 0, guParam);
 	}
 #ifdef USE_UDT_LIB
 	if(m_ClientSocket != UDT::INVALID_SOCK)
@@ -105,6 +106,10 @@ void VMVup::SetStatus(u8 _status)
 		suParam.m_LastStatus = m_uiLastStatus;
 		suParam.m_CurStatus = m_uiCurrentStatus;
 		VMSummary::GetPtr()->UpdateSummary(m_strIPAddress.c_str(), suParam);
+
+		Event evtGroup((EventType_t)E_ET_VUPInfoUpdate);
+		evtGroup.AddParam((void*)this);
+		GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evtGroup);
 	}
 }
 void VMVup::SetTestPhase(u8 _phase)
@@ -126,6 +131,10 @@ void VMVup::SetTestPhase(u8 _phase)
 		suParam.m_LastTestPhase = m_uiLastTestPhase;
 		suParam.m_CurTestPhase = m_uiCurrentTestPhase;
 		VMSummary::GetPtr()->UpdateSummary(m_strIPAddress.c_str(), suParam);
+
+		Event evtGroup((EventType_t)E_ET_VUPInfoUpdate);
+		evtGroup.AddParam((void*)this);
+		GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evtGroup);
 	}
 }
 void VMVup::SetUniqueID(s32 _uid)
@@ -142,9 +151,25 @@ void VMVup::SetGroup(s32 _group)
 {	
 	D_CHECK(HasRegistered());
 	m_iGroup = _group;
+
+	Event evtGroup((EventType_t)E_ET_VUPInfoUpdate);
+	evtGroup.AddParam((void*)this);
+	GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evtGroup);
 }
 void VMVup::SetRDVPointID(s32 _rdvid)
 {	
 	D_CHECK(HasRegistered());
+
 	m_iRDVPointID = _rdvid;
+
+	Event evtGroup((EventType_t)E_ET_VUPInfoUpdate);
+	evtGroup.AddParam((void*)this);
+	GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evtGroup);
+}
+
+void VMVup::SetViewKey(StringPtr _viewKey)
+{
+	D_CHECK(HasRegistered());
+
+	m_strViewKey = _viewKey;
 }

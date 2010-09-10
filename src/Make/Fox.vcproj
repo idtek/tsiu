@@ -1468,10 +1468,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\ExternLibs\fox\include\FXArrowButton.h"
-				>
-			</File>
-			<File
 				RelativePath="..\ExternLibs\fox\include\fxascii.h"
 				>
 			</File>
