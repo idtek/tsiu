@@ -420,6 +420,25 @@ Bool VMVupManager::RemoveVup(s32 _id)
 	}
 	m_poDirtyVUP.ReleaseContrainer();
 
+	u16 vupRDVPoint = delVup->GetRDVPointID();
+	if(vupRDVPoint != Protocal::kInvalidRDVPoint)
+	{
+		RDVPointListIterator itRDVPoint = m_poRDVList.find(delVup->GetRDVPointID());
+		if(itRDVPoint != m_poRDVList.end())
+		{
+			RDVPointInfo& info = (*itRDVPoint).second;
+			if(delVup->GetGroup() >= 0)
+			{
+				std::vector<s32>::iterator itClientPassport = find(info.m_RunningInfo.m_ClientList.begin(), info.m_RunningInfo.m_ClientList.end(), delVup->GetUniqueID());
+				D_CHECK(itClientPassport != info.m_RunningInfo.m_ClientList.end());
+				info.m_RunningInfo.m_ClientList.erase(itClientPassport);
+
+				info.m_RunningInfo.m_GroupList[delVup->GetGroup()]--;
+				info.m_RunningInfo.m_bIsGroupFull = false;
+			}
+		}
+	}
+
 	VUPViewMap& vupViewMap = m_poVupViewMap.RetrieveContrainer();
 	VUPViewMapIterator itView = vupViewMap.find(delVup->GetViewKey());
 	if(itView != vupViewMap.end())
@@ -452,7 +471,7 @@ void VMVupManager::StartTesting(VMVup* _curVUP, __int64 _startTime)
 	s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
 	if(iRet == UDT::ERROR)
 	{
-		D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+		D_Output("[ERROR] sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
 		return;
 	}
 #endif
@@ -506,7 +525,7 @@ void VMVupManager::KillClient(s32 _id)
 			s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
 			if(iRet == UDT::ERROR)
 			{
-				D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+				D_Output("[ERROR] sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
 				continue;
 			}
 #endif
@@ -535,7 +554,7 @@ void VMVupManager::KillClient(s32 _id)
 		s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
 		if(iRet == UDT::ERROR)
 		{
-			D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+			D_Output("[ERROR] sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
 			return;
 		}
 #endif
@@ -869,7 +888,7 @@ void VMVupManager::_UpdateRDVPoint()
 		RDVPointInfo& info = (*it).second;
 		D_CHECK(info.m_RunningInfo.IsValid());
 		f32 fNow = GameEngine::GetGameEngine()->GetClockMod()->GetTotalElapsedSeconds();
-		if(info.m_RunningInfo.m_ClientList.Size() >= info.m_uiExpectedNum ||
+		if(info.m_RunningInfo.m_ClientList.size() >= info.m_uiExpectedNum ||
 			fNow - info.m_RunningInfo.m_fStartTime >= (f32)info.m_uiTimeOut)
 		{
 			//Default value
@@ -889,7 +908,7 @@ void VMVupManager::_UpdateRDVPoint()
 			_ftime64(&timebuffer);
 			__int64 curTime = timebuffer.time * 1000 + timebuffer.millitm;
 
-			for(s32 i = 0; i < info.m_RunningInfo.m_ClientList.Size(); ++i)
+			for(s32 i = 0; i < info.m_RunningInfo.m_ClientList.size(); ++i)
 			{
 				VMVup* pVup = FindVup(info.m_RunningInfo.m_ClientList[i]);
 				if(!pVup)
@@ -1000,12 +1019,13 @@ void VMVupManager::_HandleUdpPack()
 						s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
 						if(iRet == UDT::ERROR)
 						{
-							D_Output("sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+							D_Output("[ERROR] sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
 							break;
 						}
 					}
 					else
 					{
+						D_Output("[ERROR] cannot find vup in client list and retry: %d\n", poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort);
 						m_pUDPPackBuffer->InsertUDPData(*poPackWrapper);
 					}
 #endif
@@ -1071,7 +1091,6 @@ void VMVupManager::_HandleUdpPack()
 						D_CHECK(pi.m_uiTimeOut == poPack->m_unValue.m_ReachRDVPointParam.m_uiTimeout);
 					}
 					RDVPointRunningInfo& runningInfo = (*itRDVPoint).second.m_RunningInfo;
-					runningInfo.m_ClientList.PushBack(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
 
 					RDVPointParameterListIterator itRDVPointParam = m_poRDVParam.find(Protocal::GetRDVPointID(Protocal::GetRDVPointMajor(uiRDVPoint), 0));
 					if(itRDVPointParam == m_poRDVParam.end())
@@ -1085,8 +1104,13 @@ void VMVupManager::_HandleUdpPack()
 							
 							runningInfo.m_GroupList[0]++;
 							
-							D_Output("[RDV Point] add vup %d to: 0[%d/-1]\n", 
-								poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort, runningInfo.m_GroupList[0]);
+							D_Output("[RDV Point] add vup %d to: R(%d, %d)G(0)[%d/-1]\n", 
+								poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort, 
+								Protocal::GetRDVPointMajor(uiRDVPoint),
+								Protocal::GetRDVPointMinor(uiRDVPoint),
+								runningInfo.m_GroupList[0]);
+
+							runningInfo.m_ClientList.push_back(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
 
 							VMSummary::GroupUpdateParam guParam;
 							guParam.m_AddorRemove = true;
@@ -1141,6 +1165,8 @@ void VMVupManager::_HandleUdpPack()
 							}
 							if(vup->GetGroup() >= 0)
 							{
+								runningInfo.m_ClientList.push_back(poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort);
+
 								VMSummary::GroupUpdateParam guParam;
 								guParam.m_AddorRemove = true;
 								guParam.m_MaxNumberInGroup = param.m_iVUPNumInEachGroup;
@@ -1148,8 +1174,13 @@ void VMVupManager::_HandleUdpPack()
 								guParam.m_VUPsPassport = poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort;
 								VMSummary::GetPtr()->UpdateGroupInfo(Protocal::GetRDVPointMajor(uiRDVPoint), Protocal::GetRDVPointMinor(uiRDVPoint), param.m_iGroupNum, guParam);
 
-								D_Output("[RDV Point] add vup %d to: %d[%d/%d]\n", 
-									poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort, vup->GetGroup(), runningInfo.m_GroupList[vup->GetGroup()], param.m_iVUPNumInEachGroup);
+								D_Output("[RDV Point] add vup %d to: R(%d, %d)G(%d)[%d/%d]\n", 
+									poPack->m_unValue.m_ReachRDVPointParam.m_uiPassPort, 
+									Protocal::GetRDVPointMajor(uiRDVPoint),
+									Protocal::GetRDVPointMinor(uiRDVPoint),
+									vup->GetGroup(), 
+									runningInfo.m_GroupList[vup->GetGroup()], 
+									param.m_iVUPNumInEachGroup);
 							}
 						}
 					}
@@ -1196,7 +1227,7 @@ u32 ListeningRunner::Run()
 		D_Output("bind m_pListeningSocket failed: %s\n", UDT::getlasterror().getErrorMessage());
 		return 1;
 	}
-	if(UDT::ERROR == UDT::listen(m_pListeningSocket, 10))
+	if(UDT::ERROR == UDT::listen(m_pListeningSocket, 50))
 	{
 		D_Output("listen m_pListeningSocket failed: %s\n", UDT::getlasterror().getErrorMessage());
 		return 1;
@@ -1218,14 +1249,20 @@ u32 ListeningRunner::Run()
 		//UDT::setsockopt(pClientSocket, 0, UDT_LINGER, (int*)&l, sizeof(int));
 
 		D_Output("get client connection from %s:%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
-		m_pMan->AddClientSocket(pClientSocket);
-
 		long addr = inet_addr(inet_ntoa(clientaddr.sin_addr));
 		struct hostent* pHostent = gethostbyaddr((char*)&addr, sizeof(long),  AF_INET); 
-
 		VMVup* newVup = new VMVup(pHostent->h_name, ntohs(clientaddr.sin_port));
 		newVup->SetClientSocket(pClientSocket);
-		m_pMan->AddVupBySocket(newVup);
+
+		if(m_pMan->AddVupBySocket(newVup))
+		{
+			m_pMan->AddClientSocket(pClientSocket);
+		}
+		else
+		{
+			delete newVup;
+			D_Output("[ERROR] add to socket list failed %s:%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
+		}
 	}
 	UDT::close(m_pListeningSocket);
 	return 0;

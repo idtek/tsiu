@@ -1,4 +1,4 @@
-#include "VMGlobalDef.h"
+#include "ATGlobalDef.h"
 
 #if PLATFORM_TYPE == PLATFORM_WIN32
 int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszArgument, int nFunsterStil)
@@ -18,17 +18,13 @@ int main(int argc, char* argv[])
 	GetLibSettings()->SetCreator(new T_Creator<WinTick>,				E_CreatorType_Tick);
 	GetLibSettings()->SetCreator(new T_Creator<WinGDIRenderWindow>,		E_CreatorType_RenderWindow);
 	GetLibSettings()->SetCreator(new T_Creator<WinGDIRenderer>,			E_CreatorType_Renderer);
-	GetLibSettings()->SetCreator(new T_Creator<WinRenderGUIWindowMsg>,	E_CreatorType_RenderWindowMsg);
+	GetLibSettings()->SetCreator(new T_Creator<WinRenderWindowMsg>,		E_CreatorType_RenderWindowMsg);
 	GetLibSettings()->SetCreator(new T_Creator<WinInputManager>,		E_CreatorType_Input);
 	GetLibSettings()->SetCreator(new T_Creator<DefaultFile>,			E_CreatorType_File);
 #endif
-	GetLibSettings()->DefineMacro(E_LS_Has_GUI);
+	GetLibSettings()->DefineMacro(E_LS_Has_GDI);
 
-#ifndef USE_UDT_LIB
-	GetLibSettings()->DefineMacro(E_LS_Has_Network);
-#endif
-
-	g_poEngine = new GameEngine(1100, 800, "VUP Manager (Ver.Beta 0.6)", false);
+	g_poEngine = new GameEngine(800, 600, "AITest", false);
 
 	D_CHECK(g_poEngine);
 

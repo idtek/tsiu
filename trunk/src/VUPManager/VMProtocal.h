@@ -101,6 +101,8 @@ struct UDP_PACK
 
 namespace Protocal
 {
+	static const unsigned short kInvalidRDVPoint = 0xffff;
+
 	inline unsigned short GetRDVPointMajor(unsigned short _rdvPoint)
 	{
 		return _rdvPoint / 1000;

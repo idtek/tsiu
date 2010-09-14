@@ -212,8 +212,8 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	Bool isOK = _InitParameter();
 	if(!isOK)
 	{
-		D_Output("read configuration file failed\n");
-		//return false;
+		D_Output("[ERROR] read configuration file failed\n");
+		return false;
 	}
 
 	if(g_IsLogRedirected)
@@ -228,7 +228,6 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 		sprintf(g_strLogName, "%s\\%s_%d_%d_%d_%d_%d_%d_%d.log", g_strLogDir.c_str(), strHostName, 
 			timeNow->tm_year + 1900, timeNow->tm_mon + 1, timeNow->tm_mday, timeNow->tm_hour, timeNow->tm_min, timeNow->tm_sec, ::GetCurrentProcessId());
 		D_Output("Out put log name: %s\n", g_strLogName);
-		//g_fp = new OutRedirector(strLogName);
 	}
 
 	//Init status
@@ -277,8 +276,9 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	g_pRecvSocket = UDT::socket(AF_INET, SOCK_DGRAM, 0);
 	if(g_pRecvSocket == UDT::INVALID_SOCK)
 	{
-		D_Output("create socket failed: %s\n", UDT::getlasterror().getErrorMessage());
-		return 0;
+		OutRedirector dir(g_strLogName);
+		std::cout << "create socket failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
+		return false;
 	}
 	
 	//Decrease
@@ -317,11 +317,12 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 		if(UDT::ERROR == UDT::connect(g_pRecvSocket, (struct sockaddr*)&addrinfo, sizeof(addrinfo)))
 		{
 			OutRedirector dir(g_strLogName);
-			std::cout << "connected failed: " << UDT::getlasterror().getErrorMessage() << ", waiting for reconnecting" << std::endl;
+			std::cout << "[ERROR] connected failed: " << UDT::getlasterror().getErrorMessage() << ", waiting for reconnecting" << std::endl;
 		}
 		else
 		{
-			D_Output("connected successfully: %s:%d \n", g_strServerIP.c_str(), g_uiServerPort);
+			OutRedirector dir(g_strLogName);
+			std::cout << "connected successfully: " << g_strServerIP.c_str() << ":" << g_uiServerPort << std::endl;
 			break;
 		}
 		Sleep(3000 + delayInterval);
@@ -357,7 +358,7 @@ bool VUPClientAdapter::RegisterMe()
 		if(iRet == UDT::ERROR)
 		{
 			OutRedirector dir(g_strLogName);
-			std::cout << "sendmsg failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
+			std::cout << "[ERROR] sendmsg failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
 			return false;
 		}
 		return true;
@@ -400,7 +401,7 @@ void VUPClientAdapter::ReachRDVPoint(unsigned short _uiRDVPointID, unsigned shor
 	if(iRet == UDT::ERROR)
 	{
 		OutRedirector dir(g_strLogName);
-		std::cout << "sendmsg failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
+		std::cout << "[ERROR] sendmsg failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
 		return;
 	}
 #endif
@@ -416,9 +417,42 @@ void VUPClientAdapter::RegisterUDPPackHandler(unsigned char _uiType, UdpPackHand
 
 bool VUPClientAdapter::Tick()
 {
-	_HandleWatchedValue();
-	_HandleRecvPack();
+	if(HasConnectToManager())
+	{
+		_HandleWatchedValue();
+		_HandleRecvPack();
+	}
+	else
+	{
+		_WaitForRegisterACK();
+	}
 	return true;
+}
+void VUPClientAdapter::_WaitForRegisterACK()
+{
+	s32 iSize = g_pUDPPackBuffer->GetSize();
+	if(iSize != 0)
+	{
+		UDP_PACK *poPacArray = new UDP_PACK[iSize];
+		g_pUDPPackBuffer->GetUDPData(poPacArray, iSize);
+		for(s32 i = 0; i < iSize; ++i)
+		{
+			UDP_PACK *poPack = poPacArray + i;
+			u8 packType = poPack->m_uiType;
+			switch(packType)
+			{
+			case EPT_M2C_ClientRegisterACK:
+				{
+					OutRedirector dir(g_strLogName);
+					std::cout << "get register ack" << std::endl;
+
+					m_HasConnectedToManager = true;
+				}
+				break;
+			}
+		}
+		delete[] poPacArray;
+	}
 }
 void VUPClientAdapter::_HandleRecvPack()
 {
@@ -439,11 +473,6 @@ void VUPClientAdapter::_HandleRecvPack()
 			}
 			switch(packType)
 			{
-			case EPT_M2C_ClientRegisterACK:
-				{
-					m_HasConnectedToManager = true;
-				}
-				break;
 			case EPT_M2C_Refresh:
 				{
 					m_HasConnectedToManager = false;
@@ -461,7 +490,7 @@ void VUPClientAdapter::_HandleRecvPack()
 					if(iRet == UDT::ERROR)
 					{
 						OutRedirector dir(g_strLogName);
-						std::cout << "sendmsg failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
+						std::cout << "[ERROR] sendmsg failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
 						break;
 					}
 #endif
@@ -515,7 +544,7 @@ void VUPClientAdapter::_HandleWatchedValue()
 			if(iRet == UDT::ERROR)
 			{
 				OutRedirector dir(g_strLogName);
-				std::cout << "sendmsg failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
+				std::cout << "[ERROR] sendmsg failed: " << UDT::getlasterror().getErrorMessage() << std::endl;
 				continue;
 			}
 #endif

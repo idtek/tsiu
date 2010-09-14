@@ -17,7 +17,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\..\exe"
+			OutputDirectory="..\..\exe\$(ProjectName)"
 			IntermediateDirectory="..\..\obj\$(ProjectName)\Debug"
 			ConfigurationType="1"
 			CharacterSet="2"
@@ -97,7 +97,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\..\exe"
+			OutputDirectory="..\..\exe\$(ProjectName)"
 			IntermediateDirectory="..\..\obj\$(ProjectName)\Release"
 			ConfigurationType="1"
 			CharacterSet="2"

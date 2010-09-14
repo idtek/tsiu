@@ -57,6 +57,7 @@ extern "C"
 	private:
 		void _HandleRecvPack();
 		void _HandleWatchedValue();
+		void _WaitForRegisterACK();
 
 		void _InternalSend(UDP_PACK* _pOutPack, int _iPackLen);
 

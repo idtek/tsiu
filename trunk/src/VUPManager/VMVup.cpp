@@ -47,7 +47,7 @@ VMVup::VMVup(const Char* _ipAddr, u16 _port)
 	, m_uiCurrentStatus(EVupStatus_Invalid)
 	, m_uiCurrentTestPhase(ETestPhase_INVALID)
 	, m_iGroup(-1)
-	, m_iRDVPointID(0)
+	, m_iRDVPointID(Protocal::kInvalidRDVPoint)
 	, m_uiLastStatus(EVupStatus_Invalid)
 	, m_uiLastTestPhase(ETestPhase_INVALID)
 	, m_strViewKey()
@@ -156,7 +156,7 @@ void VMVup::SetGroup(s32 _group)
 	evtGroup.AddParam((void*)this);
 	GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evtGroup);
 }
-void VMVup::SetRDVPointID(s32 _rdvid)
+void VMVup::SetRDVPointID(u16 _rdvid)
 {	
 	D_CHECK(HasRegistered());
 

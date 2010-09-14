@@ -533,49 +533,59 @@ struct ViewMapWrapper
 	}
 	template<class Item> void operator ()(Item it)
 	{
-		Char zValue[64] = {0};
+		const VMVup& vup = *(it.second);
+
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_CurPhase, VMVup::kTestPhase[vup.GetCurrentTestPhase()].GetName()))
+			return;
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_LastStatus, VMVup::kStatus[vup.GetLastStaus()].GetName()))
+			return;
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_LastPhase, VMVup::kTestPhase[vup.GetLastTestPhase()].GetName()))
+			return;
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_IP, vup.GetIPAddress()))
+			return;
+
+		Char strPassport[64] = {0};
+		sprintf(strPassport, "%d", vup.GetUniqueID());
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_Passport, strPassport))
+			return;
+
+		Char strRDVPoint[64] = {0};
+		if(vup.GetRDVPointID() != Protocal::kInvalidRDVPoint)
+			sprintf(strRDVPoint, "(%d, %d)%d", Protocal::GetRDVPointMajor(vup.GetRDVPointID()), Protocal::GetRDVPointMinor(vup.GetRDVPointID()), vup.GetGroup());
+		else
+			sprintf(strRDVPoint, "(-1, -1)%d", vup.GetGroup());
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_RDVPoint, strRDVPoint))
+			return;
+
+		Char strPort[64] = {0};
+		sprintf(strPort, "%d", vup.GetPort());
+		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_Port, strPort))
+			return;
+
 		if(m_Row >= m_VUPTable->getNumRows())
 		{
 			m_VUPTable->insertRows(m_Row);
 		}
-		const VMVup& vup = *(it.second);
 
-		sprintf(zValue, "%d", vup.GetUniqueID());
-		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_Passport, zValue))
-			return;
-		m_VUPTable->setItemText(m_Row, 0, zValue);
+		m_VUPTable->setItemText(m_Row, 0, strPassport);
 		m_VUPTable->setItemJustify(m_Row, 0, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		sprintf(zValue, "(%d, %d)%d", Protocal::GetRDVPointMajor(vup.GetRDVPointID()), Protocal::GetRDVPointMinor(vup.GetRDVPointID()), vup.GetGroup());
-		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_RDVPoint, zValue))
-			return;
-		m_VUPTable->setItemText(m_Row, 1, zValue);
+		m_VUPTable->setItemText(m_Row, 1, strRDVPoint);
 		m_VUPTable->setItemJustify(m_Row, 1, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_CurPhase, VMVup::kTestPhase[vup.GetCurrentTestPhase()].GetName()))
-			return;
 		m_VUPTable->setItemText(m_Row, 2, VMVup::kTestPhase[vup.GetCurrentTestPhase()].GetName());
 		m_VUPTable->setItemJustify(m_Row, 2, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_LastStatus, VMVup::kStatus[vup.GetLastStaus()].GetName()))
-			return;
 		m_VUPTable->setItemText(m_Row, 3, VMVup::kStatus[vup.GetLastStaus()].GetName());
 		m_VUPTable->setItemJustify(m_Row, 3, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_LastPhase, VMVup::kTestPhase[vup.GetLastTestPhase()].GetName()))
-			return;
 		m_VUPTable->setItemText(m_Row, 4, VMVup::kTestPhase[vup.GetLastTestPhase()].GetName());
 		m_VUPTable->setItemJustify(m_Row,4, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_IP, vup.GetIPAddress()))
-			return;
 		m_VUPTable->setItemText(m_Row, 5, vup.GetIPAddress());
 		m_VUPTable->setItemJustify(m_Row, 5, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 
-		sprintf(zValue, "%d", vup.GetPort());
-		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_Port, zValue))
-			return;
-		m_VUPTable->setItemText(m_Row, 6, zValue);
+		m_VUPTable->setItemText(m_Row, 6, strPort);
 		m_VUPTable->setItemJustify(m_Row, 6, FXTableItem::LEFT|FXTableItem::CENTER_Y);
 		
 		m_Row++;
@@ -589,7 +599,8 @@ Bool MyCanvas::bCheckFilter(s32 _iType, StringPtr _strShower)
 		VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
 		if(pMan->m_Parameters.m_Filters[_iType].m_bActiveFilter)
 		{
-			StringPtr pRet = strstr(_strShower, pMan->m_Parameters.m_Filters[_iType].m_strFilterName.c_str());
+			StringPtr pRet = strstr(_strShower, 
+									pMan->m_Parameters.m_Filters[_iType].m_strFilterName.c_str());
 			if(pRet)
 				return true;
 			else
@@ -606,21 +617,21 @@ void MyCanvas::onUpdateList(const Event* _poEvent)
 	s32 iRow = 0;
 
 #ifndef USE_UDT_LIB
-	s32 rowInTable = m_VUPTable->getNumRows();
-	s32 sizeInMap = (s32)pManager->m_poVupMap.size();
-	if(sizeInMap > rowInTable)
-	{
-		m_VUPTable->insertRows(iRow, sizeInMap - rowInTable);
-	}
+	//s32 rowInTable = m_VUPTable->getNumRows();
+	//s32 sizeInMap = (s32)pManager->m_poVupMap.size();
+	//if(sizeInMap > rowInTable)
+	//{
+	//	m_VUPTable->insertRows(iRow, sizeInMap - rowInTable);
+	//}
 	iRow = for_each(pManager->m_poVupMap.begin(), pManager->m_poVupMap.end(), ViewMapWrapper(this, m_VUPTable)).GetRow();
 #else
 	const VMVupManager::VUPViewMap& vupMap = pManager->m_poVupViewMap.GetContrainer();
-	s32 rowInTable = m_VUPTable->getNumRows();
-	s32 sizeInMap = (s32)vupMap.size();
-	if(sizeInMap > rowInTable)
-	{
-		m_VUPTable->insertRows(iRow, sizeInMap - rowInTable);
-	}
+	//s32 rowInTable = m_VUPTable->getNumRows();
+	//s32 sizeInMap = (s32)vupMap.size();
+	//if(sizeInMap > rowInTable)
+	//{
+	//	m_VUPTable->insertRows(iRow, sizeInMap - rowInTable);
+	//}
 	if(pManager->m_Parameters.m_iSortUpOrDown == VMVupManager::ESort_Up)
 	{
 		iRow = for_each(vupMap.begin(), vupMap.end(), ViewMapWrapper(this, m_VUPTable)).GetRow();

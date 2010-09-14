@@ -46,7 +46,7 @@ public:
 	D_Inline StringPtr	GetIPAddress()			const	{	return m_strIPAddress.c_str();	}
 	D_Inline u8			GetCurrentTestPhase()	const	{	return m_uiCurrentTestPhase;	}
 	D_Inline s32		GetGroup()				const	{	return m_iGroup;				}
-	D_Inline s32		GetRDVPointID()			const	{	return m_iRDVPointID;			}
+	D_Inline u16		GetRDVPointID()			const	{	return m_iRDVPointID;			}
 	D_Inline u8			GetLastStaus()			const	{	return m_uiLastStatus;			}
 	D_Inline u8			GetLastTestPhase()		const	{	return m_uiLastTestPhase;		}
 	D_Inline StringPtr	GetViewKey()			const	{	return m_strViewKey.c_str();	}
@@ -56,7 +56,7 @@ public:
 	//TJQ:
 	//precondition: HasRegistered
 	void SetGroup(s32 _group);
-	void SetRDVPointID(s32 _rdvid);
+	void SetRDVPointID(u16 _rdvid);
 	void SetStatus(u8 _status);
 	void SetTestPhase(u8 _phase);
 	void SetViewKey(StringPtr _viewKey);
@@ -85,7 +85,7 @@ private:
 	u16				m_uiPort;
 	std::string		m_strIPAddress;
 	s32				m_iGroup;
-	s32				m_iRDVPointID;
+	u16				m_iRDVPointID;
 	std::string		m_strViewKey;
 
 #ifdef USE_UDT_LIB
