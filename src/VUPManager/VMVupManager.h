@@ -129,7 +129,7 @@ private:
 			m_bHasValidValue = false;
 			m_uiCurrentRunningID = (RDVPointID)-1;
 			m_fStartTime = 0.f;
-			m_ClientList.Clear();
+			m_ClientList.clear();
 			m_GroupList.Clear();
 			m_bIsGroupFull = false;
 			//m_CurrentGoup = 0;
@@ -138,12 +138,12 @@ private:
 		Bool IsValid() const{
 			return m_bHasValidValue;
 		}
-		RDVPointID	m_uiCurrentRunningID;
-		Bool		m_bHasValidValue;
-		f32			m_fStartTime;
-		Array<s32>	m_ClientList;
-		Array<s32>  m_GroupList;
-		Bool		m_bIsGroupFull;
+		RDVPointID			m_uiCurrentRunningID;
+		Bool				m_bHasValidValue;
+		f32					m_fStartTime;
+		std::vector<s32>	m_ClientList;
+		Array<s32>			m_GroupList;
+		Bool				m_bIsGroupFull;
 		//s32			m_CurrentGoup;
 		//s32			m_CurrentNumberOfVUPInGroup;
 	};

@@ -17,7 +17,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\..\exe"
+			OutputDirectory="..\..\exe\$(ProjectName)"
 			IntermediateDirectory="..\..\obj\$(ProjectName)\Debug"
 			ConfigurationType="1"
 			CharacterSet="1"
@@ -93,7 +93,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\..\exe"
+			OutputDirectory="..\..\exe\$(ProjectName)"
 			IntermediateDirectory="..\..\obj\$(ProjectName)\Release"
 			ConfigurationType="1"
 			CharacterSet="1"
@@ -176,10 +176,6 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath="..\ExternLibs\fox\include\FXArrowButton.h"
-				>
-			</File>
 			<File
 				RelativePath=".\main.cpp"
 				>

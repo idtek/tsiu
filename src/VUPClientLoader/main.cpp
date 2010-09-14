@@ -9,10 +9,14 @@ int main(int argc, char* argv[])
 	VUPClientAdapter* vcAdapter = new VUPClientAdapter;
 	vcAdapter->Init(::GetCurrentProcessId());
 	vcAdapter->RegisterMe();
-	//delete vcAdapter;
 
-	::Sleep(9999999);
-	
+	while(1)
+	{
+		vcAdapter->Tick();
+		::Sleep(1000);
+	}
+	delete vcAdapter;
+
 	return 1;
 }
 
