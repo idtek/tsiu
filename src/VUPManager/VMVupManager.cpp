@@ -430,11 +430,12 @@ Bool VMVupManager::RemoveVup(s32 _id)
 			if(delVup->GetGroup() >= 0)
 			{
 				std::vector<s32>::iterator itClientPassport = find(info.m_RunningInfo.m_ClientList.begin(), info.m_RunningInfo.m_ClientList.end(), delVup->GetUniqueID());
-				D_CHECK(itClientPassport != info.m_RunningInfo.m_ClientList.end());
-				info.m_RunningInfo.m_ClientList.erase(itClientPassport);
-
-				info.m_RunningInfo.m_GroupList[delVup->GetGroup()]--;
-				info.m_RunningInfo.m_bIsGroupFull = false;
+				if(itClientPassport != info.m_RunningInfo.m_ClientList.end())
+				{
+					info.m_RunningInfo.m_ClientList.erase(itClientPassport);
+					info.m_RunningInfo.m_GroupList[delVup->GetGroup()]--;
+					info.m_RunningInfo.m_bIsGroupFull = false;
+				}
 			}
 		}
 	}
@@ -472,6 +473,11 @@ void VMVupManager::StartTesting(VMVup* _curVUP, __int64 _startTime)
 	if(iRet == UDT::ERROR)
 	{
 		D_Output("[ERROR] sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+		return;
+	}
+	else
+	{
+		D_Output("send start testing to %d(%s:%d) successfully\n", _curVUP->GetUniqueID(), _curVUP->GetIPAddress(), _curVUP->GetPort());
 		return;
 	}
 #endif
@@ -1012,15 +1018,30 @@ void VMVupManager::_HandleUdpPack()
 						pVup->SetStatus(poPack->m_unValue.m_ClientRegisterParam.m_uiStatus);
 						pVup->SetTestPhase(poPack->m_unValue.m_ClientRegisterParam.m_uiTestPhase);
 
-						AddVup(pVup);
+						D_Output("get registered info from: %d(%s:%d)\n", pVup->GetUniqueID(), pVup->GetIPAddress(), pVup->GetPort());
+
+						Bool isOk = AddVup(pVup);
 
 						UDP_PACK pack;
 						pack.m_uiType = EPT_M2C_ClientRegisterACK;
-						s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
-						if(iRet == UDT::ERROR)
+						if(isOk)
 						{
-							D_Output("[ERROR] sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
-							break;
+							pack.m_unValue.m_RegisterAckParam.m_uiHasSuccessed = true;
+							s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
+							if(iRet == UDT::ERROR)
+							{
+								D_Output("[ERROR] sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+							}
+						}
+						else
+						{
+							pack.m_unValue.m_RegisterAckParam.m_uiHasSuccessed = false;
+							s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
+							if(iRet == UDT::ERROR)
+							{
+								D_Output("[ERROR] sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+							}
+							D_Output("[ERROR] duplicate passport: %d\n", poPack->m_unValue.m_ClientRegisterParam.m_uiPassPort);
 						}
 					}
 					else
@@ -1247,11 +1268,12 @@ u32 ListeningRunner::Run()
 		//l.l_linger = 1;
 		//l.l_onoff = 0;
 		//UDT::setsockopt(pClientSocket, 0, UDT_LINGER, (int*)&l, sizeof(int));
-
-		D_Output("get client connection from %s:%d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 		long addr = inet_addr(inet_ntoa(clientaddr.sin_addr));
 		struct hostent* pHostent = gethostbyaddr((char*)&addr, sizeof(long),  AF_INET); 
 		VMVup* newVup = new VMVup(pHostent->h_name, ntohs(clientaddr.sin_port));
+
+		D_Output("get client connection from %s:%d\n", newVup->GetIPAddress(), newVup->GetPort());
+
 		newVup->SetClientSocket(pClientSocket);
 
 		if(m_pMan->AddVupBySocket(newVup))

@@ -109,7 +109,7 @@ namespace TsiU
 		// DIB format pads to multiples of 4 bytes...
 		bytes_per_line = (m_iWidth * 3 + 3 ) & ~3;
 		pixels = (u8*)VirtualAlloc(0, bytes_per_line * m_iHeight, MEM_COMMIT, PAGE_READWRITE);
-		D_CHECK(pixels)
+		D_CHECK(pixels);
 		skip = -bytes_per_line - m_iWidth * 3;
 		src = (u8*)bmpBuffer;
 		dst = pixels + m_iHeight * bytes_per_line + m_iWidth * 3;

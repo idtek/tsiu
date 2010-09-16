@@ -54,13 +54,6 @@ typedef void*				Udef;
    union		-- un
 
 /************************************************************************/
-
-#ifdef TLIB_DEBUG
-#define D_CHECK(s)	assert(s);
-#else
-#define D_CHECK(s)
-#endif
-
 #ifdef TLIB_DEBUG
 #define D_DebugOut	printf
 #else

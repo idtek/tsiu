@@ -54,10 +54,12 @@ extern "C"
 		void Watch(unsigned char _uiKey, const char* _zName, const int* _watchedvalue);
 		void ReachRDVPoint(unsigned short _uiRDVPointID, unsigned short _uiExpected, unsigned short _uiTimeout);
 
+		void OutputLog(const char* _log);
+
 	private:
-		void _HandleRecvPack();
-		void _HandleWatchedValue();
-		void _WaitForRegisterACK();
+		bool _HandleRecvPack();
+		bool _HandleWatchedValue();
+		bool _WaitForRegisterACK();
 
 		void _InternalSend(UDP_PACK* _pOutPack, int _iPackLen);
 

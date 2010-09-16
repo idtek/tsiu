@@ -2,6 +2,7 @@
 #define __TWIN32_PRIVATE__
 
 #include "TCore_Types.h"
+#include "TCore_Assert.h"
 
 #ifndef TLIB_NOWINDX
 #include <d3d9.h>

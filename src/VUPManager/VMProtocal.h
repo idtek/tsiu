@@ -96,6 +96,9 @@ struct UDP_PACK
 		struct{
 			__int64			m_uiBurstTime;
 		}m_StartTestingParam;
+		struct{
+			bool			m_uiHasSuccessed;
+		}m_RegisterAckParam;
 	}m_unValue;
 };
 

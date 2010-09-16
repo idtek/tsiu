@@ -8,5 +8,6 @@
 #include "TCore_Exception.h"
 #include "TCore_Thread.h"
 #include "TCore_Mutex.h"
+#include "TCore_Assert.h"
 
 #endif
