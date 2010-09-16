@@ -149,7 +149,7 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 		{
 			table->setColumnWidth(i, 100);
 		}
-		table->setRowHeaderWidth(0);
+		table->setRowHeaderWidth(40);
 		table->setColumnText(0, "ID");
 		table->setColumnText(1, "Group");
 		table->setColumnWidth(1, 60);
@@ -551,9 +551,9 @@ struct ViewMapWrapper
 
 		Char strRDVPoint[64] = {0};
 		if(vup.GetRDVPointID() != Protocal::kInvalidRDVPoint)
-			sprintf(strRDVPoint, "(%d, %d)%d", Protocal::GetRDVPointMajor(vup.GetRDVPointID()), Protocal::GetRDVPointMinor(vup.GetRDVPointID()), vup.GetGroup());
+			sprintf(strRDVPoint, "(%d,%d)%d", Protocal::GetRDVPointMajor(vup.GetRDVPointID()), Protocal::GetRDVPointMinor(vup.GetRDVPointID()), vup.GetGroup());
 		else
-			sprintf(strRDVPoint, "(-1, -1)%d", vup.GetGroup());
+			sprintf(strRDVPoint, "(-1,-1)%d", vup.GetGroup());
 		if(!m_MyCanvas->bCheckFilter(VMVupManager::ESort_RDVPoint, strRDVPoint))
 			return;
 
@@ -566,6 +566,9 @@ struct ViewMapWrapper
 		{
 			m_VUPTable->insertRows(m_Row);
 		}
+		Char strRow[64] = {0};
+		sprintf(strRow, "%d", m_Row + 1);
+		m_VUPTable->setRowText(m_Row, strRow);
 
 		m_VUPTable->setItemText(m_Row, 0, strPassport);
 		m_VUPTable->setItemJustify(m_Row, 0, FXTableItem::LEFT|FXTableItem::CENTER_Y);

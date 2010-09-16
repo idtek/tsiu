@@ -472,6 +472,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\TLibMain\TCore_Assert.h"
+					>
+				</File>
+				<File
 					RelativePath="..\tlibmain\TCore_Creator.h"
 					>
 				</File>

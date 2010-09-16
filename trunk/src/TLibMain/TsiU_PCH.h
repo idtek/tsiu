@@ -2,5 +2,6 @@
 #define __TSIU_PCH__
 
 #include "TCore_Types.h"
+#include "TCore_Assert.h"
 
 #endif
