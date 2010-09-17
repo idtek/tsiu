@@ -97,19 +97,22 @@ void VMVup::SetStatus(u8 _status)
 	{
 		D_CHECK(HasRegistered());
 
-		m_uiLastStatus = m_uiCurrentStatus;
-		m_uiCurrentStatus = _status;
+		if(m_uiCurrentStatus != _status)
+		{
+			m_uiLastStatus = m_uiCurrentStatus;
+			m_uiCurrentStatus = _status;
 
-		//Update Summary
-		VMSummary::SummaryUpdateParam suParam;
-		suParam.m_UpdateType = VMSummary::SummaryUpdateParam::ESummaryUpdateType_Status;
-		suParam.m_LastStatus = m_uiLastStatus;
-		suParam.m_CurStatus = m_uiCurrentStatus;
-		VMSummary::GetPtr()->UpdateSummary(m_strIPAddress.c_str(), suParam);
+			//Update Summary
+			VMSummary::SummaryUpdateParam suParam;
+			suParam.m_UpdateType = VMSummary::SummaryUpdateParam::ESummaryUpdateType_Status;
+			suParam.m_LastStatus = m_uiLastStatus;
+			suParam.m_CurStatus = m_uiCurrentStatus;
+			VMSummary::GetPtr()->UpdateSummary(m_strIPAddress.c_str(), suParam);
 
-		Event evtGroup((EventType_t)E_ET_VUPInfoUpdate);
-		evtGroup.AddParam((void*)this);
-		GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evtGroup);
+			Event evtGroup((EventType_t)E_ET_VUPInfoUpdate);
+			evtGroup.AddParam((void*)this);
+			GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evtGroup);
+		}
 	}
 }
 void VMVup::SetTestPhase(u8 _phase)
@@ -122,19 +125,22 @@ void VMVup::SetTestPhase(u8 _phase)
 	{
 		D_CHECK(HasRegistered());
 
-		m_uiLastTestPhase = m_uiCurrentTestPhase;
-		m_uiCurrentTestPhase = _phase;
+		if(m_uiCurrentStatus != _phase)
+		{
+			m_uiLastTestPhase = m_uiCurrentTestPhase;
+			m_uiCurrentTestPhase = _phase;
 
-		//Update Summary
-		VMSummary::SummaryUpdateParam suParam;
-		suParam.m_UpdateType = VMSummary::SummaryUpdateParam::ESummaryUpdateType_TestPhase;
-		suParam.m_LastTestPhase = m_uiLastTestPhase;
-		suParam.m_CurTestPhase = m_uiCurrentTestPhase;
-		VMSummary::GetPtr()->UpdateSummary(m_strIPAddress.c_str(), suParam);
+			//Update Summary
+			VMSummary::SummaryUpdateParam suParam;
+			suParam.m_UpdateType = VMSummary::SummaryUpdateParam::ESummaryUpdateType_TestPhase;
+			suParam.m_LastTestPhase = m_uiLastTestPhase;
+			suParam.m_CurTestPhase = m_uiCurrentTestPhase;
+			VMSummary::GetPtr()->UpdateSummary(m_strIPAddress.c_str(), suParam);
 
-		Event evtGroup((EventType_t)E_ET_VUPInfoUpdate);
-		evtGroup.AddParam((void*)this);
-		GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evtGroup);
+			Event evtGroup((EventType_t)E_ET_VUPInfoUpdate);
+			evtGroup.AddParam((void*)this);
+			GameEngine::GetGameEngine()->GetEventMod()->SendEvent(&evtGroup);
+		}
 	}
 }
 void VMVup::SetUniqueID(s32 _uid)

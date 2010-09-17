@@ -5,8 +5,7 @@
 enum
 {
 	EPT_C2M_ClientRegister = 0,
-	EPT_C2M_ReportClientRunningStatus,
-	EPT_C2M_ReportClientTesingPhase,
+	EPT_C2M_ReportClientStatus,
 	EPT_C2M_ReachRDVPoint,
 	EPT_C2M_LostConnection,
 
@@ -64,8 +63,7 @@ enum
 };
 
 //Macro
-#define kNAME_ReportClientRunningStatus_Phase	"ClientRunningStatus"
-#define kNAME_ReportClientTesingPhase_Phase		"ClientTestingPhase"
+#define kNAME_ReportClientStatus	"ClientStatus"
 
 //Packet
 struct UDP_PACK
@@ -81,17 +79,12 @@ struct UDP_PACK
 		}m_ClientRegisterParam;
 		struct{
 			int				m_uiPassPort;
-			unsigned char	m_uiStatus;
-		}m_ReportClientRunningStatusParam;
-		struct{
-			int				m_uiPassPort;
-			unsigned char	m_uiPhase;
-		}m_ReportClientTesingPhaseParam;
+			unsigned char	m_uiRunningStatus;
+			unsigned char	m_uiTestPhase;
+		}m_ReportClientStatusParam;
 		struct{
 			int				m_uiPassPort;
 			unsigned short	m_uiRDVPointID;
-			unsigned short	m_uiExpected;
-			unsigned short	m_uiTimeout;
 		}m_ReachRDVPointParam;
 		struct{
 			__int64			m_uiBurstTime;

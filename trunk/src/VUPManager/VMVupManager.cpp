@@ -541,7 +541,7 @@ void VMVupManager::KillClient(s32 _id)
 #else
 		m_poVupMapByPassport.ReleaseContrainer();
 #endif
-		m_poRDVList.clear();
+		//m_poRDVList.clear();
 	}
 	else
 	{
@@ -605,6 +605,14 @@ void VMVupManager::SetRDVParameter(RDVPointParameter& _pRDVParam, StringPtr _pOp
 	{
 		_pRDVParam.m_iVUPNumInEachGroup = _param.ToInt();
 	}
+	else if(!_stricmp(_pOption, "-expectednumber") || !_stricmp(_pOption, "-en"))
+	{
+		_pRDVParam.m_uiExpectedNum = _param.ToInt();
+	}
+	else if(!_stricmp(_pOption, "-timeout") || !_stricmp(_pOption, "-to"))
+	{
+		_pRDVParam.m_uiTimeOut = _param.ToInt();
+	}
 }
 void VMVupManager::GetRDVParameter(const RDVPointParameter& _pRDVParam, StringPtr _pOption) const
 {
@@ -623,6 +631,14 @@ void VMVupManager::GetRDVParameter(const RDVPointParameter& _pRDVParam, StringPt
 	if(!_pOption || !_stricmp(_pOption, "-vupsnumberingroup") || !_stricmp(_pOption, "-vn"))
 	{
 		D_Output("$vupsnumberingroup = %d\n", _pRDVParam.m_iVUPNumInEachGroup);
+	}
+	if(!_pOption || !_stricmp(_pOption, "-expectednumber") || !_stricmp(_pOption, "-en"))
+	{
+		D_Output("$expectednumber = %d\n", _pRDVParam.m_uiExpectedNum);
+	}
+	if(!_pOption || !_stricmp(_pOption, "-timeout") || !_stricmp(_pOption, "-to"))
+	{
+		D_Output("$timeout = %d\n", _pRDVParam.m_uiTimeOut);
 	}
 }
 
@@ -886,6 +902,7 @@ void VMVupManager::onVUPInfoChange(const Event* _poEvent)
 	m_poDirtyVUP.ReleaseContrainer();
 }
 
+//#pragma optimize("", off)
 void VMVupManager::_UpdateRDVPoint()
 {
 	RDVPointListIterator it = m_poRDVList.begin();
@@ -1052,20 +1069,19 @@ void VMVupManager::_HandleUdpPack()
 #endif
 				}
 				break;
-			case EPT_C2M_ReportClientRunningStatus:
+			case EPT_C2M_ReportClientStatus:
 				{
 					Char cmd[VMCommand::kMaxCommandLength];
-					sprintf(cmd, "updatevup %d -rs %d",	poPack->m_unValue.m_ReportClientRunningStatusParam.m_uiPassPort,
-														poPack->m_unValue.m_ReportClientRunningStatusParam.m_uiStatus);
+					sprintf(cmd, "updatevup %d -rs %d",	poPack->m_unValue.m_ReportClientStatusParam.m_uiPassPort,
+														poPack->m_unValue.m_ReportClientStatusParam.m_uiRunningStatus);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
-				}
-				break;
-			case EPT_C2M_ReportClientTesingPhase:
-				{
-					Char cmd[VMCommand::kMaxCommandLength];
-					sprintf(cmd, "updatevup %d -tp %d",	poPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPassPort,
-														poPack->m_unValue.m_ReportClientTesingPhaseParam.m_uiPhase);
+
+					sprintf(cmd, "updatevup %d -tp %d",	poPack->m_unValue.m_ReportClientStatusParam.m_uiPassPort,
+														poPack->m_unValue.m_ReportClientStatusParam.m_uiTestPhase);
 					VMCommandCenter::GetPtr()->ExecuteFromString(cmd);
+
+					//D_Output("get status %s, %s\n", VMVup::kStatus[poPack->m_unValue.m_ReportClientStatusParam.m_uiRunningStatus].GetName(),
+					//								VMVup::kTestPhase[poPack->m_unValue.m_ReportClientStatusParam.m_uiTestPhase].GetName());
 				}
 				break;
 			case EPT_C2M_ReachRDVPoint:
@@ -1077,8 +1093,6 @@ void VMVupManager::_HandleUdpPack()
 						D_Output("[RDV Point] new rdv point: %d\n", uiRDVPoint);
 						RDVPointInfo info;
 						info.m_uiID								= uiRDVPoint;
-						info.m_uiExpectedNum					= poPack->m_unValue.m_ReachRDVPointParam.m_uiExpected;
-						info.m_uiTimeOut						= poPack->m_unValue.m_ReachRDVPointParam.m_uiTimeout;
 						info.m_RunningInfo.m_bHasValidValue		= true;
 						info.m_RunningInfo.m_uiCurrentRunningID = uiRDVPoint;
 						info.m_RunningInfo.m_fStartTime			= GameEngine::GetGameEngine()->GetClockMod()->GetTotalElapsedSeconds();
@@ -1086,6 +1100,7 @@ void VMVupManager::_HandleUdpPack()
 
 						itRDVPoint = m_poRDVList.insert(std::pair<RDVPointID, RDVPointInfo>(uiRDVPoint, info)).first;
 
+						RDVPointInfo& pi = (*itRDVPoint).second;
 						RDVPointRunningInfo& runningInfo = (*itRDVPoint).second.m_RunningInfo;
 						RDVPointParameterListIterator itRDVPointParam = m_poRDVParam.find(Protocal::GetRDVPointID(Protocal::GetRDVPointMajor(uiRDVPoint), 0));
 						if(itRDVPointParam != m_poRDVParam.end())
@@ -1096,11 +1111,17 @@ void VMVupManager::_HandleUdpPack()
 							{
 								runningInfo.m_GroupList[i] = 0;
 							}
+							pi.m_uiExpectedNum = param.m_uiExpectedNum;
+							pi.m_uiTimeOut = param.m_uiTimeOut;
 						}
 						else
 						{
 							runningInfo.m_GroupList.ReSize(1);
 							runningInfo.m_GroupList[0] = 0;
+
+							//TJQ: use default value
+							pi.m_uiExpectedNum = 9999;
+							pi.m_uiTimeOut = 10 * 60;
 						}
 					}
 					else
@@ -1108,8 +1129,8 @@ void VMVupManager::_HandleUdpPack()
 						RDVPointInfo& pi = (*itRDVPoint).second;
 						D_CHECK(pi.m_RunningInfo.m_bHasValidValue);
 						D_CHECK(pi.m_RunningInfo.m_uiCurrentRunningID == uiRDVPoint);
-						D_CHECK(pi.m_uiExpectedNum == poPack->m_unValue.m_ReachRDVPointParam.m_uiExpected);
-						D_CHECK(pi.m_uiTimeOut == poPack->m_unValue.m_ReachRDVPointParam.m_uiTimeout);
+						//D_CHECK(pi.m_uiExpectedNum == poPack->m_unValue.m_ReachRDVPointParam.m_uiExpected);
+						//D_CHECK(pi.m_uiTimeOut == poPack->m_unValue.m_ReachRDVPointParam.m_uiTimeout);
 					}
 					RDVPointRunningInfo& runningInfo = (*itRDVPoint).second.m_RunningInfo;
 
