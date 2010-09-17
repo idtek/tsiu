@@ -158,10 +158,21 @@ private:
 
 	struct RDVPointParameter
 	{
+		RDVPointParameter()
+			:m_iIntervalOfEachGroup(0)
+			,m_iDelayOfStartTime(0)
+			,m_iGroupNum(1)
+			,m_iVUPNumInEachGroup(0)
+			,m_uiExpectedNum(0)
+			,m_uiTimeOut(0)
+		{
+		}
 		s32	m_iIntervalOfEachGroup;
 		s32	m_iDelayOfStartTime;
 		s32	m_iGroupNum;
 		s32	m_iVUPNumInEachGroup;
+		u16	m_uiExpectedNum;
+		u16	m_uiTimeOut;
 	};
 	typedef std::map<RDVPointID, RDVPointParameter>				RDVPointParameterList;
 	typedef std::map<RDVPointID, RDVPointParameter>::iterator	RDVPointParameterListIterator;

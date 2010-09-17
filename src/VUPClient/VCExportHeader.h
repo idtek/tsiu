@@ -51,7 +51,7 @@ extern "C"
 			return m_HasConnectedToManager;
 		}
 		void RegisterUDPPackHandler(unsigned char _uiType, UdpPackHandler _pPackHandler);
-		void Watch(unsigned char _uiKey, const char* _zName, const int* _watchedvalue);
+		void Watch(unsigned char _uiKey, const char* _zName, const unsigned short* _watchedvalue);
 		void ReachRDVPoint(unsigned short _uiRDVPointID, unsigned short _uiExpected, unsigned short _uiTimeout);
 
 		void OutputLog(const char* _log);
@@ -64,8 +64,7 @@ extern "C"
 		void _InternalSend(UDP_PACK* _pOutPack, int _iPackLen);
 
 		//PACK func
-		void _PACK_ReportClientRunningStatus(UDP_PACK* outPack, WatchedNameValueMap& nameValue);
-		void _PACK_ReportClientTesingPhase(UDP_PACK* outPack, WatchedNameValueMap& nameValue);
+		void _PACK_ReportClientStatus(UDP_PACK* outPack, WatchedNameValueMap& nameValue);
 
 	private:
 
