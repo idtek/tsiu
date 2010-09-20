@@ -656,6 +656,7 @@ GameEngine::GameEngine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool 
 {
 	VMCommandCenter::Create();
 	VMSummary::Create();
+	Logger::Create();
 }
 //-------------------------------------------------------------------------------------------------------------------------------
 void GameEngine::DoInit()
@@ -668,10 +669,14 @@ void GameEngine::DoInit()
 	//Add Object
 	GameEngine::GetGameEngine()->GetSceneMod()->AddObject("VUMMan", new VMVupManager);
 	GameEngine::GetGameEngine()->GetSceneMod()->AddObject("VUMSummary", new VMSummaryUpdater);
+
+	Logger::GetPtr()->SetOutputFile("log.out");
 }
 
 void GameEngine::DoUnInit()
 {
 	VMSummary::Destroy();
 	VMCommandCenter::Destroy();
+
+	Logger::Destroy();
 }

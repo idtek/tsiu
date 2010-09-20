@@ -1,8 +1,6 @@
 #ifndef __TUTILITY_SINGLETON__
 #define __TUTILITY_SINGLETON__
 
-
-
 namespace TsiU
 {
 	template<typename T>

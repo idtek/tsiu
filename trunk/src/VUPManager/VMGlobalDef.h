@@ -9,6 +9,8 @@ using namespace TsiU;
 #include "TWin32_Header.h"
 #endif
 
+#include "TUtility_Logger.h"
+
 #define USE_UDT_LIB
 
 //-------------------------------------------------------------------------
