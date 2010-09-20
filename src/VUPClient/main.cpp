@@ -99,7 +99,7 @@ namespace{
 				else
 				{
 					D_Output("[INFO] waiting for opening log file...\n");
-					Sleep(500);
+					Sleep(200);
 				}
 			}
 		}
@@ -116,6 +116,13 @@ namespace{
 	};
 };
 
+#ifdef DISABLE_LOG_ALL
+	#define DISABLE_LOG_1
+	#define DISABLE_LOG_2
+#endif
+
+#define DISABLE_LOG_2
+
 #define LOG(expr) while(1)\
 	{\
 		OutRedirector dir(g_strLogName);\
@@ -126,9 +133,21 @@ namespace{
 		}\
 		else\
 		{\
-			Sleep(500);\
+			Sleep(200);\
 		}\
 	}\
+
+#ifndef DISABLE_LOG_1
+#define LOG_1(expr)		LOG(expr)
+#else
+#define LOG_1(expr)
+#endif
+
+#ifndef DISABLE_LOG_2
+#define LOG_2(expr)		LOG(expr)
+#else
+#define LOG_2(expr)
+#endif
 
 //--------------------------------------------------------------------------------
 class RecvUDPRunner : public IThreadRunner
@@ -185,7 +204,7 @@ u32 RecvUDPRunner::Run()
 		s32 iRet = UDT::recvmsg(m_pRecvSocket, (char*)&pack, sizeof(UDP_PACK));
 		if(iRet == UDT::ERROR)
 		{
-			LOG("recvmsg failed(" << m_pRecvSocket << "): " << UDT::getlasterror().getErrorMessage());
+			LOG_1("recvmsg failed(" << m_pRecvSocket << "): " << UDT::getlasterror().getErrorMessage());
 			return 1;
 		}
 		else
@@ -303,7 +322,7 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	g_pRecvSocket = UDT::socket(AF_INET, SOCK_DGRAM, 0);
 	if(g_pRecvSocket == UDT::INVALID_SOCK)
 	{
-		LOG("create socket failed: " << UDT::getlasterror().getErrorMessage());
+		LOG_1("create socket failed: " << UDT::getlasterror().getErrorMessage());
 		return false;
 	}
 	
@@ -342,20 +361,20 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	{
 		if(UDT::ERROR == UDT::connect(g_pRecvSocket, (struct sockaddr*)&addrinfo, sizeof(addrinfo)))
 		{
-			LOG("[ERROR] connected failed: " << UDT::getlasterror().getErrorMessage() << ", waiting for reconnecting");
+			LOG_1("[ERROR] connected failed: " << UDT::getlasterror().getErrorMessage() << ", waiting for reconnecting");
 		}
 		else
 		{
-			LOG("[INFO] connected successfully: " << g_strServerIP.c_str() << ":" << g_uiServerPort);
+			LOG_1("[INFO] connected successfully: " << g_strServerIP.c_str() << ":" << g_uiServerPort);
 			sockaddr_in addrLocal;
 			s32 addrLen = sizeof(sockaddr_in);
 			if(UDT::ERROR == UDT::getsockname(g_pRecvSocket, (struct sockaddr*)&addrLocal, &addrLen))
 			{
-				LOG("[ERROR] getsockname failed: " << UDT::getlasterror().getErrorMessage());
+				LOG_1("[ERROR] getsockname failed: " << UDT::getlasterror().getErrorMessage());
 			}
 			else
 			{
-				LOG("[INFO] client port = " << htons(addrLocal.sin_port));
+				LOG_1("[INFO] client port = " << htons(addrLocal.sin_port));
 			}
 			break;
 		}
@@ -371,7 +390,7 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 }
 void VUPClientAdapter::OutputLog(const char* _log)
 {
-	LOG(_log);
+	LOG_2(_log);
 }
 
 bool VUPClientAdapter::RegisterMe()
@@ -396,7 +415,7 @@ bool VUPClientAdapter::RegisterMe()
 		s32 iRet = UDT::sendmsg(g_pRecvSocket, (const Char*)&pack, sizeof(UDP_PACK));
 		if(iRet == UDT::ERROR)
 		{
-			LOG("[ERROR] sendmsg failed: " << UDT::getlasterror().getErrorMessage());
+			LOG_1("[ERROR] sendmsg failed: " << UDT::getlasterror().getErrorMessage());
 			return false;
 		}
 		return true;
@@ -441,7 +460,7 @@ void VUPClientAdapter::ReachRDVPoint(unsigned short _uiRDVPointID, unsigned shor
 	s32 iRet = UDT::sendmsg(g_pRecvSocket, (const Char*)&pack, sizeof(UDP_PACK));
 	if(iRet == UDT::ERROR)
 	{
-		LOG("[ERROR] sendmsg failed: " << UDT::getlasterror().getErrorMessage());
+		LOG_1("[ERROR] sendmsg failed: " << UDT::getlasterror().getErrorMessage());
 	}
 #endif
 }
@@ -489,12 +508,12 @@ bool VUPClientAdapter::_WaitForRegisterACK()
 				{
 					if(poPack->m_unValue.m_RegisterAckParam.m_uiHasSuccessed)
 					{
-						LOG("[INFO] get register ack successfully");
+						LOG_1("[INFO] get register ack successfully");
 						m_HasConnectedToManager = true;
 					}
 					else
 					{
-						LOG("[INFO] get register ack failed, for using duplicate passport");
+						LOG_1("[INFO] get register ack failed, for using duplicate passport");
 						m_HasConnectedToManager = false;
 
 						return false;
@@ -503,7 +522,7 @@ bool VUPClientAdapter::_WaitForRegisterACK()
 				break;
 			default:
 				{
-					LOG("[ERROR] get msg when not connected to manager yet: " << packType);
+					LOG_1("[ERROR] get msg when not connected to manager yet: " << packType);
 					g_pUDPPackBuffer->InsertUDPData(*poPack);
 					break;
 				}
@@ -548,14 +567,14 @@ bool VUPClientAdapter::_HandleRecvPack()
 					s32 iRet = UDT::sendmsg(g_pRecvSocket, (const Char*)&pack, sizeof(UDP_PACK));
 					if(iRet == UDT::ERROR)
 					{
-						LOG("[ERROR] sendmsg failed: " << UDT::getlasterror().getErrorMessage());
+						LOG_1("[ERROR] sendmsg failed: " << UDT::getlasterror().getErrorMessage());
 					}
 #endif
 					break;
 				}
 			case EPT_M2C_KillClient:
 				{
-					LOG("[INFO] get \"kill\" command from manager, wait for quit...");
+					LOG_1("[INFO] get \"kill\" command from manager, wait for quit...");
 
 					exit(0);
 
@@ -617,7 +636,7 @@ bool VUPClientAdapter::_HandleWatchedValue()
 			s32 iRet = UDT::sendmsg(g_pRecvSocket, (const Char*)&pack, sizeof(UDP_PACK));
 			if(iRet == UDT::ERROR)
 			{
-				LOG("[ERROR] sendmsg failed: " << UDT::getlasterror().getErrorMessage());
+				LOG_1("[ERROR] sendmsg failed: " << UDT::getlasterror().getErrorMessage());
 			}
 #endif
 		}
