@@ -1,12 +1,6 @@
 #ifndef __TUTILITY_DEBUGCONSOLE__
 #define __TUTILITY_DEBUGCONSOLE__
 
-
-
-#if PLATFORM_TYPE == PLATFORM_WIN32
-#include <windows.h>
-#endif
-
 namespace TsiU
 {
 	class DebugConsole
@@ -26,6 +20,7 @@ namespace TsiU
 		{
 #if PLATFORM_TYPE == PLATFORM_WIN32
 			::FreeConsole();
+			fclose(stdout);
 #endif
 		}
 	};

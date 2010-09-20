@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 	GetLibSettings()->DefineMacro(E_LS_Has_Network);
 #endif
 
-	g_poEngine = new GameEngine(1140, 800, "VUP Manager (Ver.Beta 0.7.4)", false);
+	g_poEngine = new GameEngine(1140, 800, "VUP Manager (Ver.Beta 0.7.3)", false);
 
 	D_CHECK(g_poEngine);
 

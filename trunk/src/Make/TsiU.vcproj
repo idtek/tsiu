@@ -392,6 +392,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\TLibMain\TUtility_Logger.h"
+					>
+				</File>
+				<File
 					RelativePath="..\TLibMain\TUtility_MemPool.h"
 					>
 				</File>
