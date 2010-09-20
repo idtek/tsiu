@@ -62,7 +62,12 @@ namespace TsiU
 		}
 		Bool Write(const void* _poBuff, u32 _uiSize)
 		{
-			return m_fp && (u32)fwrite(_poBuff, 1, _uiSize, m_fp) == _uiSize;;
+			Bool isOK = m_fp && (u32)fwrite(_poBuff, 1, _uiSize, m_fp) == _uiSize;
+			if(isOK)
+			{
+				fflush(m_fp);
+			}
+			return isOK;
 		}
 		Bool Seek(s32 _iOffset, FileCursor_t _ulPos)
 		{

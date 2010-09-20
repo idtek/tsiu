@@ -46,17 +46,17 @@ public:
 		return m_Container;
 	}
 	T& RetrieveContrainer(){
-		//D_Output("0x%x Lock\n", (int)&m_Mutex);
+		//LOG_INFO("0x%x Lock\n", (int)&m_Mutex);
 		m_Mutex.Lock();
 		return m_Container;
 	}
 	const T& RetrieveContrainer() const{
-		//D_Output("0x%x Lock\n", (int)&m_Mutex);
+		//LOG_INFO("0x%x Lock\n", (int)&m_Mutex);
 		m_Mutex.Lock();
 		return m_Container;
 	}
 	void ReleaseContrainer() const{
-		//D_Output("0x%x UnLock\n", (int)&m_Mutex);
+		//LOG_INFO("0x%x UnLock\n", (int)&m_Mutex);
 		m_Mutex.UnLock();
 	}
 

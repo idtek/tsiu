@@ -12,7 +12,15 @@ namespace TsiU
 	}
 }
 //#ifdef TLIB_DEBUG
-#define D_CHECK(s)	(void)((s) || (TsiU::InnerAssertion(#s, __FILE__, __LINE__), 0))
+#if defined(ASSERT_LEVEL)
+	#define D_CHECK_P(S,P)	\
+		if(P >= ASSERT_LEVEL)	\
+			(void)((S) || (TsiU::InnerAssertion(#S, __FILE__, __LINE__), 0));
+#else
+	#define D_CHECK_P(S,P) (void)((S) || (TsiU::InnerAssertion(#S, __FILE__, __LINE__), 0));
+#endif
+
+#define D_CHECK(S)	D_CHECK_P(S,0)
 //#else
 //#define D_CHECK(s)
 //#endif

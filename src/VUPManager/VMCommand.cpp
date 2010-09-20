@@ -5,13 +5,13 @@ Bool VMCommandCenter::RegisterCommand(StringPtr _strCmdName, VMCommand::VMComman
 {
 	if(_strCmdName == NULL || !strcmp(_strCmdName, ""))
 	{
-		D_Output("[VMCommandCenter::RegisterCommand] invalid command name\n");
+		LOG_INFO("[VMCommandCenter::RegisterCommand] invalid command name\n");
 		return false;
 	}
 	VMCommandMapIterator it = m_CommandMap.find(_strCmdName);
 	if(it != m_CommandMap.end())
 	{
-		D_Output("[VMCommandCenter::RegisterCommand] duplicate command name\n");
+		LOG_INFO("[VMCommandCenter::RegisterCommand] duplicate command name\n");
 		return false;
 	}
 	VMCommand* newCommand = new VMCommand(_pHandler, _iMinParamCount, _defaultParamList);
@@ -29,7 +29,7 @@ Bool VMCommandCenter::ExecuteFromString(StringPtr _cmd)
 	VMCommandMapIterator it = m_CommandMap.find(token);
 	if(it == m_CommandMap.end())
 	{
-		D_Output("[VMCommandCenter::ExecuteFromString] unknown command\n");
+		LOG_INFO("[VMCommandCenter::ExecuteFromString] unknown command\n");
 		return false;
 	}
 	VMCommand& rc = *((*it).second);
@@ -47,12 +47,12 @@ Bool VMCommandCenter::ExecuteFromString(StringPtr _cmd)
 	s32 iRet = rc.Execute(paramList);
 	if(iRet)
 	{
-		D_Output("[CMD] executing command failed: %s\n", _cmd);
+		LOG_INFO("[CMD] executing command failed: %s\n", _cmd);
 		return false;
 	}
 	else
 	{
-		//D_Output("[CMD] execute command successfully: %s\n", _cmd);
+		//LOG_INFO("[CMD] execute command successfully: %s\n", _cmd);
 	}
 	return true;
 }
