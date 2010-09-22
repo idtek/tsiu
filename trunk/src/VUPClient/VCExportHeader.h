@@ -60,7 +60,8 @@ extern "C"
 		bool _HandleRecvPack();
 		bool _HandleWatchedValue();
 		bool _WaitForRegisterACK();
-
+		
+		void _SendingLog();
 		void _InternalSend(UDP_PACK* _pOutPack, int _iPackLen);
 
 		//PACK func

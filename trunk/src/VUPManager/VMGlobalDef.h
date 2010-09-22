@@ -26,6 +26,7 @@ enum{
 	E_ET_GroupSizeChanged,
 	E_ET_FindVUP,
 	E_ET_VUPInfoUpdate,
+	E_ET_GetLogFile,
 };
 
 #define SUMMARYNAME_TOTALVUP	"0.Total VUPs"

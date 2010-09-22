@@ -1,8 +1,9 @@
 <config>
-	<serverip>10.192.84.24</serverip>
+	<serverip>127.0.0.1</serverip>
 	<serverport>51001</serverport>
+	<serverlogport>51002</serverlogport>
 	<clientstartport>50000</clientstartport>
 	<clientendport>50050</clientendport>
 	<logredirect>1</logredirect>
-	<logdir>\\sha-wks-aa827\ClientLog</logdir>
+	<logdir>.\</logdir>
 </config>

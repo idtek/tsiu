@@ -6,6 +6,8 @@
 #include <algorithm>
 #include "VMSummary.h"
 #include <sstream>
+#include <fstream>
+#include <iostream>
 
 //--------------------------------------------------------------------------
 #ifndef USE_UDT_LIB
@@ -213,6 +215,15 @@ s32 VMVupManager::Filter(const VMCommand::ParamList& _paramList)
 	return 0;
 }
 
+s32 VMVupManager::LogRequest(const VMCommand::ParamList& _paramList)
+{
+	s32	iPassport = _paramList[0].ToInt();
+	VMVupManager* pMan = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<VMVupManager>("VUMMan");
+	pMan->RequestLog(iPassport);
+
+	return 0;
+}
+
 //--------------------------------------------------------------------------------------------
 VMVupManager::VMVupManager()
 #ifndef USE_UDT_LIB
@@ -246,6 +257,7 @@ VMVupManager::VMVupManager()
 	VMCommandCenter::GetPtr()->RegisterCommand("find",			VMVupManager::FindVUP,			1);
 	VMCommandCenter::GetPtr()->RegisterCommand("sort",			VMVupManager::Sort,				1);
 	VMCommandCenter::GetPtr()->RegisterCommand("filter",		VMVupManager::Filter,			0);
+	VMCommandCenter::GetPtr()->RegisterCommand("getlog",		VMVupManager::LogRequest,		1);
 }
 
 VMVupManager::~VMVupManager()
@@ -262,6 +274,9 @@ VMVupManager::~VMVupManager()
 #else
 	m_ListeningThread->Stop(1000);
 	D_SafeDelete(m_ListeningThread);
+
+	m_TransferLoggerThread->Stop(1000);
+	D_SafeDelete(m_TransferLoggerThread);
 
 	m_WorkingThread->Stop(-1);
 	D_SafeDelete(m_WorkingThread);
@@ -500,6 +515,24 @@ void VMVupManager::Refresh()
 		delete pVup;
 	}
 	m_poVupMap.clear();
+#endif
+}
+
+void VMVupManager::RequestLog(s32 _id)
+{
+#ifdef USE_UDT_LIB
+	const VMVup* pVup = FindVup(_id);
+	if(!pVup)
+		return;
+
+	UDP_PACK pack;
+	pack.m_uiType = EPT_M2C_LogRequest;
+	s32 iRet = UDT::sendmsg(pVup->GetClientSocket(), (const Char*)&pack, sizeof(UDP_PACK));
+	if(iRet == UDT::ERROR)
+	{
+		LOG_INFO("[ERROR] sendmsg failed: %s\n", UDT::getlasterror().getErrorMessage());
+		return;
+	}
 #endif
 }
 
@@ -781,19 +814,22 @@ Bool VMVupManager::_InitParameter()
 
 	TiXmlElement* root = pConfigFile->RootElement();
 
-	TiXmlElement* serverPort = root->FirstChildElement();
+	TiXmlElement* serverPort = root->FirstChildElement("serverport");
 	m_uiServerPort = atoi(serverPort->GetText());
 
-	TiXmlElement* clientStartPort = serverPort->NextSiblingElement();
+	TiXmlElement* serverLogPort = root->FirstChildElement("serverlogport");
+	m_uiServerTransferLogPort = atoi(serverLogPort->GetText());
+
+	TiXmlElement* clientStartPort = root->FirstChildElement("clientstartport");
 	m_uiClientStartPort = atoi(clientStartPort->GetText());
 
-	TiXmlElement* clientEndPort = clientStartPort->NextSiblingElement();
+	TiXmlElement* clientEndPort = root->FirstChildElement("clientendport");
 	m_uiClientEndPort = atoi(clientEndPort->GetText());
 
-	TiXmlElement* broadCastAddress = clientEndPort->NextSiblingElement();
+	TiXmlElement* broadCastAddress = root->FirstChildElement("broadcastip");
 	m_strBroadCastAddress = broadCastAddress->GetText();
 
-	TiXmlElement* initCommandGroups = broadCastAddress->NextSiblingElement();
+	TiXmlElement* initCommandGroups = root->FirstChildElement("commands");
 	TiXmlElement* command = initCommandGroups->FirstChildElement();
 	while(command)
 	{
@@ -853,6 +889,10 @@ void VMVupManager::Create()
 
 	m_WorkingThread = new Thread(new WorkingRunner(this, m_pUDPPackBuffer));
 	bRet = m_WorkingThread->Start();
+	D_CHECK(bRet);
+
+	m_TransferLoggerThread = new Thread(new TransferLogger(m_uiServerTransferLogPort));
+	bRet = m_TransferLoggerThread->Start();
 	D_CHECK(bRet);
 #endif
 
@@ -1385,6 +1425,106 @@ void WorkingRunner::NotifyQuit()
 {
 	m_bRequestStop = true;
 }
+//---------------------------------------------------------------------------------------------------------
+TransferLogger::TransferLogger(u16 _port)
+	: m_uiServerTransferLogPort(_port)
+	, m_bRequestStop(false)
+{
+}
+
+u32 TransferLogger::Run()
+{
+	UDTSOCKET pListeningSocket = UDT::socket(AF_INET, SOCK_STREAM, 0);
+	if(pListeningSocket == UDT::INVALID_SOCK)
+	{
+		D_Output("[ERROR] create pListeningSocket failed: %s\n", UDT::getlasterror().getErrorMessage());
+		return 1;
+	}
+	sockaddr_in addrinfo;
+	addrinfo.sin_family = AF_INET;
+	addrinfo.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
+	addrinfo.sin_port = htons(m_uiServerTransferLogPort);
+	if(UDT::ERROR == UDT::bind(pListeningSocket, (struct sockaddr*)&addrinfo, sizeof(addrinfo)))
+	{
+		D_Output("[ERROR] bind pListeningSocket failed: %s\n", UDT::getlasterror().getErrorMessage());
+		return 1;
+	}
+	if(UDT::ERROR == UDT::listen(pListeningSocket, 1))
+	{
+		D_Output("[ERROR] listen pListeningSocket failed: %s\n", UDT::getlasterror().getErrorMessage());
+		return 1;
+	}
+	sockaddr_in clientaddr;
+	int addrlen = sizeof(clientaddr);
+	UDTSOCKET pClientSocket;
+	while (!m_bRequestStop)
+	{
+		if(UDT::INVALID_SOCK == (pClientSocket = UDT::accept(pListeningSocket, (sockaddr*)&clientaddr, &addrlen)))
+		{
+			D_Output("[ERROR] accept m_pListeningSocket failed: %s\n", UDT::getlasterror().getErrorMessage());
+			return 1;
+		}
+		long addr = inet_addr(inet_ntoa(clientaddr.sin_addr));
+		struct hostent* pHostent = gethostbyaddr((char*)&addr, sizeof(long),  AF_INET); 
+		D_Output("[INFO] get file transferring request from %s:%d\n", pHostent->h_name, ntohs(clientaddr.sin_port));
+
+		int64_t size = -1;
+		if(UDT::ERROR == UDT::recv(pClientSocket, (char*)&size, sizeof(int64_t), 0))
+		{
+			D_Output("[ERROR] recv file size failed: %s\n", UDT::getlasterror().getErrorMessage());
+			continue;
+		}
+		if(size >= 0)
+		{
+			Char strClientLogName[MAX_PATH];
+			sprintf(strClientLogName, "%s_%d.log", pHostent->h_name, ntohs(clientaddr.sin_port));
+			std::fstream ofs(strClientLogName, std::ios::out | std::ios::binary | std::ios::trunc);
+			if(ofs.is_open())
+			{
+				int64_t recvsize; 
+				if (UDT::ERROR == (recvsize = UDT::recvfile(pClientSocket, ofs, 0, size)))
+				{
+					ofs.close();
+					D_Output("[ERROR] recvfile failed: %s\n", UDT::getlasterror().getErrorMessage());
+					continue;
+				}
+				D_Output("[INFO] recvfile log file successfully: %s\n", strClientLogName);
+				ofs.close();
+
+				HWND mainHwnd = (HWND)GameEngine::GetGameEngine()->GetRenderMod()->GetGUIMainWindow()->id();
+				HINSTANCE hInst = ::ShellExecute(mainHwnd,"open", strClientLogName, "", "", SW_SHOW);
+				if((s32)hInst <= 32)
+				{
+					if((s32)hInst == ERROR_ACCESS_DENIED)
+					{
+						hInst = ::ShellExecute(mainHwnd, "open", "notepad.exe", strClientLogName, "", SW_SHOW);
+						if((int)hInst > 32)
+						{
+							continue;
+						}
+					}
+					D_Output("[ERROR] failed to open file: %s\n", strClientLogName);
+				}
+			}
+			else
+			{
+				D_Output("[ERROR] failed to create %s\n", strClientLogName);
+			}
+		}
+		else
+		{
+			D_Output("[ERROR] recvfile log file failed: open remote log file failed\n");
+		}
+
+	}
+	UDT::close(pListeningSocket);
+	return 0;
+}
+
+void TransferLogger::NotifyQuit()
+{
+	m_bRequestStop = true;
+}
 //----------------------------------------------------------------------------------------------------------------
 void VMVupManager::AddClientSocket(UDTSOCKET _pNewSocket)
 {
@@ -1447,6 +1587,5 @@ Bool VMVupManager::LostConnection(UDTSOCKET _pLostConnection)
 	}
 	m_pClientSockets.ReleaseContrainer();
 	return true;
-}	
-
+}
 #endif

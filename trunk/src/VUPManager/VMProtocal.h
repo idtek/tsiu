@@ -13,6 +13,7 @@ enum
 	EPT_M2C_StartTesting,
 	EPT_M2C_KillClient,
 	EPT_M2C_Refresh,
+	EPT_M2C_LogRequest,
 
 	EPT_Num
 };

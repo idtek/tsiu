@@ -93,6 +93,20 @@ private:
 	MemPool<UDP_PACKWrapper>*	m_pUDPPackBuffer;
 	Bool						m_bRequestStop;
 };
+
+class TransferLogger : public IThreadRunner
+{
+public:
+	TransferLogger(u16 _port);
+
+	virtual u32		Run();
+	virtual void	NotifyQuit();
+
+private:
+	Bool	m_bRequestStop;
+	u16		m_uiServerTransferLogPort;
+};
+
 #endif
 
 class VMVupManager : public Object
@@ -219,6 +233,7 @@ public:
 	static s32 FindVUP(const VMCommand::ParamList& _paramList);
 	static s32 Sort(const VMCommand::ParamList& _paramList);
 	static s32 Filter(const VMCommand::ParamList& _paramList);
+	static s32 LogRequest(const VMCommand::ParamList& _paramList);
 
 public:
 	VMVupManager();
@@ -247,6 +262,7 @@ public:
 	std::string 		GetViewKey(const VMVup* _curVUP) const;
 	void				RefreshViewMap();
 	void				SetFilter(StringPtr _pOrder, StringPtr _pName);
+	void				RequestLog(s32 _id);
 
 #ifdef USE_UDT_LIB
 	void											AddClientSocket(UDTSOCKET _pNewSocket);
@@ -281,11 +297,13 @@ private:
 #else
 	Thread*											m_ListeningThread;
 	Thread*											m_WorkingThread;
+	Thread*											m_TransferLoggerThread;
 	VMThreadSafeContainer<std::vector<UDTSOCKET>>	m_pClientSockets;
 	VMThreadSafeContainer<VUPMap>					m_poVupMapByPassport;
 	VMThreadSafeContainer<VUPMap>					m_poVupMapBySocket;
 	VMThreadSafeContainer<VUPViewMap>				m_poVupViewMap;
 	VMThreadSafeContainer<std::set<VMVup*>>			m_poDirtyVUP;
+	u16												m_uiServerTransferLogPort;
 #endif
 
 	RDVPointList				m_poRDVList;

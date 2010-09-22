@@ -5,6 +5,7 @@
 #include <time.h>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -38,6 +39,7 @@ namespace{
 	OutRedirector*		g_fp = NULL;
 
 #ifdef USE_UDT_LIB
+	u16					g_uiServerTransferLogPort	= 51002;
 	UDTSOCKET			g_pRecvSocket = UDT::INVALID_SOCK;
 #endif
 
@@ -62,16 +64,21 @@ namespace{
 		TiXmlElement* root = pConfigFile->RootElement();
 
 		//ServerIP;
-		TiXmlElement* serverIP = root->FirstChildElement();
+		TiXmlElement* serverIP = root->FirstChildElement("serverip");
 		g_strServerIP = serverIP->GetText();
 		
-		TiXmlElement* serverPort = serverIP->NextSiblingElement();
+		TiXmlElement* serverPort = root->FirstChildElement("serverport");
 		g_uiServerPort = atoi(serverPort->GetText());
 
-		TiXmlElement* clientStartPort = serverPort->NextSiblingElement();
+#ifdef USE_UDT_LIB
+		TiXmlElement* serverLogPort = root->FirstChildElement("serverlogport");
+		g_uiServerTransferLogPort = atoi(serverLogPort->GetText());
+#endif
+
+		TiXmlElement* clientStartPort = root->FirstChildElement("clientstartport");
 		g_uiStartPort = atoi(clientStartPort->GetText());
 
-		TiXmlElement* clientEndPort = clientStartPort->NextSiblingElement();
+		TiXmlElement* clientEndPort = root->FirstChildElement("clientendport");
 		g_uiEndPort = atoi(clientEndPort->GetText());
 
 		TiXmlElement* logDir = root->FirstChildElement("logdir");
@@ -219,7 +226,6 @@ void RecvUDPRunner::NotifyQuit()
 {
 	m_bRequestStop = true;
 }
-
 //----------------------------------------------------------------------------------
 VUPClientAdapter::VUPClientAdapter()
 	: m_HasConnectedToManager(false) 
@@ -325,7 +331,6 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 		LOG_1("create socket failed: " << UDT::getlasterror().getErrorMessage());
 		return false;
 	}
-	
 	//Decrease
 	//s32 delayConnect = ::GetCurrentProcessId();
 	//s32 delayInterval = delayConnect % 10 * 500;
@@ -337,22 +342,6 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	//	else
 	//		Sleep(10);
 	//}
-
-	//int mssSize = 750;
-	//if(UDT::ERROR == UDT::setsockopt(g_pRecvSocket, 0, UDT_MSS, (const char*)&mssSize, sizeof(int)))
-	//{
-	//	D_Output("setsockopt mss: %s\n", UDT::getlasterror().getErrorMessage());
-	//	return false;
-	//}
-	//linger l;
-	//l.l_linger = 1;
-	//l.l_onoff = 0;
-	//if(UDT::ERROR == UDT::setsockopt(g_pRecvSocket, 0, UDT_LINGER, (const int*)&l, sizeof(linger)))
-	//{
-	//	D_Output("setsockopt mss: %s\n", UDT::getlasterror().getErrorMessage());
-	//	return false;
-	//}
-
 	sockaddr_in addrinfo;
 	addrinfo.sin_family = AF_INET;
 	addrinfo.sin_addr.S_un.S_addr = inet_addr(g_strServerIP.c_str());
@@ -593,11 +582,67 @@ bool VUPClientAdapter::_HandleRecvPack()
 					//dir.Get() << "[INFO] get start testing: " << timeStr << std::endl;
 					break;
 				}
+			case EPT_M2C_LogRequest:
+				{
+					_SendingLog();
+					break;
+				}
 			}
 		}
 		delete[] poPacArray;
 	}
 	return true;
+}
+
+void VUPClientAdapter::_SendingLog()
+{
+	UDTSOCKET pSendLogSocket = UDT::socket(AF_INET, SOCK_STREAM, 0);
+	if(pSendLogSocket == UDT::INVALID_SOCK)
+	{
+		LOG_1("create socket failed: " << UDT::getlasterror().getErrorMessage());
+		return;
+	}
+	sockaddr_in addrinfo;
+	addrinfo.sin_family = AF_INET;
+	addrinfo.sin_addr.S_un.S_addr = inet_addr(g_strServerIP.c_str());
+	addrinfo.sin_port = htons(g_uiServerTransferLogPort);
+	if(UDT::ERROR == UDT::connect(pSendLogSocket, (struct sockaddr*)&addrinfo, sizeof(addrinfo)))
+	{
+		LOG_1("[ERROR] connected failed: " << UDT::getlasterror().getErrorMessage());
+		return;
+	}
+	std::fstream ifs(g_strLogName, std::ios::in | std::ios::binary);
+	int64_t size;
+	if(ifs.is_open())
+	{
+		ifs.seekg(0, std::ios::end);
+		size = ifs.tellg();
+		ifs.seekg(0, std::ios::beg);
+	}
+	else
+	{
+		size = -1; //failed to open file
+	}
+	if (UDT::ERROR == UDT::send(pSendLogSocket, (char*)&size, sizeof(int64_t), 0))
+	{
+		UDT::close(pSendLogSocket);
+		ifs.close();
+		LOG_1("[ERROR] send failed" << UDT::getlasterror().getErrorMessage());
+		return;
+	}
+	if(size >= 0)
+	{
+		if (UDT::ERROR == UDT::sendfile(pSendLogSocket, ifs, 0, size))
+		{
+			LOG_1("[ERROR] sendfile failed" << UDT::getlasterror().getErrorMessage());
+		}
+		else
+		{
+			LOG_1("[INFO] send log file successfully");
+		}
+		ifs.close();
+	}
+	UDT::close(pSendLogSocket);
 }
 
 bool VUPClientAdapter::_HandleWatchedValue()
