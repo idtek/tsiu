@@ -651,27 +651,27 @@ void VMVupManager::GetRDVParameter(const RDVPointParameter& _pRDVParam, StringPt
 {
 	if(!_pOption || !_stricmp(_pOption, "-groupnumber") || !_stricmp(_pOption, "-gn"))
 	{
-		LOG_INFO("$groupnumber = %d\n", _pRDVParam.m_iGroupNum);
+		D_Output("$groupnumber = %d\n", _pRDVParam.m_iGroupNum);
 	}
 	if(!_pOption || !_stricmp(_pOption, "-interval") || !_stricmp(_pOption, "-i"))
 	{
-		LOG_INFO("$interval = %d\n", _pRDVParam.m_iIntervalOfEachGroup);
+		D_Output("$interval = %d\n", _pRDVParam.m_iIntervalOfEachGroup);
 	}
 	if(!_pOption || !_stricmp(_pOption, "-delay") || !_stricmp(_pOption, "-d"))
 	{
-		LOG_INFO("$delay = %d\n", _pRDVParam.m_iDelayOfStartTime);
+		D_Output("$delay = %d\n", _pRDVParam.m_iDelayOfStartTime);
 	}
 	if(!_pOption || !_stricmp(_pOption, "-vupsnumberingroup") || !_stricmp(_pOption, "-vn"))
 	{
-		LOG_INFO("$vupsnumberingroup = %d\n", _pRDVParam.m_iVUPNumInEachGroup);
+		D_Output("$vupsnumberingroup = %d\n", _pRDVParam.m_iVUPNumInEachGroup);
 	}
 	if(!_pOption || !_stricmp(_pOption, "-expectednumber") || !_stricmp(_pOption, "-en"))
 	{
-		LOG_INFO("$expectednumber = %d\n", _pRDVParam.m_uiExpectedNum);
+		D_Output("$expectednumber = %d\n", _pRDVParam.m_uiExpectedNum);
 	}
 	if(!_pOption || !_stricmp(_pOption, "-timeout") || !_stricmp(_pOption, "-to"))
 	{
-		LOG_INFO("$timeout = %d\n", _pRDVParam.m_uiTimeOut);
+		D_Output("$timeout = %d\n", _pRDVParam.m_uiTimeOut);
 	}
 }
 
@@ -691,11 +691,11 @@ void VMVupManager::GetParameter(StringPtr _pOption) const
 {
 	if(!_pOption || !_stricmp(_pOption, "-hidesummaryifzero") || !_stricmp(_pOption, "-hs"))
 	{
-		LOG_INFO("$hidesummaryifzero = %d\n", m_Parameters.m_iHideSummaryIfZero);
+		D_Output("$hidesummaryifzero = %d\n", m_Parameters.m_iHideSummaryIfZero);
 	}
 	if(!_pOption || !_stricmp(_pOption, "-freezelist") || !_stricmp(_pOption, "-fl"))
 	{
-		LOG_INFO("$freezelist = %d\n", m_Parameters.m_iFreezeList);
+		D_Output("$freezelist = %d\n", m_Parameters.m_iFreezeList);
 	}
 }
 

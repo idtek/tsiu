@@ -128,7 +128,7 @@ namespace{
 	#define DISABLE_LOG_2
 #endif
 
-#define DISABLE_LOG_2
+//#define DISABLE_LOG_2
 
 #define LOG(expr) while(1)\
 	{\
@@ -143,15 +143,19 @@ namespace{
 			Sleep(200);\
 		}\
 	}\
+	g_fp->Get() << expr << std::endl;\
 
+
+//Log 1 -> log to remote and local
 #ifndef DISABLE_LOG_1
 #define LOG_1(expr)		LOG(expr)
 #else
 #define LOG_1(expr)
 #endif
 
+//Log 2 -> log to local
 #ifndef DISABLE_LOG_2
-#define LOG_2(expr)		LOG(expr)
+#define LOG_2(expr)		g_fp->Get() << expr << std::endl;
 #else
 #define LOG_2(expr)
 #endif
@@ -281,6 +285,12 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 		sprintf(g_strLogName, "%s\\%s_%d_%d_%d_%d_%d_%d_%d.log", g_strLogDir.c_str(), strHostName, 
 			timeNow->tm_year + 1900, timeNow->tm_mon + 1, timeNow->tm_mday, timeNow->tm_hour, timeNow->tm_min, timeNow->tm_sec, ::GetCurrentProcessId());
 		D_Output("Out put log name: %s\n", g_strLogName);
+
+		sprintf(g_strLocalLogName, "%s_%d_%d_%d_%d_%d_%d_%d.log", strHostName, 
+			timeNow->tm_year + 1900, timeNow->tm_mon + 1, timeNow->tm_mday, timeNow->tm_hour, timeNow->tm_min, timeNow->tm_sec, ::GetCurrentProcessId());
+		D_Output("Out put log name: %s\n", g_strLocalLogName);
+
+		g_fp = new OutRedirector(g_strLocalLogName);
 	}
 
 	//Init status
@@ -325,6 +335,9 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	iRet = g_pSendSocket->SetAddress(g_strServerIP.c_str(), g_uiServerPort);
 	D_CHECK(!iRet);
 #else
+	//Log version
+	LOG_1("[INFO] Ver 0.8.1");
+
 	g_pRecvSocket = UDT::socket(AF_INET, SOCK_DGRAM, 0);
 	if(g_pRecvSocket == UDT::INVALID_SOCK)
 	{
@@ -611,7 +624,7 @@ void VUPClientAdapter::_SendingLog()
 		LOG_1("[ERROR] connected failed: " << UDT::getlasterror().getErrorMessage());
 		return;
 	}
-	std::fstream ifs(g_strLogName, std::ios::in | std::ios::binary);
+	std::fstream ifs(g_strLocalLogName, std::ios::in | std::ios::binary);
 	int64_t size;
 	if(ifs.is_open())
 	{

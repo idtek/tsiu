@@ -6,6 +6,8 @@
 #include <sstream>
 #include "VMSummary.h"
 #include <algorithm>
+#include <time.h>
+#include <iomanip>
 //--------------------------------------------------------------------------------
 Engine*		g_poEngine	= NULL;
 //-----------------------------------------------------------------------------------------------
@@ -670,7 +672,17 @@ void GameEngine::DoInit()
 	GameEngine::GetGameEngine()->GetSceneMod()->AddObject("VUMMan", new VMVupManager);
 	GameEngine::GetGameEngine()->GetSceneMod()->AddObject("VUMSummary", new VMSummaryUpdater);
 
-	Logger::GetPtr()->SetOutputFile("log.out");
+	//Setup Log
+	Char strLogName[MAX_PATH];
+	struct tm * timeNow;
+	__time64_t  thetime;
+	_time64(&thetime);
+	timeNow = _localtime64(&thetime);
+
+	sprintf(strLogName, ".\\manager_%d_%d_%d_%d_%d_%d_%d.log", 
+		timeNow->tm_year + 1900, timeNow->tm_mon + 1, timeNow->tm_mday, timeNow->tm_hour, timeNow->tm_min, timeNow->tm_sec, ::GetCurrentProcessId());
+	D_Output("Out put log name: %s\n", strLogName);
+	Logger::GetPtr()->SetOutputFile(strLogName);
 }
 
 void GameEngine::DoUnInit()
