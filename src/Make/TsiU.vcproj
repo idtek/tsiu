@@ -460,6 +460,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\TLibMain\TCore_Memory.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\TLibMain\TCore_Mutex.cpp"
 					>
 				</File>

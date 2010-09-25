@@ -4,6 +4,9 @@ namespace TsiU
 {
 	void* DefaultAllocator::Alloc( u32 _uiSize )
 	{
+		if(_uiSize <= 0)	
+			_uiSize = 1;
+
 		D_CHECK( _uiSize > 0 );
 		void *poMem = malloc( _uiSize );
 		D_CHECK( poMem );

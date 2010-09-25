@@ -5,7 +5,6 @@ namespace TsiU
 {
 	enum
 	{
-		E_CreatorType_Allocator,
 		E_CreatorType_Panic,
 		E_CreatorType_Tick,
 		E_CreatorType_Renderer,

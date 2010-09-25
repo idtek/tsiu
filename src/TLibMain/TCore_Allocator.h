@@ -1,9 +1,6 @@
 #ifndef __TCORE_ALLOCATOR__ 
 #define __TCORE_ALLOCATOR__
 
-
-#include "TCore_Creator.h"
-
 namespace TsiU
 {
 	class Allocator
@@ -23,11 +20,6 @@ namespace TsiU
 		virtual void* Realloc(void* _poMem, u32 p_uiSize);
 		virtual void  Free(void* _poMem);
 	};
-
-	/************************************************************************/
-	/* Global Func                                                          */
-	/************************************************************************/
-	extern Allocator* g_poAllocator;
 }
 
 #endif

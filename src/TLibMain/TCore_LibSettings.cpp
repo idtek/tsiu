@@ -1,24 +1,61 @@
 #include "TCore_LibSettings.h"
+#include "TCore_Allocator.h"
+#include <new>
 
 namespace TsiU
 {	
-	LibSettings::LibSettings()
+	TsiULibSettings::TsiULibSettings()
+		: m_poAllocator(NULL)
+		, m_uiMacro(0)
 	{
+		//Setup default allocator
+		SetupAllocator(NULL);
 		for(u32 i = 0; i < E_CreatorType_Number; ++i)
 		{
-			m_poCreatorList[i] = new NullCreator;
-			D_CHECK(m_poCreatorList[i]);
+			m_poCreatorList[i] = NULL;
 		}
 		m_uiMacro = 0;
 	}
-	LibSettings::~LibSettings()
+	TsiULibSettings::~TsiULibSettings()
 	{
 		for(u32 i = 0; i < E_CreatorType_Number; ++i)
 		{
 			D_SafeDelete(m_poCreatorList[i]);
 		}
+		//TJQ: not free
+		if(m_poAllocator)
+		{
+			m_poAllocator->~Allocator();
+			free(m_poAllocator);
+			m_poAllocator = NULL;
+		}
 	}
-	void LibSettings::SetCreator(Creator* _poCreator, u32 _uiCreatorType)
+	void TsiULibSettings::SetupAllocator(Allocator* alloc)
+	{
+		if(m_poAllocator)
+		{
+			m_poAllocator->~Allocator();
+			free(m_poAllocator);
+			m_poAllocator = NULL;
+		}
+		D_CHECK(!m_poAllocator);
+		if(!alloc)
+		{
+			//Use Default allocator
+			void* pMalloc = malloc(sizeof(DefaultAllocator));
+			m_poAllocator = new(pMalloc) DefaultAllocator;
+		}
+		else
+		{
+			m_poAllocator = alloc;
+		}
+		D_CHECK(m_poAllocator);
+	}
+	Allocator* TsiULibSettings::GetAllocator()
+	{
+		return m_poAllocator;
+	}
+	void TsiULibSettings::SetupCreator(Creator* _poCreator, u32 _uiCreatorType)
 	{
 		D_CHECK(_poCreator);
 		D_CHECK(_uiCreatorType < E_CreatorType_Number);
@@ -27,16 +64,16 @@ namespace TsiU
 
 		m_poCreatorList[_uiCreatorType] = _poCreator;
 	}
-	Creator* LibSettings::GetCreator(u32 _uiCreatorType)
+	Creator* TsiULibSettings::GetCreator(u32 _uiCreatorType)
 	{
 		D_CHECK(_uiCreatorType < E_CreatorType_Number);
 		return m_poCreatorList[_uiCreatorType];
 	}
-	void LibSettings::DefineMacro(LibSettingMacro_t _uiMacro)
+	void TsiULibSettings::DefineMacro(LibSettingMacro_t _uiMacro)
 	{
 		m_uiMacro |= _uiMacro;
 	}
-	Bool LibSettings::IsDefined(LibSettingMacro_t _uiMacro)
+	Bool TsiULibSettings::IsDefined(LibSettingMacro_t _uiMacro)
 	{
 		return (m_uiMacro & _uiMacro) != 0;
 	}
@@ -45,19 +82,27 @@ namespace TsiU
 	/* Global Func                                                          */
 	/************************************************************************/
 
-	LibSettings* g_poLibSettings = NULL;
+	static TsiULibSettings* g_spoLibSettings = NULL;
 
-	void InitLibSettings()
+	void InitLibSettings(TsiULibSettings* _poLibSetting)
 	{
-		g_poLibSettings = new LibSettings;
-		D_CHECK(g_poLibSettings);
+		g_spoLibSettings = _poLibSetting;
+		g_spoLibSettings->GetAllocator()->Init();
+		for(u32 i = 0; i < E_CreatorType_Number; ++i)
+		{
+			g_spoLibSettings->SetupCreator(new NullCreator, i);
+		}
 	}
-	LibSettings* GetLibSettings()
+	TsiULibSettings* GetLibSettings()
 	{
-		return g_poLibSettings;
+		return g_spoLibSettings;
 	}
-	void UnInitLibSettings()
+	void UninitLibSettings(TsiULibSettings* _poLibSetting)
 	{
-		D_SafeDelete(g_poLibSettings);
+		g_spoLibSettings = NULL;
+	}
+	Bool HasInited()
+	{
+		return g_spoLibSettings != NULL;
 	}
 }

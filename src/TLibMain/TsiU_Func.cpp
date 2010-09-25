@@ -3,12 +3,4 @@
 
 namespace TsiU
 {
-	void InitLibrary()
-	{
-		InitLibSettings();		
-	}
-	void UnInitLibrary()
-	{
-		UnInitLibSettings();
-	}
 }

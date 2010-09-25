@@ -224,7 +224,7 @@
 				OutputFile="$(OutDir)\$(ProjectName)_d.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\ExternLibs\TinyXML\lib"
-				IgnoreDefaultLibraryNames="libcmtd.lib MSVCPRTD.LIB"
+				IgnoreDefaultLibraryNames="LIBCMTD.LIB MSVCPRTD.LIB"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"

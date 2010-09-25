@@ -15,19 +15,25 @@ namespace TsiU
 		E_LS_Has_Script		= (1<<5)
 	};
 
-	class LibSettings
+	class Allocator;
+
+	class TsiULibSettings
 	{
 	public:
-		LibSettings();
-		~LibSettings();
+		TsiULibSettings();
+		~TsiULibSettings();
 
-		void SetCreator(Creator* _poCreator, u32 _uiCreatorType);
+		void SetupAllocator(Allocator* alloc);
+		Allocator* GetAllocator();
+		
+		void SetupCreator(Creator* _poCreator, u32 _uiCreatorType);
 		Creator* GetCreator(u32 _uiCreatorType);
 
 		void DefineMacro(LibSettingMacro_t _uiMacro);
 		Bool IsDefined(LibSettingMacro_t _uiMacro);
 
 	private:
+		Allocator*	m_poAllocator;
 		u32			m_uiMacro;
 		Creator*	m_poCreatorList[E_CreatorType_Number];
 	};
@@ -35,9 +41,10 @@ namespace TsiU
 	/* Global Func                                                          */
 	/************************************************************************/
 	
-	extern void InitLibSettings();
-	extern LibSettings* GetLibSettings();
-	extern void UnInitLibSettings();
+	extern void InitLibSettings(TsiULibSettings* _poLibSetting);
+	extern TsiULibSettings* GetLibSettings();
+	extern Bool HasInited();
+	extern void UninitLibSettings(TsiULibSettings* _poLibSetting);
 
 	template<typename T>
 	T* CallCreator(u32 _uiType)
