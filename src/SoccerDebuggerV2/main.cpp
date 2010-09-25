@@ -10,10 +10,11 @@ int main(int argc, char* argv[])
 	::SetPriorityClass(::GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 #endif
 
-	InitLibrary();
-	
+	TsiULibSettings libSettings;
+
+	InitLibSettings(&libSettings);
+
 #if PLATFORM_TYPE == PLATFORM_WIN32
-	libSettings.SetupCreator(new T_Creator<DefaultAllocator>, E_CreatorType_Allocator);
 	libSettings.SetupCreator(new T_Creator<WinPanic>, E_CreatorType_Panic);
 	libSettings.SetupCreator(new T_Creator<WinTick>, E_CreatorType_Tick);
 	libSettings.SetupCreator(new T_Creator<WinGDIRenderWindow>, E_CreatorType_RenderWindow);
@@ -22,8 +23,8 @@ int main(int argc, char* argv[])
 	libSettings.SetupCreator(new T_Creator<WinInputManager>, E_CreatorType_Input);
 	libSettings.SetupCreator(new T_Creator<DefaultFile>, E_CreatorType_File);
 #endif
-	GetLibSettings()->DefineMacro(E_LS_Has_GDI);
-	GetLibSettings()->DefineMacro(E_LS_Has_GUI);
+	libSettings.DefineMacro(E_LS_Has_GDI);
+	libSettings.DefineMacro(E_LS_Has_GUI);
 
 	g_poEngine = new MyEngine(g_WindowWidth, g_WindowHeight, "SoccerDebugger(SSO version) V2.4", g_bIsAlwaysOnTop);
 
@@ -39,7 +40,7 @@ int main(int argc, char* argv[])
 
 	D_SafeDelete(g_poEngine);
 
-	UnInitLibrary();
+	UninitLibSettings(&libSettings);
 
 	return 0;
 }
