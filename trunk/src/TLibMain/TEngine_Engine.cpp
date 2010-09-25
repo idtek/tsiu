@@ -40,7 +40,7 @@ namespace TsiU
 		m_bQuitEngine = false;
 
 		g_poPanic = CallCreator<Panic>(E_CreatorType_Panic);
-		g_poAllocator = CallCreator<Allocator>(E_CreatorType_Allocator);
+		//g_poAllocator = CallCreator<Allocator>(E_CreatorType_Allocator);
 
 //#ifdef TLIB_DEBUG
 		m_poDebugConsole = new DebugConsole();

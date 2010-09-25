@@ -10,19 +10,20 @@ int main(int argc, char* argv[])
 	::SetPriorityClass(::GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 #endif
 
-	InitLibrary();
+	TsiULibSettings libSettings;
+
+	InitLibSettings(&libSettings);
 
 #if PLATFORM_TYPE == PLATFORM_WIN32
-	GetLibSettings()->SetCreator(new T_Creator<DefaultAllocator>,		E_CreatorType_Allocator);
-	GetLibSettings()->SetCreator(new T_Creator<WinPanic>,				E_CreatorType_Panic);
-	GetLibSettings()->SetCreator(new T_Creator<WinTick>,				E_CreatorType_Tick);
-	GetLibSettings()->SetCreator(new T_Creator<WinGDIRenderWindow>,		E_CreatorType_RenderWindow);
-	GetLibSettings()->SetCreator(new T_Creator<WinGDIRenderer>,			E_CreatorType_Renderer);
-	GetLibSettings()->SetCreator(new T_Creator<WinRenderWindowMsg>,		E_CreatorType_RenderWindowMsg);
-	GetLibSettings()->SetCreator(new T_Creator<WinInputManager>,		E_CreatorType_Input);
-	GetLibSettings()->SetCreator(new T_Creator<DefaultFile>,			E_CreatorType_File);
+	libSettings.SetupCreator(new T_Creator<WinPanic>,				E_CreatorType_Panic);
+	libSettings.SetupCreator(new T_Creator<WinTick>,				E_CreatorType_Tick);
+	libSettings.SetupCreator(new T_Creator<WinGDIRenderWindow>,		E_CreatorType_RenderWindow);
+	libSettings.SetupCreator(new T_Creator<WinGDIRenderer>,			E_CreatorType_Renderer);
+	libSettings.SetupCreator(new T_Creator<WinRenderWindowMsg>,		E_CreatorType_RenderWindowMsg);
+	libSettings.SetupCreator(new T_Creator<WinInputManager>,		E_CreatorType_Input);
+	libSettings.SetupCreator(new T_Creator<DefaultFile>,			E_CreatorType_File);
 #endif
-	GetLibSettings()->DefineMacro(E_LS_Has_GDI);
+	libSettings.DefineMacro(E_LS_Has_GDI);
 
 	g_poEngine = new GameEngine(800, 600, "AITest", false);
 
@@ -38,7 +39,7 @@ int main(int argc, char* argv[])
 
 	D_SafeDelete(g_poEngine);
 
-	UnInitLibrary();
+	UninitLibSettings(&libSettings);
 
 	return 0;
 }

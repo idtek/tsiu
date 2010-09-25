@@ -3,8 +3,6 @@
 
 namespace TsiU
 {
-	extern void InitLibrary();
-	extern void UnInitLibrary();
 }
 
 #endif
