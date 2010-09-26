@@ -492,7 +492,14 @@ void VMVupManager::StartTesting(VMVup* _curVUP, __int64 _startTime)
 	}
 	else
 	{
-		LOG_INFO("send start testing to %d(%s:%d) successfully\n", _curVUP->GetUniqueID(), _curVUP->GetIPAddress(), _curVUP->GetPort());
+		if(iRet != sizeof(UDP_PACK))
+		{
+			LOG_INFO("[ERROR] send start testing to %d(%s:%d) failed\n", _curVUP->GetUniqueID(), _curVUP->GetIPAddress(), _curVUP->GetPort());
+		}
+		else
+		{
+			LOG_INFO("send start testing to %d(%s:%d) successfully\n", _curVUP->GetUniqueID(), _curVUP->GetIPAddress(), _curVUP->GetPort());
+		}
 		return;
 	}
 #endif
