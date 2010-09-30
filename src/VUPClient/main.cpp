@@ -336,7 +336,7 @@ bool VUPClientAdapter::Init(unsigned int _uiPassport)
 	D_CHECK(!iRet);
 #else
 	//Log version
-	LOG_1("[INFO] Ver 0.8.1");
+	LOG_1("[INFO] Ver 0.8.3");
 
 	g_pRecvSocket = UDT::socket(AF_INET, SOCK_DGRAM, 0);
 	if(g_pRecvSocket == UDT::INVALID_SOCK)
