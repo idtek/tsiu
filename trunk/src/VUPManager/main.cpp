@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 	libSettings.DefineMacro(E_LS_Has_Network);
 #endif
 
-	g_poEngine = new GameEngine(1140, 800, "VUP Manager (Ver.Beta 0.8)", false);
+	g_poEngine = new GameEngine(1140, 800, "VUP Manager (Ver.Beta 0.8.1)", false);
 
 	D_CHECK(g_poEngine);
 
