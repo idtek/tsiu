@@ -372,7 +372,7 @@
 				Name="src"
 				>
 				<File
-					RelativePath=".\TUtility_Logger.cpp"
+					RelativePath="..\TLibMain\TUtility_Logger.cpp"
 					>
 				</File>
 			</Filter>
