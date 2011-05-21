@@ -13,13 +13,13 @@ using namespace TsiU;
 
 #include "SDMacro.h"
 
-class MemPool;
+//class MemPool;
 class ODynamicObj;
 struct UDP_PACK;
 
 extern Engine*						g_poEngine;
 extern SimpleRenderObjectUtility*	g_poSROU;
-extern MemPool*						g_poMem;
+extern MemPool<UDP_PACK>*			g_poMem;
 extern Bool							g_bStop;
 extern HANDLE						g_hRecv;
 extern ODynamicObj*					g_WatchPlayer;

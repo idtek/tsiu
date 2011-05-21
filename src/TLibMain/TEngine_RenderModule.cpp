@@ -47,7 +47,10 @@ namespace TsiU
 			m_poRenderer = CallCreator<Renderer>(E_CreatorType_Renderer);
 			D_CHECK(m_poRenderer);
 
-			m_poRenderer->InitRender(_uiWidth, _uiHeight, _strTitle, _bIsWindow, NULL);
+			if(!GetLibSettings()->IsDefined(E_LS_Has_GUI))
+			{
+				m_poRenderer->InitRender(_uiWidth, _uiHeight, _strTitle, _bIsWindow, NULL);
+			}
 		}
 
 		m_poRenderWindowMsg = CallCreator<RenderWindowMsg>(E_CreatorType_RenderWindowMsg);

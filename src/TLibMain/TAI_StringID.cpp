@@ -4,21 +4,17 @@ namespace TsiU
 {
 	namespace AI
 	{
-#pragma warning ( disable:4996 )
-		unsigned int StringID::Hash(const char * str)
+		u32 StringID::Hash(StringPtr str)
 		{
-			unsigned int l = (unsigned int ) strlen(str);
-			unsigned int h =  l;  
-
-			unsigned int step = ( l >> 6 ) + 1;  /* if string is too long, don't hash all its chars */
-			size_t i;
-			for (i=l; i>=step; i-=step) 
+			u32 l = (u32)strlen(str);
+			u32 h =  l;  
+			u32 step = ( l >> 6 ) + 1;  /* if string is too long, don't hash all its chars */
+			for(int i = l; i >= step; i -= step) 
 				h = h ^ ((h<<5)+(h>>2) + str[i-1]);
-
 			return h;
 		}
 
-		StringID::StringID(const char * str, bool useString)
+		StringID::StringID(StringPtr str, Bool useString)
 #if STRINGID_USE_STRING
 			:m_useString(useString)
 #endif
@@ -36,7 +32,7 @@ namespace TsiU
 #if STRINGID_USE_STRING
 			if( m_useString )
 			{	
-				m_originalString = new char [strlen(str) + 1];
+				m_originalString = new Char[strlen(str) + 1];
 				strcpy(m_originalString, str);
 			}
 			else
@@ -44,13 +40,11 @@ namespace TsiU
 				m_originalString = const_cast<char *> ( str );
 			}
 #endif
-
-
 			m_id = Hash(str);		
 		}
 
 
-		bool StringID::operator == (StringID str ) const
+		Bool StringID::operator == (StringID str ) const
 		{
 #if STRINGID_USE_STRING
 			if(this->m_useString && str.m_useString )
@@ -64,7 +58,7 @@ namespace TsiU
 			}
 		}
 
-		bool StringID::operator < (StringID str) const
+		Bool StringID::operator < (StringID str) const
 		{
 #if STRINGID_USE_STRING
 			if(this->m_useString && str.m_useString )

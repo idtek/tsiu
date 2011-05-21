@@ -9,6 +9,9 @@ GameEngine::GameEngine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool 
 }
 void GameEngine::DoInit()
 {
+	AI::RefValue<int, AI::ERefValuFlag_Writable> intTest("test", 0);
+	D_Output("%d\n", (int)intTest);
+	intTest = 100;
 }
 
 void GameEngine::DoUnInit()
