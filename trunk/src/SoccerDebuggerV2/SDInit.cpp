@@ -8,7 +8,7 @@
 
 Engine*						g_poEngine = NULL;
 SimpleRenderObjectUtility*	g_poSROU = NULL;
-MemPool*					g_poMem = NULL;
+MemPool<UDP_PACK>*			g_poMem = NULL;
 HANDLE						g_hRecv;
 Bool						g_bStop = false;
 ODynamicObj*				g_WatchPlayer = NULL;
@@ -321,7 +321,7 @@ void MyEngine::DoInit()
 
 	NetWorkInit();
 
-	g_poMem = new MemPool;
+	g_poMem = new MemPool<UDP_PACK>;
 	g_poMem->SetMaxSize(1000);
 
 	g_poSROU = new WinGDISimpleRenderObjectUtility((WinGDIRenderer*)g_poEngine->GetRenderMod()->GetRenderer());

@@ -1,8 +1,6 @@
 #ifndef __TAI_STRINGID__
 #define __TAI_STRINGID__
 
-
-
 #define STRINGID_USE_STRING 1
 
 namespace TsiU
@@ -12,15 +10,15 @@ namespace TsiU
 		class StringID
 		{
 		public:
-			StringID():m_id(0)
+			StringID()
+				: m_id(0)
 #if STRINGID_USE_STRING
-				,m_useString(false)
-				,m_originalString(NULL)
+				, m_useString(false)
+				, m_originalString(NULL)
 #endif
-			{
-			}
+			{}
 
-			StringID(const StringID & str)
+			StringID(const StringID& str)
 			{
 				this->m_id = str.m_id;
 #if STRINGID_USE_STRING
@@ -29,7 +27,7 @@ namespace TsiU
 #endif
 			}
 
-			StringID( unsigned int id )
+			StringID( u32 id )
 			{
 				m_id = id;
 #if STRINGID_USE_STRING
@@ -45,10 +43,10 @@ namespace TsiU
 #endif
 			}
 
-			StringID(const char * str, bool useString = false);
+			StringID(StringPtr str, Bool useString = false);
 
-			unsigned int GetID() const { return m_id; }
-			const char * GetString() const { 
+			u32 GetID() const { return m_id; }
+			StringPtr GetString() const { 
 #if STRINGID_USE_STRING
 				return m_originalString;
 #else
@@ -72,29 +70,29 @@ namespace TsiU
 			}
 
 
-			bool operator == (StringID str ) const;
-			bool operator < (StringID id ) const;
+			Bool operator ==(StringID str ) const;
+			Bool operator < (StringID id ) const;
 
 
-			bool operator == (unsigned int id ) const
+			Bool operator == (u32 id ) const
 			{
 				return this->m_id == id;
 			}
 
-			bool operator < (unsigned int id) const
+			Bool operator < (u32 id) const
 			{
 				return this->m_id < id;
 			}
 
 		private:
 #if STRINGID_USE_STRING
-			bool				m_useString;
-			char * m_originalString;
+			Bool  m_useString;
+			Char* m_originalString;
 #endif
-			unsigned int		m_id;	
+			u32	  m_id;	
 
 		public:
-			static unsigned int Hash(const char * str);
+			static u32 Hash(StringPtr str);
 		};
 	}
 }

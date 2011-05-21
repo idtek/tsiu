@@ -888,6 +888,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\TLibMain\TAI_RefValue.h"
+					>
+				</File>
+				<File
 					RelativePath="..\TLibMain\TAI_StringID.h"
 					>
 				</File>
