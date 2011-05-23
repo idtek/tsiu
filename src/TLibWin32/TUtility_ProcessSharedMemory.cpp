@@ -25,10 +25,14 @@ namespace TsiU
 			D_CHECK(0);
 		}
 		sprintf(zEventName, "%s_MemMapping", zName);
-		m_pMappingHandle = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, iSize, zEventName);
+		m_pMappingHandle = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, iSize, zEventName);
 		if(m_pMappingHandle)
 		{
 			m_pPointer = MapViewOfFile(m_pMappingHandle, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, iSize);
+			if(GetLastError() != ERROR_ALREADY_EXISTS)
+			{
+				memset(m_pPointer, 0, iSize);
+			}
 		}
 		return m_pPointer;
 	}
