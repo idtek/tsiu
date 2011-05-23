@@ -375,6 +375,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\TLibWin32\TUtility_ProcessSharedMemory.h"
+				>
+			</File>
+			<File
 				RelativePath="..\TLibWin32\TWin32_Header.h"
 				>
 			</File>
@@ -458,6 +462,10 @@
 			</File>
 			<File
 				RelativePath="..\TLibWin32\TRender_WinMsg.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\TLibWin32\TUtility_ProcessSharedMemory.cpp"
 				>
 			</File>
 		</Filter>

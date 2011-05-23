@@ -23,7 +23,7 @@ Char						g_zLastOpenFile[kMAX_FILENAME_LENGTH];
 
 const u32 kg_NumberOfTab = E_Tab_Num;
 const Char* kg_TabDesc[kg_NumberOfTab] = {
-	"    Entity    ", "    Attributes    ", "    Statistics    ", "    Watch    "
+	" Entity ", " Attributes ", " Statistics ", " Watch "
 };
 
 class MyCanvas : public FXCanvas {
@@ -137,6 +137,33 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 		m_TabTable[i]->setColumnText(1, "Value");
 		m_TabTable[i]->setSelBackColor(FXRGB(128,128,128));
 	}
+	FXTabItem* poTab = new FXTabItem(poTabBook, " Formation " ,NULL);
+	poTab->setTabOrientation(TAB_BOTTOM);
+	FXHorizontalFrame* poTableFrame = new FXHorizontalFrame(poTabBook, FRAME_THICK|FRAME_RAISED);
+	FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poTableFrame,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+	FXMatrix* mainnmatrix = new FXMatrix(poBoxframe, 3, MATRIX_BY_ROWS|LAYOUT_FILL_X);
+
+	FXMatrix* formationmatrix = new FXMatrix(mainnmatrix, 3, MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
+	new FXButton(formationmatrix, "Save...", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	new FXButton(formationmatrix, "Load...", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	new FXButton(formationmatrix, "Export to lua...", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+
+	FXMatrix* filtermatrix = new FXMatrix(mainnmatrix, 3, MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
+	FXListBox* pitchTypeList = new FXListBox(filtermatrix, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	pitchTypeList->appendItem("Normal");
+	pitchTypeList->appendItem("Large");
+	FXListBox* teamStateList = new FXListBox(filtermatrix, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	teamStateList->appendItem("Attack");
+	teamStateList->appendItem("Defend");
+	FXListBox* positionList = new FXListBox(filtermatrix, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	for(int i = 0; i < 15; ++i)
+	{
+		positionList->appendItem(FXStringFormat("%d", i));
+	}
+	positionList->setNumVisible(15);
+
+	FXMatrix* simulationmatrix = new FXMatrix(mainnmatrix, 3, MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
+	new FXButton(simulationmatrix, "Simulation", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
 }
 long MyCanvas::onKeyPress(FXObject* sender, FXSelector sel,void* ptr)
 {
