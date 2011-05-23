@@ -67,13 +67,13 @@ namespace TsiU
 			for(s32 i = 0; i < s_poMsgCallBack.Size(); ++i)
 				s_poMsgCallBack[i]->OnKeyDown(_wParam, _lParam);
 			break;
+		case WM_KEYUP:
+			for(s32 i = 0; i < s_poMsgCallBack.Size(); ++i)
+			s_poMsgCallBack[i]->OnKeyUp(_wParam, _lParam);
+			break;
 		case WM_SYSKEYDOWN:
 			for(s32 i = 0; i < s_poMsgCallBack.Size(); ++i)
 				s_poMsgCallBack[i]->OnKeyDown(_wParam, _lParam);
-			break;
-		case WM_KEYUP:
-			for(s32 i = 0; i < s_poMsgCallBack.Size(); ++i)
-				s_poMsgCallBack[i]->OnKeyUp(_wParam, _lParam);
 			break;
 		case WM_SYSKEYUP:
 			for(s32 i = 0; i < s_poMsgCallBack.Size(); ++i)
