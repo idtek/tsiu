@@ -55,8 +55,8 @@ public:
 	{
 		AI::RefValueManager::Get().Flush();
 
-		m_X = m_X.As() + (100 * _fDeltaTime);
-		if(m_X.As() > GameEngine::GetGameEngine()->GetRenderMod()->GetRenderer()->GetWidth())
+		m_X += (int)(100 * _fDeltaTime);
+		if(m_X > GameEngine::GetGameEngine()->GetRenderMod()->GetRenderer()->GetWidth())
 		{
 			m_X = 0;
 		}
