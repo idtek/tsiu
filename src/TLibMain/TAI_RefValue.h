@@ -86,28 +86,38 @@ namespace TsiU
 			{
 				return As();
 			}
-			void operator =(const T& lhs)
-			{
-				WRITABLE_FLAG_CHECK();
-				m_Value = lhs;
-				SetDirtyState(true);
-			}
-			bool operator ==(const RefValue<T, flag>& lhs) const
-			{
-				return m_Value == lhs.m_Value;
-			}
-			bool operator ==(const T& val) const
-			{
-				return m_Value == val;
-			}
-			bool operator !=(const RefValue<T, flag>& lhs) const
-			{
-				return !operator==(lhs);
-			}
-			bool operator !=(const T& val) const
-			{
-				return !operator==(val);
-			}
+			RefValue<T, flag>&	operator = (const RefValue<T, flag>& rhs)		{ WRITABLE_FLAG_CHECK(); m_Value =  rhs.m_Value; SetDirtyState(true); return (*this);	}
+			RefValue<T, flag>&	operator +=(const RefValue<T, flag>& rhs)		{ WRITABLE_FLAG_CHECK(); m_Value += rhs.m_Value; SetDirtyState(true); return (*this);	}
+			RefValue<T, flag>&	operator -=(const RefValue<T, flag>& rhs)		{ WRITABLE_FLAG_CHECK(); m_Value -= rhs.m_Value; SetDirtyState(true); return (*this);	}
+			RefValue<T, flag>&	operator *=(const RefValue<T, flag>& rhs)		{ WRITABLE_FLAG_CHECK(); m_Value *= rhs.m_Value; SetDirtyState(true); return (*this);	}
+			RefValue<T, flag>&	operator /=(const RefValue<T, flag>& rhs)		{ WRITABLE_FLAG_CHECK(); m_Value /= rhs.m_Value; SetDirtyState(true); return (*this);	}
+			
+			RefValue<T, flag>&	operator = (const T& val)						{ WRITABLE_FLAG_CHECK(); m_Value =  val;		 SetDirtyState(true); return (*this);	}
+			RefValue<T, flag>&	operator +=(const T& val)						{ WRITABLE_FLAG_CHECK(); m_Value += val;		 SetDirtyState(true); return (*this);	}
+			RefValue<T, flag>&	operator -=(const T& val)						{ WRITABLE_FLAG_CHECK(); m_Value -= val;		 SetDirtyState(true); return (*this);	}
+			RefValue<T, flag>&	operator *=(const T& val)						{ WRITABLE_FLAG_CHECK(); m_Value *= val;		 SetDirtyState(true); return (*this);	}
+			RefValue<T, flag>&	operator /=(const T& val)						{ WRITABLE_FLAG_CHECK(); m_Value /= val;		 SetDirtyState(true); return (*this);	}
+
+			T 					operator - () const								{ return -m_Value;	}
+			T 					operator + (const RefValue<T, flag>& rhs) const { return m_Value + rhs.m_Value;	}
+			T 					operator - (const RefValue<T, flag>& rhs) const	{ return m_Value - rhs.m_Value;	}
+			T 					operator * (const RefValue<T, flag>& rhs) const { return m_Value * rhs.m_Value;	}
+			T 					operator / (const RefValue<T, flag>& rhs) const { return m_Value / rhs.m_Value;	}
+			T 					operator + (const T& val) const 				{ return m_Value + val;	}
+			T 					operator - (const T& val) const					{ return m_Value - val;	}
+			T 					operator * (const T& val) const 				{ return m_Value * val;	}
+			T 					operator / (const T& val) const 				{ return m_Value / val;	}
+
+			bool				operator ==(const RefValue<T, flag>& rhs) const	{ return m_Value == rhs.m_Value;	}
+			bool				operator ==(const T& val) const					{ return m_Value == val;			}
+			bool				operator !=(const RefValue<T, flag>& rhs) const	{ return !operator==(rhs);			}
+			bool				operator !=(const T& val) const					{ return !operator==(val);			}
+			bool				operator <(const RefValue<T, flag>& rhs) const	{ return m_Value < rhs.m_Value;		}
+			bool				operator <=(const T& val) const					{ return m_Value <= val;			}
+			bool				operator >(const RefValue<T, flag>& rhs) const	{ return m_Value > rhs.m_Value;		}
+			bool				operator >=(const T& val) const					{ return m_Value >= val;			}
+			bool				operator !() const								{ return !m_Value;					}
+
 			const T& As() const
 			{
 				return m_Value;
@@ -125,6 +135,9 @@ namespace TsiU
 			{
 				memcpy((char*)&m_Value, rawData, GetSize());
 			}
+		private:
+			RefValue(const RefValue<T, flag>&);
+
 		private:
 			T m_Value;
 		};
