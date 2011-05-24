@@ -375,6 +375,10 @@
 					RelativePath="..\TLibMain\TUtility_Logger.cpp"
 					>
 				</File>
+				<File
+					RelativePath="..\TLibMain\TUtility_ProcessSharedMemory.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="inc"
@@ -401,6 +405,10 @@
 				</File>
 				<File
 					RelativePath="..\TLibMain\TUtility_MemPool.h"
+					>
+				</File>
+				<File
+					RelativePath="..\TLibMain\TUtility_ProcessSharedMemory.h"
 					>
 				</File>
 				<File
@@ -899,6 +907,10 @@
 			<Filter
 				Name="src"
 				>
+				<File
+					RelativePath="..\TLibMain\TAI_RefValue.cpp"
+					>
+				</File>
 				<File
 					RelativePath="..\TLibMain\TAI_StringID.cpp"
 					>

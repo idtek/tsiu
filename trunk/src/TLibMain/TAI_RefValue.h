@@ -6,6 +6,7 @@
 #endif
 #include "TUtility_Singleton.h"
 #include <map>
+#include <string>
 
 namespace TsiU
 {
@@ -79,7 +80,7 @@ namespace TsiU
 			}
 			~RefValue()
 			{
-				RefValueManager::Get().RemoveRefValue(this);
+				RefValueManager::Get().RemoveRefValue(this, flag);
 			}
 			operator T() const
 			{
@@ -128,6 +129,13 @@ namespace TsiU
 			T m_Value;
 		};
 
+		typedef RefValue<int,	ERefValuFlag_Writable> RFInt;
+		typedef RefValue<int,	ERefValuFlag_ReadOnly> RFCInt;
+		typedef RefValue<float, ERefValuFlag_Writable> RFFloat;
+		typedef RefValue<float, ERefValuFlag_ReadOnly> RFCFloat;
+		typedef RefValue<bool,	ERefValuFlag_Writable> RFBool;
+		typedef RefValue<bool,	ERefValuFlag_ReadOnly> RFCBool;
+
 		class IRefValueUpdater
 		{
 		public:
@@ -153,134 +161,25 @@ namespace TsiU
 				unsigned int	m_Offset;
 			};
 		public:
-			RefValueManager()
-				: m_NextAvailableHeadOffset(0)
-				, m_NextAvailableDataOffset(0)
-				, m_SharedMemory(0)
-			{
-#if PLATFORM_TYPE == PLATFORM_WIN32
-				int size = sizeof(HeadInfo) * kMaxHeadCount + kMaxDataCount;
-				m_SharedMemory = (char*)m_ProccessSM.Malloc(size, "AIRefValue Memory");
-#endif
-			}
+			RefValueManager();
 
-			void Flush()
-			{
-#if PLATFORM_TYPE == PLATFORM_WIN32
-				//update writeable value
-				m_ProccessSM.Lock();
-				std::map<std::string, RefValueBase*>::iterator itWritable = m_WritableRefValues.begin();
-				while(itWritable != m_WritableRefValues.end())
-				{
-					RefValueBase* val = (*itWritable).second;
-					if(val->IsDirty())
-					{
-						HeadInfo* hi = (HeadInfo*)(m_SharedMemory + val->GetOffsetInMemory());
-						D_CHECK(hi->m_Flags == EHeadFlag_InUse && !strncmp(val->GetName(), hi->m_VName, kMaxNameSize));
-						char* dataMem = m_SharedMemory + _GetDataSegmentOffset() + hi->m_Offset;
-						memcpy(dataMem, val->GetData(), val->GetSize());
-
-						val->SetDirtyState(false);
-					}
-					++itWritable;
-				}
-				m_ProccessSM.UnLock();
-				//update readonly 
-				std::map<std::string, RefValueBase*>::iterator itReadOnly = m_ReadOnlyRefValues.begin();
-				while(itReadOnly != m_ReadOnlyRefValues.end())
-				{
-					RefValueBase* val = (*itReadOnly).second;
-					if(val->GetOffsetInMemory() == 0xffffffff)
-					{
-						HeadInfo* hiArray = (HeadInfo*)m_SharedMemory;
-						for(int i = 0; i < kMaxHeadCount; ++i)
-						{
-							const HeadInfo& hi = hiArray[i];
-							if(hi.m_Flags == EHeadFlag_InUse && !strncmp(val->GetName(), hi.m_VName, kMaxNameSize))
-							{
-								val->SetOffsetInMemory(i * sizeof(HeadInfo));
-								break;
-							}
-						}
-					}
-					unsigned int offset = val->GetOffsetInMemory();
-					if(offset != 0xffffffff)
-					{
-						HeadInfo* hi = (HeadInfo*)(m_SharedMemory + offset);
-						val->SetData(m_SharedMemory + _GetDataSegmentOffset() + hi->m_Offset);
-					}
-					++itReadOnly;
-				}
-#endif
-			}
-
-			bool AddRefValue(RefValueBase* val, unsigned int attr)
-			{
-				if(attr == ERefValuFlag_ReadOnly)
-				{
-					std::map<std::string, RefValueBase*>::iterator it = m_ReadOnlyRefValues.find(val->GetName());
-					if(it != m_ReadOnlyRefValues.end())
-					{
-						return false;
-					}
-					m_ReadOnlyRefValues.insert(std::pair<std::string, RefValueBase*>(val->GetName(), val));
-					return true;
-				}
-				else
-				{
-					std::map<std::string, RefValueBase*>::iterator it = m_WritableRefValues.find(val->GetName());
-					if(it != m_WritableRefValues.end())
-					{
-						return false;
-					}
-					m_WritableRefValues.insert(std::pair<std::string, RefValueBase*>(val->GetName(), val));
-
-#if PLATFORM_TYPE == PLATFORM_WIN32
-					if(m_NextAvailableHeadOffset < _GetDataSegmentOffset() && 
-					   m_NextAvailableDataOffset + val->GetSize() < sizeof(HeadInfo) * kMaxHeadCount + kMaxDataCount)
-					{
-						m_ProccessSM.Lock();
-
-						val->SetOffsetInMemory(m_NextAvailableHeadOffset);
-
-						HeadInfo* hi = (HeadInfo*)(m_SharedMemory + m_NextAvailableHeadOffset);
-						strncpy(hi->m_VName, val->GetName(), kMaxNameSize - 1);
-						hi->m_VName[kMaxNameSize - 1] = '\0';
-						hi->m_Flags = EHeadFlag_InUse;
-						hi->m_VSize = val->GetSize();
-						hi->m_Offset = m_NextAvailableDataOffset;
-
-						memcpy(m_SharedMemory + _GetDataSegmentOffset() + m_NextAvailableDataOffset, val->GetData(), val->GetSize());
-
-						m_NextAvailableHeadOffset += sizeof(HeadInfo);
-						m_NextAvailableDataOffset += hi->m_VSize;
-
-						m_ProccessSM.UnLock();
-
-						return true;
-					}
-#endif
-				}
-				return false;
-			}
-			bool RemoveRefValue(RefValueBase* val)
-			{
-				return false;
-			}
+			void Flush();
+			bool AddRefValue(RefValueBase* val, unsigned int attr);
+			bool RemoveRefValue(RefValueBase* val, unsigned int attr);
 
 		private:
-			unsigned int _GetDataSegmentOffset(){
-				return sizeof(HeadInfo) * kMaxHeadCount;
-			}
-
+			HeadInfo*		_FindRefValueHeadInfo(const char* name, unsigned char expectedFlag) const;
+			char*			_GetDataSegment(unsigned int offset) const;
+			char*			_GetAvailableDataSegment(const HeadInfo* hi, unsigned int size) const;
+			unsigned int	_GetDataSegmentOffset(const char* addr) const;
+			HeadInfo*		_GetHeadInfo(unsigned int i) const;
+			unsigned int	_GetHeadInfoIndex(const char* addr) const;
 
 		private:
 #if PLATFORM_TYPE == PLATFORM_WIN32
 			ProccessSharedMemory m_ProccessSM;
 #endif
 			char*			m_SharedMemory;
-			unsigned int	m_NextAvailableHeadOffset;
-			unsigned int	m_NextAvailableDataOffset;
 
 			std::map<std::string, RefValueBase*> m_ReadOnlyRefValues;
 			std::map<std::string, RefValueBase*> m_WritableRefValues;

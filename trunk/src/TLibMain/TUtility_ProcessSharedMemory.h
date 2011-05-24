@@ -3,6 +3,7 @@
 
 namespace TsiU
 {
+#if PLATFORM_TYPE == PLATFORM_WIN32
 	class ProccessSharedMemory
 	{
 	public:
@@ -19,6 +20,7 @@ namespace TsiU
 		Udef	m_pMutexHandle;
 		Udef	m_pMappingHandle;
 	};
+#endif
 }
 
 #endif
