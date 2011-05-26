@@ -4,5 +4,6 @@
 #include "TUtility_Array.h"
 #include "TUtility_List.h"
 #include "TUtility_MemPool.h"
+#include "TUtility_BitArray.h"
 
 #endif

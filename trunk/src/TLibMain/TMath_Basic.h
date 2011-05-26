@@ -36,6 +36,7 @@ namespace TsiU
 		}
 		static inline Bool IsZero(f32 p_fVal){ return IsEqual(p_fVal, 0.f);	}
 
+		static inline f32 Square(f32 _fVal)					{ return _fVal * _fVal;			}
 		static inline f32 Sqrt(f32 p_fVal)					{ return sqrt(p_fVal);			}
 		static inline f32 InvSqrt(f32 p_fVal)				{ return 1.f/sqrt(p_fVal);		}
 		static inline f32 Pow(f32 p_fVal, f32 p_fPower=2.f)	{ return pow(p_fVal, p_fPower);	}

@@ -4,6 +4,7 @@
 #include "SDMempool.h"
 #include "SDWindowMsgCallBack.h"
 #include "fxkeys.h"
+#include "SDFormationEditor.h"
 //#include "SDGuiCallBack.h"
 
 Engine*						g_poEngine = NULL;
@@ -107,6 +108,7 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	//H1
 	FXEGDIViewer    *poDXViewer	= new FXEGDIViewer(poGroupH1, NULL, 0, FRAME_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 	poDXViewer->RegisterListener(new SDWindowMsgCallBack);
+	poDXViewer->RegisterListener(new FEWindowMsgCallBack);
 
 	//H2
 	FXTabBook* poTabBook = new FXTabBook(poGroupH2, this, 0, PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
@@ -354,6 +356,8 @@ void MyEngine::DoInit()
 	g_poSROU = new WinGDISimpleRenderObjectUtility((WinGDIRenderer*)g_poEngine->GetRenderMod()->GetRenderer());
 	//RenderWindowMsg::RegisterMsgListener(new SDWindowMsgCallBack);
 	
+	g_poEngine->GetSceneMod()->AddObject("RefValueUpdater", new ORefValueUpdater);
+	g_poEngine->GetSceneMod()->AddObject("FormationEditor", new FormationEditor);
 	g_poEngine->GetSceneMod()->AddObject("ZBall", new OBall);
 	g_poEngine->GetSceneMod()->AddObject("Parser", new OParser);
 	g_poEngine->GetSceneMod()->AddObject("TeamHome", new OTeam(kHOME_TEAM));

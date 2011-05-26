@@ -6,6 +6,8 @@
 
 namespace TsiU
 {
+	class Vec3;
+
 	class Vec2
 	{
 	public:
@@ -42,15 +44,15 @@ namespace TsiU
 			D_CHECK(p_uiIdx < 2);
 			return *(&x+p_uiIdx);
 		}
-		inline const Vec2& operator +()
+		inline const Vec2& operator +() const
 		{
 			return *this;
 		}
-		inline Vec2 operator - ()
+		inline Vec2 operator - () const 
 		{
 			return Vec2(-x, -y);
 		}
-		inline Vec2 operator + (const Vec2& p_V)
+		inline Vec2 operator + (const Vec2& p_V) const 
 		{
 			return Vec2(x + p_V.x, y + p_V.y);
 		}
@@ -60,7 +62,7 @@ namespace TsiU
 			y += p_V.y;
 			return *this;
 		}
-		inline Vec2 operator + (const f32 p_fVal)
+		inline Vec2 operator + (const f32 p_fVal) const 
 		{
 			return Vec2(x + p_fVal, y + p_fVal);
 		}
@@ -70,7 +72,7 @@ namespace TsiU
 			y += p_fVal;
 			return *this;
 		}
-		inline Vec2 operator - (const Vec2& p_V)
+		inline Vec2 operator - (const Vec2& p_V) const 
 		{
 			return Vec2(x - p_V.x, y - p_V.y);
 		}
@@ -90,7 +92,7 @@ namespace TsiU
 			y -= p_fVal;
 			return *this;
 		}
-		inline Vec2 operator * (const Vec2& p_V)
+		inline Vec2 operator * (const Vec2& p_V) const 
 		{
 			return Vec2(x * p_V.x, y * p_V.y);
 		}
@@ -100,7 +102,7 @@ namespace TsiU
 			y *= p_V.y;
 			return *this;
 		}
-		inline Vec2 operator * (const f32 p_fVal)
+		inline Vec2 operator * (const f32 p_fVal) const 
 		{
 			return Vec2(x * p_fVal, y * p_fVal);
 		}
@@ -110,7 +112,7 @@ namespace TsiU
 			y *= p_fVal;
 			return *this;
 		}
-		inline Vec2 operator / (const Vec2& p_V)
+		inline Vec2 operator / (const Vec2& p_V) const 
 		{
 			return Vec2(x / p_V.x, y / p_V.y);
 		}
@@ -120,7 +122,7 @@ namespace TsiU
 			y /= p_V.y;
 			return *this;
 		}
-		inline Vec2 operator / (const f32 p_fVal)
+		inline Vec2 operator / (const f32 p_fVal) const
 		{
 			return Vec2(x / p_fVal, y / p_fVal);
 		}
@@ -173,6 +175,8 @@ namespace TsiU
 		{
 			D_DebugOut("x = %f, y = %f\n", x, y);
 		}
+
+		static Vec2 FromVec3(const Vec3& v);
 
 		static const Vec2 kZERO;
 		static const Vec2 kXUNIT;

@@ -1,6 +1,7 @@
 #include "TMath_Vector3.h"
 #include "TMath_Quaternion.h"
 #include "TMath_Matrix4.h"
+#include "TMath_Vector2.h"
 
 namespace TsiU
 {
@@ -26,5 +27,10 @@ namespace TsiU
 		return Vec3( x * m.mat[0][0] + y * m.mat[1][0] + z * m.mat[2][0] + m.mat[3][0], 
 					 x * m.mat[0][1] + y * m.mat[1][1] + z * m.mat[2][1] + m.mat[3][1], 
 					 x * m.mat[0][2] + y * m.mat[1][2] + z * m.mat[2][2] + m.mat[3][2]);
+	}
+
+	Vec3 Vec3::FromVec2(const Vec2& v)
+	{
+		return Vec3(v.x, v.y, 0.f);
 	}
 }

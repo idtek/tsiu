@@ -76,6 +76,13 @@ namespace TsiU
 			else
 			{
 #if PLATFORM_TYPE == PLATFORM_WIN32
+				HeadInfo* sameNameHeadInfo = _FindRefValueHeadInfo(val->GetName(), EHeadFlag_InUse);
+				if(sameNameHeadInfo)
+				{
+					D_CHECK(0);
+					return false;
+				}
+
 				HeadInfo* headInfoSegment = _FindRefValueHeadInfo(NULL, EHeadFlag_Available);
 				if(!headInfoSegment)
 					return false;

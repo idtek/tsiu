@@ -188,6 +188,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SDFormationEditor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SDInit.cpp"
 				>
 			</File>
@@ -213,6 +217,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\SDFormationEditor.h"
+				>
+			</File>
 			<File
 				RelativePath=".\SDGlobalDef.h"
 				>
