@@ -78,7 +78,7 @@ private:
 class FERefPlayer : public FEElement
 {
 public:
-	FERefPlayer();
+	FERefPlayer(s32 id);
 
 	//from FEElement
 	virtual void Create();
@@ -86,6 +86,7 @@ public:
 	virtual void Draw();
 
 private:
+	s32 m_id;
 	f32 m_fPlayerRadius;
 	AI::RefValue<Vec2, AI::ERefValuFlag_ReadOnly> m_RfPosition;
 };

@@ -16,11 +16,20 @@ namespace TsiU
 
 		class RefValueBase
 		{
+		protected:
 			static const unsigned int kMaxNameSize = 64;
 
 		public:
+			RefValueBase()
+				: m_HasRegisted(false)
+				, m_IsDirty(false)
+				, m_OffsetInMemory(0xffffffff)
+			{
+				m_VName[0] = '\0';
+			}
 			RefValueBase(const char* registeredName)
-				: m_IsDirty(false)
+				: m_HasRegisted(false)
+				, m_IsDirty(false)
 				, m_OffsetInMemory(0xffffffff)
 			{
 				strncpy(m_VName, registeredName, kMaxNameSize - 1);
@@ -46,7 +55,8 @@ namespace TsiU
 			virtual unsigned int GetSize() const = 0;
 			virtual const char* GetData() const = 0;
 			virtual void SetData(const char* rawData) = 0;
-		private:
+		protected:
+			bool		 m_HasRegisted;
 			unsigned int m_OffsetInMemory;
 			bool		 m_IsDirty;
 			char		 m_VName[kMaxNameSize];
@@ -72,15 +82,32 @@ namespace TsiU
 		class RefValue : public RefValueBase
 		{
 		public:
+			RefValue()
+				: RefValueBase()
+				, m_Value()
+			{}
 			RefValue(const char* registeredName, const T& initValue)
 				: RefValueBase(registeredName)
 				, m_Value(initValue)
 			{
-				RefValueManager::Get().AddRefValue(this, flag);
+				m_HasRegisted = RefValueManager::Get().AddRefValue(this, flag);
 			}
 			~RefValue()
 			{
-				RefValueManager::Get().RemoveRefValue(this, flag);
+				if(m_HasRegisted)
+					RefValueManager::Get().RemoveRefValue(this, flag);
+			}
+			bool RegisterValue(const char* registeredName, const T& initValue)
+			{
+				if(!m_HasRegisted)
+				{
+					strncpy(m_VName, registeredName, kMaxNameSize - 1);
+					m_VName[kMaxNameSize - 1] = '\0';
+					m_Value = initValue;
+
+					m_HasRegisted = RefValueManager::Get().AddRefValue(this, flag);
+				}
+				return m_HasRegisted;
 			}
 			operator T() const
 			{

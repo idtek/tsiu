@@ -106,9 +106,12 @@ bool FERefBall::InBounds(const Vec2& checkPoint) const
 	return false;
 }
 //----------------------------------------------------------
-FERefPlayer::FERefPlayer()
-	: m_RfPosition("RefPlayer", Vec2()) 
+FERefPlayer::FERefPlayer(s32 id)
+	: m_id(id)
 {
+	Char refName[16] = {0};
+	sprintf(refName, "Player%d_Pos", m_id);
+	m_RfPosition.RegisterValue(refName,Vec2());
 	m_fPlayerRadius = 0.9f;
 }
 void FERefPlayer::Create()
@@ -129,7 +132,8 @@ void FERefPlayer::Draw()
 
 	Vec2 indicatorPos(m_vPos.x - m_fPlayerRadius, m_vPos.y + m_fPlayerRadius);
 	Vec2 indicatorScreenPos = CoordinateInfo::WorldToScreen(indicatorPos);
-	Char indicator[] = "P";
+	Char indicator[4];
+	itoa(m_id, indicator, 10);
 	g_poSROU->DrawStringEx(
 		indicatorScreenPos.x, 
 		indicatorScreenPos.y,
@@ -147,7 +151,7 @@ void FECanvas::Create()
 	static Bool enter_once = false;
 	if(enter_once == false)
 	{
-		FEElement* playerRef = new FERefPlayer;
+		FEElement* playerRef = new FERefPlayer(0);
 		playerRef->Create();
 		playerRef->SetPosition(0.f, 0.f, 0.f);
 		m_Elements.PushBack(playerRef);
