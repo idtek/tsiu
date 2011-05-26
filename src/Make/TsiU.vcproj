@@ -388,6 +388,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\TLibMain\TUtility_BitArray.h"
+					>
+				</File>
+				<File
 					RelativePath="..\tlibmain\TUtility_DebugConsole.h"
 					>
 				</File>

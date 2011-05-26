@@ -16,7 +16,6 @@ namespace TsiU
 		virtual void OnMouseLDrag(s32 x, s32 y, s32 relX, s32 relY){};
 		virtual void OnKeyDown(u32 key, s64 info){};
 		virtual void OnKeyUp(u32 key, s64 info){};
-		virtual void OnKeyPress(u32 key, s64 info){};
 	};
 
 	class RenderWindowMsg

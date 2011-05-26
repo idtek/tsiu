@@ -38,7 +38,8 @@ namespace TsiU
 		long onMiddleBtnRelease(FXObject* sender, FXSelector sel, void *ptr);
 		long onRightBtnPress(FXObject* sender, FXSelector sel, void *ptr);
 		long onRightBtnRelease(FXObject* sender, FXSelector sel, void *ptr);
-		long onKeyPress(FXObject* sender, FXSelector sel, void *ptr);
+		long onKeyDown(FXObject* sender, FXSelector sel, void *ptr);
+		long onKeyUp(FXObject* sender, FXSelector sel, void *ptr);
 		long onMotion(FXObject* sender, FXSelector sel, void *ptr);
 		long onConfigure(FXObject* sender, FXSelector sel, void *ptr);
 
@@ -49,6 +50,7 @@ namespace TsiU
 
 	private:
 		Array<RenderWindowMsgListener*> m_poMsgCallBack;
+		bool							m_IsLeftMouseDown;
 	};
 }
 

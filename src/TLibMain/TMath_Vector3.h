@@ -8,6 +8,7 @@ namespace TsiU
 {
 	class Quat;
 	class Mat4;
+	class Vec2;
 
 	class Vec3
 	{
@@ -193,6 +194,8 @@ namespace TsiU
 		{
 			D_DebugOut("x = %f, y = %f, z = %f\n", x, y, z);
 		}
+
+		static Vec3 FromVec2(const Vec2& v);
 
 		static const Vec3 ZERO;
 		static const Vec3 XUNIT;
