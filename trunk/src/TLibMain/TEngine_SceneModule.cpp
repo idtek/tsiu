@@ -79,7 +79,7 @@ namespace TsiU
 			{
 				Object* pObj = (*it).second;
 				pObj->UpdateMatrix();
-				if(pObj->HasControlFlag(E_OCF_Drawable))
+				if(pObj->HasControlFlag(E_OCF_Drawable) && pObj->HasControlFlag(E_OCF_Show))
 				{
 					objectArrayWithZOrder[pObj->GetZOrder()].PushBack(pObj);
 				}
@@ -101,7 +101,7 @@ namespace TsiU
 			{
 				Object* pObj = (*it).second;
 				pObj->UpdateMatrix();
-				if(pObj->HasControlFlag(E_OCF_Drawable))
+				if(pObj->HasControlFlag(E_OCF_Drawable) && pObj->HasControlFlag(E_OCF_Show))
 				{
 					DrawableObject *pDObj = (DrawableObject *)pObj;
 					pDObj->Draw();

@@ -39,15 +39,29 @@ namespace Util
 	extern void DrawValue(ETabIndex tab, UDP_PACK* pack, bool shouldHighLight = false);
 }
 
+enum{
+	EAppMode_None,
+	EAppMode_WatchMode,
+	EAppMode_FormationEditor
+};
+
 class MyEngine : public Engine
 {
 public:
 	MyEngine(u32 p_uiWidth, u32 p_uiHeight, const Char* p_strTitle, Bool p_bIsWindow)
 		:Engine(p_uiWidth, p_uiHeight, p_strTitle, p_bIsWindow)
+		,m_AppMode(EAppMode_None)
 	{}
 
 	virtual void DoInit();
 	virtual void DoUnInit();
+
+	void	ChangeAppMode(u32 mode);
+	void	UpdateCanvas();
+	u32		GetAppMode()			const{ return m_AppMode;	}
+
+private:
+	u32 m_AppMode;
 };
 
 #endif

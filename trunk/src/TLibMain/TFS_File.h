@@ -30,11 +30,15 @@ namespace TsiU
 		virtual Bool Close() = 0;
 		virtual u32	 Size() = 0;
 		virtual Bool IsExisted(const Char* _poFilePath) = 0;
+		virtual Bool IsValid() = 0;
 	};
 
 	class DefaultFile : public File
 	{
 	public:
+		DefaultFile()
+			: m_fp(NULL)
+		{}
 		Bool Open(const Char* _poFilePath, u32 _eOpenMode)
 		{
 			Char option[3] = {0};
@@ -107,6 +111,10 @@ namespace TsiU
 				return true;
 			}
 			return false;
+		}
+		Bool IsValid()
+		{
+			return m_fp != NULL;
 		}
 	private:
 		FILE *m_fp;

@@ -5,6 +5,7 @@
 #include "SDWindowMsgCallBack.h"
 #include "fxkeys.h"
 #include "SDFormationEditor.h"
+#include "tinyxml.h"
 //#include "SDGuiCallBack.h"
 
 Engine*						g_poEngine = NULL;
@@ -46,27 +47,44 @@ public:
 public:
 	enum {
 		ID_SENDCOMMAND = FXMainWindow::ID_LAST,
-		ID_TABLE,
+		ID_SELECTTAB,
+		ID_CHANGECANVAS,
+		ID_SAVEFORMATIONDATA,
+		ID_LOADFORMATIONDATA,
+		ID_EXPORTFORMATIONDATA,
+		ID_STARTSTOPSIMULATION,
 	};
 public:
 	long onCmdSendCommand(FXObject* sender, FXSelector sel, void* ptr);
 	long onKeyPress(FXObject* sender, FXSelector sel, void* ptr);
-	long onTableSelected(FXObject* sender, FXSelector sel,void* ptr);
-	long onTableDeselected(FXObject* sender, FXSelector sel,void* ptr);
+	long onTabSelected(FXObject* sender, FXSelector sel, void* ptr);
+	long onChangeCanvas(FXObject* sender, FXSelector sel, void* ptr);
+	long onExportFormationData(FXObject* sender, FXSelector sel, void* ptr);
+	long onSaveFormationData(FXObject* sender, FXSelector sel, void* ptr);
+	long onLoadFormationData(FXObject* sender, FXSelector sel, void* ptr);
+	long onSimulationControl(FXObject* sender, FXSelector sel, void* ptr);
 
 	inline FXTable* GetTable(ETabIndex tab) const { return m_TabTable[tab];	}
 
-private:
+public:
 	FXTextField*		m_Command;
 	Array<FXString>		m_CommandHistory;
 	s32					m_CurrentCommand;
 	FXTable*			m_TabTable[kg_NumberOfTab];
+
+	FXListBox*			m_PitchListBox;
+	FXListBox*			m_TeamStateListBox;
+	FXListBox*			m_PositionListBox;
+	FXButton*			m_SimulatingBtn;
 };
 FXDEFMAP(MyCanvas) MyCanvasMap[]={
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_SENDCOMMAND,           MyCanvas::onCmdSendCommand),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_SAVEFORMATIONDATA,     MyCanvas::onSaveFormationData),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_EXPORTFORMATIONDATA,   MyCanvas::onExportFormationData),
 	FXMAPFUNC(SEL_KEYPRESS,		MyCanvas::ID_SENDCOMMAND,			MyCanvas::onKeyPress),
-	FXMAPFUNC(SEL_SELECTED,		MyCanvas::ID_TABLE,					MyCanvas::onTableSelected),
-	FXMAPFUNC(SEL_DESELECTED,	MyCanvas::ID_TABLE,					MyCanvas::onTableDeselected),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_SELECTTAB,				MyCanvas::onTabSelected),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_CHANGECANVAS,			MyCanvas::onChangeCanvas),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_STARTSTOPSIMULATION,	MyCanvas::onSimulationControl),
 };
 // ButtonApp implementation
 FXIMPLEMENT(MyCanvas, FXCanvas, MyCanvasMap, ARRAYNUMBER(MyCanvasMap))
@@ -111,7 +129,7 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	poDXViewer->RegisterListener(new FEWindowMsgCallBack);
 
 	//H2
-	FXTabBook* poTabBook = new FXTabBook(poGroupH2, this, 0, PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
+	FXTabBook* poTabBook = new FXTabBook(poGroupH2, this, ID_SELECTTAB, PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
 	poTabBook->setTabStyle(TABBOOK_BOTTOMTABS);
 	FXuint packing_hints = poTabBook->getPackingHints();
 	packing_hints |= PACK_UNIFORM_WIDTH;
@@ -123,7 +141,7 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 		poTab->setTabOrientation(TAB_BOTTOM);
 		FXHorizontalFrame* poTableFrame = new FXHorizontalFrame(poTabBook, FRAME_THICK|FRAME_RAISED);
 		FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poTableFrame,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-		m_TabTable[i] = new FXTable(poBoxframe,this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY|TABLE_NO_COLSELECT|TABLE_NO_ROWSELECT,0,0,0,0, 2,2,2,2);
+		m_TabTable[i] = new FXTable(poBoxframe,this, NULL, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY|TABLE_NO_COLSELECT|TABLE_NO_ROWSELECT,0,0,0,0, 2,2,2,2);
 		m_TabTable[i]->setBackColor(FXRGB(255,255,255));
 		m_TabTable[i]->setVisibleRows(20);
 		m_TabTable[i]->setVisibleColumns(2);
@@ -146,26 +164,26 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	FXMatrix* mainnmatrix = new FXMatrix(poBoxframe, 3, MATRIX_BY_ROWS|LAYOUT_FILL_X);
 
 	FXMatrix* formationmatrix = new FXMatrix(mainnmatrix, 3, MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
-	new FXButton(formationmatrix, "Save...", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
-	new FXButton(formationmatrix, "Load...", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
-	new FXButton(formationmatrix, "Export to lua...", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	new FXButton(formationmatrix, "Save...", NULL, this, ID_SAVEFORMATIONDATA, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	new FXButton(formationmatrix, "Load...", NULL, this, ID_LOADFORMATIONDATA, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	new FXButton(formationmatrix, "Export to lua...", NULL, this, ID_EXPORTFORMATIONDATA, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
 
 	FXMatrix* filtermatrix = new FXMatrix(mainnmatrix, 3, MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
-	FXListBox* pitchTypeList = new FXListBox(filtermatrix, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
-	pitchTypeList->appendItem("Normal");
-	pitchTypeList->appendItem("Large");
-	FXListBox* teamStateList = new FXListBox(filtermatrix, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
-	teamStateList->appendItem("Attack");
-	teamStateList->appendItem("Defend");
-	FXListBox* positionList = new FXListBox(filtermatrix, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	m_PitchListBox = new FXListBox(filtermatrix, this, ID_CHANGECANVAS, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	m_PitchListBox->appendItem("Normal");
+	m_PitchListBox->appendItem("Large");
+	m_TeamStateListBox = new FXListBox(filtermatrix, this, ID_CHANGECANVAS, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	m_TeamStateListBox->appendItem("Attack");
+	m_TeamStateListBox->appendItem("Defend");
+	m_PositionListBox = new FXListBox(filtermatrix, this, ID_CHANGECANVAS, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
 	for(int i = 0; i < 15; ++i)
 	{
-		positionList->appendItem(FXStringFormat("%d", i));
+		m_PositionListBox->appendItem(FXStringFormat("%d", i));
 	}
-	positionList->setNumVisible(15);
+	m_PositionListBox->setNumVisible(15);
 
 	FXMatrix* simulationmatrix = new FXMatrix(mainnmatrix, 3, MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
-	new FXButton(simulationmatrix, "Simulation", NULL, this, ID_SENDCOMMAND, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	m_SimulatingBtn = new FXButton(simulationmatrix, "Start Simulation", NULL, this, ID_STARTSTOPSIMULATION, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
 }
 long MyCanvas::onKeyPress(FXObject* sender, FXSelector sel,void* ptr)
 {
@@ -231,17 +249,106 @@ long MyCanvas::onCmdSendCommand(FXObject* sender, FXSelector sel,void* ptr)
 
 	return 1;
 }
-long MyCanvas::onTableSelected(FXObject* sender, FXSelector sel,void* ptr)
+long MyCanvas::onTabSelected(FXObject* sender, FXSelector sel,void* ptr)
+{
+	FXint current = (FXint)(ptr);
+	
+	MyEngine* pMyEngine = (MyEngine*)g_poEngine;
+	pMyEngine->ChangeAppMode(current == E_Tab_FormationEditor ? EAppMode_FormationEditor : EAppMode_WatchMode);
+	
+	return 1;
+}
+long MyCanvas::onChangeCanvas(FXObject* sender, FXSelector sel, void* ptr)
+{
+	MyEngine* pMyEngine = (MyEngine*)g_poEngine;
+	pMyEngine->UpdateCanvas();
+	
+	return 1;
+}
+long MyCanvas::onSaveFormationData(FXObject* sender, FXSelector sel, void* ptr)
+{
+	FXFileDialog savedialog(this,tr("Save Document"));
+	savedialog.setSelectMode(SELECTFILE_ANY);
+	savedialog.setPatternList("*.xml");
+	savedialog.setCurrentPattern(0);
+	savedialog.setFilename("formationdata.xml");
+	if(!savedialog.execute()) 
+		return 1;
+
+	FXString file = savedialog.getFilename();
+	if(FXStat::exists(file)){
+		if( MBOX_CLICKED_NO == FXMessageBox::question(this,MBOX_YES_NO,tr("Overwrite Document"),tr("Overwrite existing document: %s?"),file.text())) 
+			return 1;
+	}
+	
+	TiXmlDocument* pFormationDataFile = new TiXmlDocument(file.text());
+	if(pFormationDataFile)
+	{
+		FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+		pEditor->Serialize(pFormationDataFile, NULL);
+		pFormationDataFile->SaveFile();
+		FXMessageBox::information(this,MBOX_OK,tr("Info"),tr("Save %s successfully"), file.text());
+		delete pFormationDataFile;
+	}
+	else
+	{
+		FXMessageBox::error(this,MBOX_OK,tr("Error"),tr("Save %s failed"), file.text());
+	}
+	return 1;
+}
+
+long MyCanvas::onLoadFormationData(FXObject* sender, FXSelector sel, void* ptr)
 {
 	return 1;
 }
 
-// Deselected
-long MyCanvas::onTableDeselected(FXObject* sender, FXSelector sel,void* ptr)
+long MyCanvas::onExportFormationData(FXObject* sender, FXSelector sel, void* ptr)
 {
+	FXFileDialog savedialog(this,tr("Export to"));
+	savedialog.setSelectMode(SELECTFILE_ANY);
+	savedialog.setPatternList("*.lua");
+	savedialog.setCurrentPattern(0);
+	savedialog.setFilename("formationdata.lua");
+	if(!savedialog.execute()) 
+		return 1;
+
+	FXString file = savedialog.getFilename();
+	if(FXStat::exists(file)){
+		if( MBOX_CLICKED_NO == FXMessageBox::question(this,MBOX_YES_NO,tr("Overwrite Document"),tr("Overwrite existing document: %s?"),file.text())) 
+			return 1;
+	}
+
+	File* pLuaFile = FileManager::Get().OpenFile(file.text(), E_FOM_Write | E_FOM_Text);
+	if(pLuaFile)
+	{
+		FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+		pEditor->Export(pLuaFile);
+		FXMessageBox::information(this,MBOX_OK,tr("Info"),tr("Export %s successfully"), file.text());
+		FileManager::Get().CloseFile(pLuaFile);
+	}
+	else
+	{
+		FXMessageBox::error(this,MBOX_OK,tr("Error"),tr("Export %s failed"), file.text());
+	}
 	return 1;
 }
-
+long MyCanvas::onSimulationControl(FXObject* sender, FXSelector sel, void* ptr)
+{
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+	if(pEditor->IsSimulating())
+	{
+		m_SimulatingBtn->setText("Start Simulation");
+		pEditor->StopSimulation();
+	}
+	else
+	{
+		m_SimulatingBtn->setText("Stop Simulation");
+		FESimulatedCanvas::SimulatedSettings setup;
+		setup.m_PlayerPosition.PushBack(0);
+		pEditor->StartSimulation(setup);
+	}
+	return 1;
+}
 //-------------------------------------------------------------------------------------------------------------------------
 
 MyCanvas* g_Canvas = NULL;
@@ -368,6 +475,60 @@ void MyEngine::DoInit()
 	g_hRecv = BEGINTHREADEX(0,0,RecvUDPPack,0,0,0);
 
 	memset(g_zLastOpenFile, 0, kMAX_FILENAME_LENGTH);
+
+	ChangeAppMode(EAppMode_WatchMode);
+}
+
+void MyEngine::ChangeAppMode(u32 mode)
+{
+	if(mode != m_AppMode)
+	{
+		Array<Object*> showObj, hideObj;
+		if(mode == EAppMode_FormationEditor)
+		{
+			showObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("RefValueUpdater"));
+			showObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("FormationEditor"));
+
+			hideObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("ZBall"));
+			hideObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("TeamHome"));
+			hideObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("TeamAway"));
+
+			UpdateCanvas();
+		}
+		else
+		{
+			hideObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("RefValueUpdater"));
+			hideObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("FormationEditor"));
+
+			showObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("ZBall"));
+			showObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("TeamHome"));
+			showObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("TeamAway"));
+
+			CoordinateInfo::sLength = kPithLenghNormal;
+			CoordinateInfo::sWidth = kPitchWidthNormal;
+		}
+		for(int i = 0; i < showObj.Size(); ++i)
+		{
+			if(showObj[i])
+				showObj[i]->AddControlFlag(E_OCF_Active | E_OCF_Show);
+		}
+		for(int i = 0; i < hideObj.Size(); ++i)
+		{
+			if(hideObj[i])
+				hideObj[i]->RemoveControlFlag(E_OCF_Active | E_OCF_Show);
+		}
+		m_AppMode = mode;
+	}
+}
+
+void MyEngine::UpdateCanvas()
+{
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+	int pitchList	= g_Canvas->m_PitchListBox->getCurrentItem();
+	int teamState	= g_Canvas->m_TeamStateListBox->getCurrentItem();
+	int position	= g_Canvas->m_PositionListBox->getCurrentItem();
+
+	pEditor->SetCurrentCanvas(pitchList, teamState, position);
 }
 
 void MyEngine::DoUnInit()

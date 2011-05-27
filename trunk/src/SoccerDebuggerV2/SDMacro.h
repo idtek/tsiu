@@ -9,6 +9,22 @@ extern u32 g_WindowHeight;
 #define kWINDOW_WIDTH		1280
 #define kWINDOW_HEIGHT		630
 
+static const f32 kPithLenghNormal	= 50.f;
+static const f32 kPitchWidthNormal	= 30.f;
+static const f32 kPithLenghLarge	= 60.f;
+static const f32 kPitchWidthLarge	= 40.f;
+
+struct CoordinateInfo
+{
+	static f32	GetPixelPerMeter();
+	static f32	GetMeterPerPixel();
+	static Vec2 WorldToScreen(const Vec2& worldPos);
+	static Vec2 ScreenToWorld(const Vec2& screenPos);
+
+	static f32 sLength;
+	static f32 sWidth;
+};
+
 #ifdef SSO_YETI
 #define kRULE_GOALLINE			52.5f	
 #define kRULE_SIDELINE			34.0f	
@@ -17,8 +33,8 @@ extern u32 g_WindowHeight;
 #define kRULE_PENALTY_HEIGHT	(2 * (3.66f + 16.5f))
 #define kRULE_PENALTY_WIDTH		16.5f
 #else
-#define kRULE_GOALLINE			25.f	
-#define kRULE_SIDELINE			15.f	
+#define kRULE_GOALLINE			(CoordinateInfo::sLength / 2.f)	
+#define kRULE_SIDELINE			(CoordinateInfo::sWidth / 2.f)
 #define kRULE_CENTERCIRCLE		6.0f
 #define kRULE_PENALTY_POS		(kRULE_SIDELINE - (3.66f + 16.5f) * 0.6f)
 #define kRULE_PENALTY_HEIGHT	(2 * (3.66f + 16.5f) * 0.6f)
@@ -113,6 +129,8 @@ enum ETabIndex
 	E_Tab_Statistics,
 	E_Tab_Watch,
 	E_Tab_Num,
+
+	E_Tab_FormationEditor = E_Tab_Num,
 };
 
 

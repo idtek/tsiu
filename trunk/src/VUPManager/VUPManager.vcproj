@@ -355,7 +355,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\VMSummary.h"
+				RelativePath=".\VMSummary.cpp"
 				>
 			</File>
 			<File
@@ -385,7 +385,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\VMSummary.cpp"
+				RelativePath=".\VMSummary.h"
 				>
 			</File>
 			<File
