@@ -12,7 +12,8 @@ namespace TsiU
 	enum ObjectControlFlag_t
 	{
 		E_OCF_Active = (1<<0),
-		E_OCF_Drawable = (1<<1)
+		E_OCF_Drawable = (1<<1),
+		E_OCF_Show = (1<<2),
 	};
 
 	enum{
@@ -51,9 +52,9 @@ namespace TsiU
 		inline void SetMatrix(const Mat4& m)				{ m_mMatrix = m;				InvalidateMat();	}
 		inline void SetScale(const Vec3& s)					{ m_vScale = s;					InvalidateMat();	}
 
-		inline void AddControlFlag(ObjectControlFlag_t _uiFlag)		{ m_uiControlFlags |= (_uiFlag);			}
-		inline void RemoveControlFlag(ObjectControlFlag_t _uiFlag)	{ m_uiControlFlags &= (~_uiFlag);			}
-		inline Bool HasControlFlag(ObjectControlFlag_t _uiFlag)		const { return (m_uiControlFlags & _uiFlag) != 0;	}
+		inline void AddControlFlag(u32 _uiFlag)				{ m_uiControlFlags |= (_uiFlag);			}
+		inline void RemoveControlFlag(u32 _uiFlag)			{ m_uiControlFlags &= (~_uiFlag);			}
+		inline Bool HasControlFlag(u32 _uiFlag)		const	{ return (m_uiControlFlags & _uiFlag) != 0;	}
 
 		inline void SetParent(Object* _poParent)			{ m_Parent = _poParent;}
 		inline void AddChild(Object* _poChild)				{ m_poChildList.PushBack(_poChild); _poChild->SetParent(this);	}
@@ -80,15 +81,13 @@ namespace TsiU
 		u8		m_ZOrder;
 	};
 
-
-
 	class DrawableObject : public Object
 	{
 	public:
 		DrawableObject()
 			:Object()
 		{
-			AddControlFlag(E_OCF_Drawable);
+			AddControlFlag(E_OCF_Drawable | E_OCF_Show);
 		}
 
 		virtual void Draw() = 0;

@@ -61,10 +61,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="tinyxmld.lib"
+				AdditionalDependencies="tinyxmld.lib libjpeg.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_d.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\ExternLibs\TinyXML\lib"
+				AdditionalLibraryDirectories="..\ExternLibs\TinyXML\lib;..\ExternLibs\libjpeg\lib;"
 				IgnoreDefaultLibraryNames="libcd.lib;libcmtd.lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"

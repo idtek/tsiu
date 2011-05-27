@@ -3,9 +3,8 @@
 
 #include "SDGlobalDef.h"
 
-static const f32 kPithLenghNormal	= 50.f;
-static const f32 kPitchWidthNormal	= 30.f;
-
+class TiXmlDocument;
+class TiXmlElement;
 //----------------------------------------------------------------------------
 class ORefValueUpdater : public Object
 {
@@ -14,19 +13,6 @@ public:
 	{}
 	virtual void Tick(f32 _fDeltaTime);
 };
-
-//----------------------------------------------------------------------------
-struct CoordinateInfo
-{
-	static f32	GetPixelPerMeter();
-	static f32	GetMeterPerPixel();
-	static Vec2 WorldToScreen(const Vec2& worldPos);
-	static Vec2 ScreenToWorld(const Vec2& screenPos);
-
-	static f32 sLength;
-	static f32 sWidth;
-};
-
 //----------------------------------------------------------------------------
 class IOperator
 {
@@ -34,13 +20,22 @@ public:
 	virtual void Select(const Vec2& pos)	= 0;
 	virtual void Deselect(const Vec2& pos)	= 0;
 	virtual void Move(const Vec2& pos)		= 0;
+	virtual void Delete()					= 0;
+};
+class ISerializer
+{
+public:
+	virtual void Serialize	(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent = NULL){}
+	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent = NULL){}
 };
 //----------------------------------------------------------------------------
-class FEElement : public DrawableObject, IOperator
+class FEElement : public DrawableObject, public IOperator, public ISerializer
 {
 protected:
 	enum{
-		EFEFlag_Selected = (1<<0),
+		EFEFlag_Selected	= (1<<0),
+		EFEFlag_Deletable	= (1<<1),
+		EFEFlag_Movable		= (1<<2),
 	};
 
 public:
@@ -50,17 +45,41 @@ public:
 	virtual void Select(const Vec2& pos);
 	virtual void Deselect(const Vec2& pos);
 	virtual void Move(const Vec2& pos);
+	virtual void Delete(){}
+
+	void AddFlags(u32 flags);
+	void RemoveFlags(u32 flags);
+	Bool HasFlags(u32 flags) const;
 
 	virtual bool InBounds(const Vec2& checkPoint) const { return false;	}
+
+protected:
+	Vec2 ClampToPitch(const Vec2& unclamppedPos);
 
 protected:
 	BitArray m_Flag;
 };
 //----------------------------------------------------------------------------
-class FERefBall : public FEElement
+class FEEditableElement : public FEElement
 {
 public:
-	FERefBall();
+	FEEditableElement(s32 id)
+		: FEElement()
+		, m_id(id)
+	{}
+
+	void SetColor(const D_Color& clr)			{ m_Color = clr;	}		
+	s32	 GetID()						const	{ return m_id;		}
+
+protected:
+	D_Color		m_Color;
+	s32			m_id;
+};
+
+class FEBall : public FEEditableElement
+{
+public:
+	FEBall(s32 id);
 
 	//from FEElement
 	virtual void Create();
@@ -70,24 +89,53 @@ public:
 
 	virtual void Move(const Vec2& pos);
 
-private:
-	f32 m_fBallRadius;
+	virtual void Serialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
+	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
+
+protected:
+	f32		m_fBallRadius;
+};
+
+class FESimulatedBall : public FEBall
+{
+public:
+	FESimulatedBall(s32 id);
+
+	virtual void Tick(f32 _fDeltaTime);
+	virtual void Move(const Vec2& pos);
+
+protected:
 	AI::RefValue<Vec2, AI::ERefValuFlag_Writable> m_RfPosition;
 };
 //----------------------------------------------------------------------------
-class FERefPlayer : public FEElement
+class FEPlayer : public FEEditableElement
 {
 public:
-	FERefPlayer(s32 id);
+	FEPlayer(s32 id);
 
 	//from FEElement
 	virtual void Create();
 	virtual void Tick(f32 _fDeltaTime);
 	virtual void Draw();
+	virtual bool InBounds(const Vec2& checkPoint) const;
 
-private:
-	s32 m_id;
+	virtual void Move(const Vec2& pos);
+
+	virtual void Serialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
+	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
+
+protected:
 	f32 m_fPlayerRadius;
+};
+class FESimulatedPlayer : public FEPlayer
+{
+public:
+	FESimulatedPlayer(s32 id);
+
+	//from FEElement
+	virtual void Tick(f32 _fDeltaTime);
+
+protected:
 	AI::RefValue<Vec2, AI::ERefValuFlag_ReadOnly> m_RfPosition;
 };
 //----------------------------------------------------------------------------
@@ -95,22 +143,75 @@ class FECanvas : public FEElement
 {
 public:
 	FECanvas();
-	
-	virtual void Create();
-	virtual void Tick(f32 _fDeltaTime);
-	virtual void Draw();
 
-	virtual void Select(const Vec2& pos);
 	virtual void Deselect(const Vec2& pos);
 	virtual void Move(const Vec2& pos);
 
+protected:
+	FEEditableElement* m_SelectedElement;
+};
+class FEEditorCanvas : public FECanvas
+{
+	struct ElementPair
+	{
+		FEBall*		m_RefElement;
+		FEPlayer*	m_FormationElement;
+	};
+	typedef std::map<s32, ElementPair*>				ElementPairMap;
+	typedef std::map<s32, ElementPair*>::iterator	ElementPairMapIterator;
+	typedef std::map<s32, ElementPair*>::iterator	ElementPairMapConstIterator;
+
+public:
+	FEEditorCanvas();
+
+	virtual void Create(){}
+		    void Create(f32 length, f32 width);
+	virtual void Tick(f32 _fDeltaTime);
+	virtual void Draw();
+	virtual void Select(const Vec2& pos);
+	virtual void Delete();
+
+	virtual void Export(File* _pFile, u32 pitchType, u32 teamState, u32 position);
+	virtual void Serialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
+	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
+
+	void AddElementPair(const Vec2& pos);
+
 private:
-	FEElement*		  m_SelectedElements;
-	Array<FEElement*> m_Elements;
+	u32			   m_NextID;
+	ElementPairMap m_Elements;
+};
+class FESimulatedCanvas : public FECanvas
+{
+public:
+	FESimulatedCanvas();
+
+	struct SimulatedSettings
+	{
+		u32			m_PitchType;
+		u32			m_TeamState;
+		Array<u32>	m_PlayerPosition;
+	};
+	void Setup(const SimulatedSettings& setup);
+	void Stop();
+
+	virtual void Create(){}
+	virtual void Tick(f32 _fDeltaTime);
+	virtual void Draw();
+	virtual void Select(const Vec2& pos);
+
+private:
+	Array<FEEditableElement*> m_Elements;
 };
 //----------------------------------------------------------------------------
 class FormationEditor : public FEElement
 {
+	static const s32 kMaxPositionCount = 15;
+public:
+	enum{
+		EEditorMode_Edit,
+		EEditorMode_Simulation
+	};
 	enum{
 		EPitchType_Normal,
 		EPitchType_Large,
@@ -121,7 +222,6 @@ class FormationEditor : public FEElement
 		ETeamState_Defend,
 		ETeamState_Num,
 	};
-	static const s32 kMaxPositionCount = 15;
 
 public:
 	FormationEditor();
@@ -133,12 +233,24 @@ public:
 	virtual void Select(const Vec2& pos);
 	virtual void Deselect(const Vec2& pos);
 	virtual void Move(const Vec2& pos);
+	virtual void Delete();
 
+	virtual void Export(File* pFile);
+	virtual void Serialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
+	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
+
+	Bool IsSimulating() const { return m_Mode == EEditorMode_Simulation;	}
+
+	void StartSimulation(const FESimulatedCanvas::SimulatedSettings& setup);
+	void StopSimulation();
+	void AddElementPair();
 	void SetCurrentCanvas(u32 pitchType, u32 teamState, u32 pos);
 
 private:
-	FECanvas* m_CurrentCanvas;
-	FECanvas* m_Canvases[EPitchType_Num][ETeamState_Num][kMaxPositionCount]; 
+	u32					m_Mode;
+	FESimulatedCanvas*	m_SimulatedCanvas;
+	FEEditorCanvas*		m_CurrentCanvas;
+	FEEditorCanvas*		m_Canvases[EPitchType_Num][ETeamState_Num][kMaxPositionCount]; 
 
 };
 //----------------------------------------------------------------------------
