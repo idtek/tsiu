@@ -29,6 +29,12 @@ namespace TsiU
 		{
 			return p_X > p_High ? p_High : ( p_X < p_Low ? p_Low : p_X );
 		}
+		template<typename T> 
+		static inline T Blend(const T& p_Floor, const T& p_Ceiling, f32 p_Coef)
+		{
+			D_CHECK(p_Coef >= 0 && p_Coef <= 1.f);
+			return p_Floor * p_Coef + p_Ceiling * (1.f - p_Coef);
+		}
 
 		static inline Bool IsEqual(f32 p_fLVal, f32 p_fRVal)
 		{ 

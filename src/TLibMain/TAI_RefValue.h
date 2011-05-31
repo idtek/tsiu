@@ -185,7 +185,7 @@ namespace TsiU
 		class RefValueManager : public Singleton<RefValueManager>, IRefValueUpdater
 		{
 			static const unsigned int kMaxNameSize = 64;
-			static const unsigned int kMaxHeadCount = 64;
+			static const unsigned int kMaxHeadCount = 256;
 			static const unsigned int kMaxDataCount = 1024 * 1024;
 
 			enum{

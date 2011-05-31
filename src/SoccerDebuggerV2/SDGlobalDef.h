@@ -29,7 +29,13 @@ extern Bool							g_bIsShowDetailed;
 extern Bool							g_bIsSlowMotion;
 extern Bool							g_bIsAlwaysOnTop;
 extern Bool							g_bIsWatchOwner;
-extern char							g_zLastOpenFile[256];
+extern char							g_zRootDir[MAX_PATH];
+
+
+enum{
+	E_ET_SIM_SelectPlayer = E_ET_User,
+	E_ET_SIM_SelectRefCanvas,
+};
 
 //DrawValue;
 namespace Util
