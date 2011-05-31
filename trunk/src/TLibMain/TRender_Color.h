@@ -39,6 +39,10 @@ namespace TsiU
 		{
 			return !operator==(_Color);
 		}
+		inline Color32 operator + (const Color32& _Color)
+		{
+			return Color32((u8)(r + _Color.r), (u8)(g + _Color.g), (u8)(b + _Color.b), (u8)(a + _Color.a));
+		}
 		inline Color32 operator * (const f32 _fv)
 		{
 			return Color32((u8)(r * _fv), (u8)(g * _fv), (u8)(b * _fv), (u8)(a * _fv));
@@ -47,11 +51,19 @@ namespace TsiU
 		{
 			return Color32((u8)(_fv * _v.r), (u8)(_fv * _v.g), (u8)(_fv * _v.b), (u8)(_fv * _v.a));
 		}
+		inline friend Color32 operator * (const Color32& _v, const f32 _fv)
+		{
+			return Color32((u8)(_fv * _v.r), (u8)(_fv * _v.g), (u8)(_fv * _v.b), (u8)(_fv * _v.a));
+		}
 		inline Color32 operator / (const f32 _fv)
 		{
 			return Color32((u8)(r / _fv), (u8)(g / _fv), (u8)(b / _fv), (u8)(a / _fv));
 		}
 		inline friend Color32 operator / (const f32 _fv, const Color32& _v)
+		{
+			return Color32((u8)(_fv / _v.r), (u8)(_fv / _v.g), (u8)(_fv / _v.b), (u8)(_fv / _v.a));
+		}
+		inline friend Color32 operator / (const Color32& _v, const f32 _fv)
 		{
 			return Color32((u8)(_fv / _v.r), (u8)(_fv / _v.g), (u8)(_fv / _v.b), (u8)(_fv / _v.a));
 		}

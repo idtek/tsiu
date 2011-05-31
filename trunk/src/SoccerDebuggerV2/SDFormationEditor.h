@@ -25,8 +25,8 @@ public:
 class ISerializer
 {
 public:
-	virtual void Serialize	(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent = NULL){}
-	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent = NULL){}
+	virtual void Serialize	(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent = NULL)	{}
+	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent = NULL)	{}
 };
 //----------------------------------------------------------------------------
 class FEElement : public DrawableObject, public IOperator, public ISerializer
@@ -92,6 +92,8 @@ public:
 	virtual void Serialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 
+	void DrawWithColor(const D_Color& clr);
+
 protected:
 	f32		m_fBallRadius;
 };
@@ -101,8 +103,10 @@ class FESimulatedBall : public FEBall
 public:
 	FESimulatedBall(s32 id);
 
+	virtual bool InBounds(const Vec2& checkPoint) const;
 	virtual void Tick(f32 _fDeltaTime);
 	virtual void Move(const Vec2& pos);
+	virtual void Draw();
 
 protected:
 	AI::RefValue<Vec2, AI::ERefValuFlag_Writable> m_RfPosition;
@@ -124,18 +128,27 @@ public:
 	virtual void Serialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 
+	void DrawWithColor(const D_Color& clr);
+
 protected:
 	f32 m_fPlayerRadius;
 };
 class FESimulatedPlayer : public FEPlayer
 {
 public:
-	FESimulatedPlayer(s32 id);
+	static int sHomePlayerCount;
+	static int sAwayPlayerCount;
+
+	FESimulatedPlayer(s32 id, int team);
 
 	//from FEElement
+	virtual void Select(const Vec2& pos); 
+	virtual bool InBounds(const Vec2& checkPoint) const;
 	virtual void Tick(f32 _fDeltaTime);
+	virtual void Draw();
 
 protected:
+	int m_Team;
 	AI::RefValue<Vec2, AI::ERefValuFlag_ReadOnly> m_RfPosition;
 };
 //----------------------------------------------------------------------------
@@ -163,6 +176,7 @@ class FEEditorCanvas : public FECanvas
 
 public:
 	FEEditorCanvas();
+	~FEEditorCanvas();
 
 	virtual void Create(){}
 		    void Create(f32 length, f32 width);
@@ -175,6 +189,7 @@ public:
 	virtual void Serialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 
+	void DrawWithColor(const D_Color& clr);
 	void AddElementPair(const Vec2& pos);
 
 private:
@@ -185,15 +200,19 @@ class FESimulatedCanvas : public FECanvas
 {
 public:
 	FESimulatedCanvas();
+	~FESimulatedCanvas();
 
 	struct SimulatedSettings
 	{
+		std::string m_RootDir;
 		u32			m_PitchType;
 		u32			m_TeamState;
-		Array<u32>	m_PlayerPosition;
+		Array<u32>	m_HomePlayerPosition;
+		Array<u32>	m_AwayPlayerPosition;
 	};
 	void Setup(const SimulatedSettings& setup);
 	void Stop();
+	void Move(const Vec2& pos);
 
 	virtual void Create(){}
 	virtual void Tick(f32 _fDeltaTime);
@@ -201,6 +220,7 @@ public:
 	virtual void Select(const Vec2& pos);
 
 private:
+	FESimulatedBall*		  m_SimBall;
 	Array<FEEditableElement*> m_Elements;
 };
 //----------------------------------------------------------------------------
@@ -225,6 +245,7 @@ public:
 
 public:
 	FormationEditor();
+	~FormationEditor();
 
 	virtual void Create();
 	virtual void Tick(f32 _fDeltaTime);
@@ -239,20 +260,50 @@ public:
 	virtual void Serialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 
-	Bool IsSimulating() const { return m_Mode == EEditorMode_Simulation;	}
+	Bool IsSimulating() const			{ return m_Mode == EEditorMode_Simulation;	}
+	void SetIsHomeAttacking(bool val)	{ m_IsHomeAttacking = val;	}
 
-	void StartSimulation(const FESimulatedCanvas::SimulatedSettings& setup);
-	void StopSimulation();
+	void Clear();
+	Bool StartSimulation(const FESimulatedCanvas::SimulatedSettings& setup);
+	Bool StopSimulation();
 	void AddElementPair();
 	void SetCurrentCanvas(u32 pitchType, u32 teamState, u32 pos);
 
 private:
+	void onSIM_SelectRefCanvas(const Event* _poEvent);
+
+private:
 	u32					m_Mode;
 	FESimulatedCanvas*	m_SimulatedCanvas;
+	FEEditorCanvas*		m_SimulatedRefCanvas;
 	FEEditorCanvas*		m_CurrentCanvas;
 	FEEditorCanvas*		m_Canvases[EPitchType_Num][ETeamState_Num][kMaxPositionCount]; 
 
+	AI::RFBool			m_InSimulatedMode;
+	AI::RFInt			m_RefPlayerPositionInTB[8];
+	AI::RFBool			m_IsHomeAttacking;
 };
+//----------------------------------------------------------------------------
+class FEDebuggerInfo : public DrawableObject
+{
+	static const int	kGridWidth = 5;
+	static const int	kGridLength = 3;
+
+public:
+	FEDebuggerInfo();
+
+	virtual void Create(){};
+	virtual void Tick(f32 _fDeltaTime);
+	virtual void Draw();
+
+	void SetSelectedPosition(s32 pos) { m_SelectedPosition = pos;	}
+
+private:
+	f32   m_Turn;
+	bool  m_GoUp;
+	s32	  m_SelectedPosition;
+};
+
 //----------------------------------------------------------------------------
 class FEWindowMsgCallBack : public RenderWindowMsgListener
 {

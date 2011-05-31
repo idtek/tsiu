@@ -7,7 +7,7 @@ extern u32 g_WindowWidth;
 extern u32 g_WindowHeight;
 
 #define kWINDOW_WIDTH		1280
-#define kWINDOW_HEIGHT		630
+#define kWINDOW_HEIGHT		680
 
 static const f32 kPithLenghNormal	= 50.f;
 static const f32 kPitchWidthNormal	= 30.f;
@@ -18,11 +18,12 @@ struct CoordinateInfo
 {
 	static f32	GetPixelPerMeter();
 	static f32	GetMeterPerPixel();
-	static Vec2 WorldToScreen(const Vec2& worldPos);
-	static Vec2 ScreenToWorld(const Vec2& screenPos);
+	static Vec2 WorldToScreen(const Vec2& worldPos, Bool awayView = false);
+	static Vec2 ScreenToWorld(const Vec2& screenPos, Bool awayView = false);
 
-	static f32 sLength;
-	static f32 sWidth;
+	static Bool sAwayView;
+	static f32  sLength;
+	static f32	sWidth;
 };
 
 #ifdef SSO_YETI
@@ -78,7 +79,7 @@ struct CoordinateInfo
 #define kPLAYER_COUNT			5
 
 #define kHOME_TEAM				0
-#define KAWAY_TEAM				1
+#define kAWAY_TEAM				1
 
 #define kFILTER_WATCH					0
 #define kFILTER_BALL					1

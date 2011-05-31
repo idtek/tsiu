@@ -55,6 +55,11 @@ namespace TsiU
 					HeadInfo* hi = _GetHeadInfo(index);
 					if(hi->m_Flags == EHeadFlag_InUse)
 						val->SetData(_GetDataSegment(hi->m_Offset));
+					else
+					{
+						//tmp
+						val->SetOffsetInMemory(0xffffffff);
+					}
 				}
 				++itReadOnly;
 			}
@@ -79,31 +84,31 @@ namespace TsiU
 				HeadInfo* sameNameHeadInfo = _FindRefValueHeadInfo(val->GetName(), EHeadFlag_InUse);
 				if(sameNameHeadInfo)
 				{
-					D_CHECK(0);
-					return false;
+					val->SetOffsetInMemory(_GetHeadInfoIndex((const char*)sameNameHeadInfo));
 				}
+				else
+				{
+					HeadInfo* headInfoSegment = _FindRefValueHeadInfo(NULL, EHeadFlag_Available);
+					if(!headInfoSegment)
+						return false;
 
-				HeadInfo* headInfoSegment = _FindRefValueHeadInfo(NULL, EHeadFlag_Available);
-				if(!headInfoSegment)
-					return false;
+					char* dataSegment = _GetAvailableDataSegment(headInfoSegment, val->GetSize());
+					if(!dataSegment)
+						return false;
 
-				char* dataSegment = _GetAvailableDataSegment(headInfoSegment, val->GetSize());
-				if(!dataSegment)
-					return false;
+					m_ProccessSM.Lock();
 
-				m_ProccessSM.Lock();
+					val->SetOffsetInMemory(_GetHeadInfoIndex((const char*)headInfoSegment));
 
-				val->SetOffsetInMemory(_GetHeadInfoIndex((const char*)headInfoSegment));
+					strncpy(headInfoSegment->m_VName, val->GetName(), kMaxNameSize - 1);
+					headInfoSegment->m_VName[kMaxNameSize - 1] = '\0';
+					headInfoSegment->m_Flags = EHeadFlag_InUse;
+					headInfoSegment->m_VSize = val->GetSize();
+					headInfoSegment->m_Offset = _GetDataSegmentOffset(dataSegment);
+					memcpy(dataSegment, val->GetData(), val->GetSize());
 
-				strncpy(headInfoSegment->m_VName, val->GetName(), kMaxNameSize - 1);
-				headInfoSegment->m_VName[kMaxNameSize - 1] = '\0';
-				headInfoSegment->m_Flags = EHeadFlag_InUse;
-				headInfoSegment->m_VSize = val->GetSize();
-				headInfoSegment->m_Offset = _GetDataSegmentOffset(dataSegment);
-				memcpy(dataSegment, val->GetData(), val->GetSize());
-
-				m_ProccessSM.UnLock();
-
+					m_ProccessSM.UnLock();
+				}
 				std::map<std::string, RefValueBase*>::iterator it = m_WritableRefValues.find(val->GetName());
 				if(it != m_WritableRefValues.end())
 				{
@@ -137,7 +142,8 @@ namespace TsiU
 				m_ProccessSM.Lock();
 				D_CHECK(val->GetOffsetInMemory() != 0xffffffff);
 				HeadInfo* hi = _GetHeadInfo(val->GetOffsetInMemory());
-				hi->m_Flags = EHeadFlag_CanDelete;
+				//todo
+				hi->m_Flags = EHeadFlag_Available;
 				m_ProccessSM.UnLock();
 
 				return true;
