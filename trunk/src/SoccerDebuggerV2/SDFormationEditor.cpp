@@ -149,7 +149,7 @@ void FEBall::DrawWithColor(const D_Color& clr)
 	Vec2 indicatorPos(realPos.x - m_fBallRadius, realPos.y + m_fBallRadius);
 	Vec2 indicatorScreenPos = CoordinateInfo::WorldToScreen(indicatorPos);
 	Char indicator[4];
-	itoa(m_id, indicator, 10);
+	_itoa(m_id, indicator, 10);
 	g_poSROU->DrawStringEx(
 		indicatorScreenPos.x, 
 		indicatorScreenPos.y,
@@ -267,6 +267,40 @@ bool FESimulatedBall::InBounds(const Vec2& checkPoint) const
 	return false;
 }
 //----------------------------------------------------------
+FERealBall::FERealBall()
+	: FEBall(0)
+	, m_RfPosition("Ball", Vec2())
+{
+}
+bool FERealBall::InBounds(const Vec2& checkPoint) const
+{
+	return false;
+}
+void FERealBall::Tick(f32 _fDeltaTime)
+{
+	m_vPos = Vec3::FromVec2(m_RfPosition.As());
+}
+void FERealBall::Draw()
+{
+	D_Color bodyColor = m_Color;
+	if(HasFlags(EFEFlag_Selected))
+		bodyColor = bodyColor / 1.5f;
+
+	Vec2 screenPos = CoordinateInfo::WorldToScreen(Vec2::FromVec3(m_vPos));
+	g_poSROU->DrawFillCircle((f32)screenPos.x, (f32)screenPos.y, m_fBallRadius * CoordinateInfo::GetPixelPerMeter(), bodyColor, D_Color(0, 0, 0));
+
+	Vec2 indicatorPos(m_vPos.x - m_fBallRadius, m_vPos.y + m_fBallRadius);
+	Vec2 indicatorScreenPos = CoordinateInfo::WorldToScreen(indicatorPos);
+	Char indicator[] = "B";
+	g_poSROU->DrawStringEx(
+		indicatorScreenPos.x, 
+		indicatorScreenPos.y,
+		2 * m_fBallRadius * CoordinateInfo::GetPixelPerMeter(), 
+		2 * m_fBallRadius * CoordinateInfo::GetPixelPerMeter(),
+		kPLAYER_NUMSIZE * CoordinateInfo::GetPixelPerMeter(),
+		indicator, NULL, D_Color(0,0,0));
+}
+//----------------------------------------------------------
 FEPlayer::FEPlayer(s32 id)
 	: FEEditableElement(id)
 {
@@ -306,7 +340,7 @@ void FEPlayer::DrawWithColor(const D_Color& clr)
 	Vec2 indicatorPos(realPos.x - m_fPlayerRadius, realPos.y + m_fPlayerRadius);
 	Vec2 indicatorScreenPos = CoordinateInfo::WorldToScreen(indicatorPos);
 	Char indicator[4];
-	itoa(m_id, indicator, 10);
+	_itoa(m_id, indicator, 10);
 	g_poSROU->DrawStringEx(
 		indicatorScreenPos.x, 
 		indicatorScreenPos.y,
@@ -416,7 +450,7 @@ void FESimulatedPlayer::Draw()
 	Vec2 indicatorPos(m_vPos.x - m_fPlayerRadius, m_vPos.y + m_fPlayerRadius);
 	Vec2 indicatorScreenPos = CoordinateInfo::WorldToScreen(indicatorPos);
 	Char indicator[4];
-	itoa(m_Team == kHOME_TEAM ? (m_id - 0 + 1) : (m_id - FESimulatedPlayer::sHomePlayerCount + 1), indicator, 10);
+	_itoa(m_Team == kHOME_TEAM ? (m_id - 0 + 1) : (m_id - FESimulatedPlayer::sHomePlayerCount + 1), indicator, 10);
 	g_poSROU->DrawStringEx(
 		indicatorScreenPos.x, 
 		indicatorScreenPos.y,
@@ -439,9 +473,56 @@ void FESimulatedPlayer::Select(const Vec2& pos)
 {
 	FEPlayer::Select(pos);
 
-	Event evt((EventType_t)E_ET_SIM_SelectPlayer);
+	Event evt((EventType_t)E_ET_SIM_SelectPlayerInSimulating);
 	evt.AddParam(m_id);
 	evt.AddParam(m_Team);
+	g_poEngine->GetEventMod()->SendEvent(&evt);
+}
+
+FERealPlayer::FERealPlayer(s32 id, int team, bool isGK)
+	: FESimulatedPlayer(id, team)
+	, m_bIsGK(isGK)
+{
+}
+void FERealPlayer::Draw()
+{
+	D_Color bodyColor = m_Color;
+	if(HasFlags(EFEFlag_Selected))
+		bodyColor = bodyColor / 1.5f;
+
+	Vec2 playerPos(m_vPos.x - m_fPlayerRadius, m_vPos.y + m_fPlayerRadius);
+	Vec2 playerScreenPos = CoordinateInfo::WorldToScreen(playerPos);
+	g_poSROU->DrawFillRectangle(
+		(f32)playerScreenPos.x,
+		(f32)playerScreenPos.y,
+		2 * m_fPlayerRadius * CoordinateInfo::GetPixelPerMeter(), 
+		2 * m_fPlayerRadius * CoordinateInfo::GetPixelPerMeter(),
+		bodyColor, D_Color(255, 255, 255));
+
+	Vec2 indicatorPos(m_vPos.x - m_fPlayerRadius, m_vPos.y + m_fPlayerRadius);
+	Vec2 indicatorScreenPos = CoordinateInfo::WorldToScreen(indicatorPos);
+	Char indicator[4];
+	if(m_bIsGK)
+		strcpy(indicator, "G");
+	else
+		_itoa(m_Team == kHOME_TEAM ? (m_id) : (m_id - FESimulatedPlayer::sHomePlayerCount), indicator, 10);
+
+	g_poSROU->DrawStringEx(
+		indicatorScreenPos.x, 
+		indicatorScreenPos.y,
+		2 * m_fPlayerRadius * CoordinateInfo::GetPixelPerMeter(), 
+		2 * m_fPlayerRadius * CoordinateInfo::GetPixelPerMeter(),
+		kPLAYER_NUMSIZE * CoordinateInfo::GetPixelPerMeter(),
+		indicator, NULL, D_Color(0,0,0));
+}
+void FERealPlayer::Select(const Vec2& pos)
+{
+	FEPlayer::Select(pos);
+
+	Event evt((EventType_t)E_ET_SIM_SelectPlayerInRealGame);
+	evt.AddParam(m_id);
+	evt.AddParam(m_Team);
+	evt.AddParam(m_bIsGK);
 	g_poEngine->GetEventMod()->SendEvent(&evt);
 }
 //----------------------------------------------------------
@@ -775,12 +856,101 @@ void FESimulatedCanvas::Move(const Vec2& pos)
 	}
 }
 //----------------------------------------------------------
+FERealGameCanvas::FERealGameCanvas()
+{
+
+}
+FERealGameCanvas::~FERealGameCanvas()
+{
+	for(int i = 0; i < m_Elements.Size(); ++i)
+	{
+		D_SafeDelete(m_Elements[i]);
+	}
+	m_Elements.Clear();
+}
+
+void FERealGameCanvas::Setup(const FERealGameCanvas::RealGameInfo& rgInfo)
+{
+	FEEditableElement* pNewElement = new FERealBall;
+	m_Elements.PushBack(pNewElement);
+
+	FESimulatedPlayer::sHomePlayerCount = 0;
+	FESimulatedPlayer::sAwayPlayerCount = 0;
+
+	int nextIdx = 0;
+	for(int i = 0; i < 10; ++i)
+	{
+		if(rgInfo.m_Player[i].m_HasValidData && rgInfo.m_Player[i].m_Team == kHOME_TEAM)
+		{
+			pNewElement = new FERealPlayer(nextIdx++, rgInfo.m_Player[i].m_Team, rgInfo.m_Player[i].m_IsGK);
+			m_Elements.PushBack(pNewElement);
+			++FESimulatedPlayer::sHomePlayerCount;
+		}
+	}
+	for(int i = 0; i < 10; ++i)
+	{
+		if(rgInfo.m_Player[i].m_HasValidData && rgInfo.m_Player[i].m_Team == kAWAY_TEAM)
+		{
+			pNewElement = new FERealPlayer(nextIdx++, rgInfo.m_Player[i].m_Team, rgInfo.m_Player[i].m_IsGK);
+			m_Elements.PushBack(pNewElement);
+			++FESimulatedPlayer::sAwayPlayerCount;
+		}
+	}
+}
+void FERealGameCanvas::Stop()
+{
+	for(int i = 0; i < m_Elements.Size(); ++i)
+	{
+		D_SafeDelete(m_Elements[i]);
+	}
+	m_Elements.Clear();
+	m_SelectedElement = NULL;
+}
+void FERealGameCanvas::Tick(f32 _fDeltaTime)
+{
+	for(int i = 0; i < m_Elements.Size(); ++i)
+	{
+		m_Elements[i]->Tick(_fDeltaTime);
+	}
+}
+void FERealGameCanvas::Draw()
+{
+	for(int i = 0; i < m_Elements.Size(); ++i)
+	{
+		m_Elements[i]->Draw();
+	}
+}
+void FERealGameCanvas::Select(const Vec2& pos)
+{
+	if(m_SelectedElement)
+	{
+		m_SelectedElement->Deselect(pos);
+	}
+	m_SelectedElement = NULL;
+
+	unsigned int zOrder = EZOrder_Bottom;
+	for(int i = 0; i < m_Elements.Size(); ++i)
+	{
+		if(m_Elements[i]->InBounds(pos))
+		{
+			if(zOrder >= m_Elements[i]->GetZOrder())
+			{
+				zOrder = m_Elements[i]->GetZOrder();
+				m_SelectedElement = m_Elements[i];
+			}
+		}
+	}
+	if(m_SelectedElement)
+		m_SelectedElement->Select(pos);
+}
+
+//----------------------------------------------------------
 FormationEditor::FormationEditor()
 	: m_CurrentCanvas(NULL)
-	, m_Mode(EEditorMode_Edit)
-	, m_InSimulatedMode("ToSimulation", false)
+	, m_Mode("Mode", EEditorMode_Edit)
 	, m_IsHomeAttacking("InHomeAttacking", false)
 	, m_SimulatedRefCanvas(NULL)
+	, m_RealGameInfo("RealGameInfo", FERealGameCanvas::RealGameInfo())
 {
 	for(s32 i = 0; i < EPitchType_Num; ++i)
 	{
@@ -793,12 +963,13 @@ FormationEditor::FormationEditor()
 		}
 	}
 	char refName[16] = {0};
-	for(int i = 0; i < 10; ++i)
+	for(int i = 0; i <10; ++i)
 	{
 		sprintf(refName, "Player%d_PosInTB", i);
 		m_RefPlayerPositionInTB[i].RegisterValue(refName, -1);
 	}
 	m_SimulatedCanvas = new FESimulatedCanvas;
+	m_RealGameCanvas = new FERealGameCanvas;
 }
 FormationEditor::~FormationEditor()
 {
@@ -813,6 +984,7 @@ FormationEditor::~FormationEditor()
 		}
 	}
 	D_SafeDelete(m_SimulatedCanvas);
+	D_SafeDelete(m_RealGameCanvas);
 }
 void FormationEditor::Create()
 {
@@ -834,78 +1006,103 @@ void FormationEditor::Create()
 		(EventType_t)(E_ET_SIM_SelectRefCanvas), 
 		new MEventHandler<FormationEditor>(this, &FormationEditor::onSIM_SelectRefCanvas));
 
+	g_poEngine->GetEventMod()->RegisterHandler(
+		(EventType_t)(E_ET_SIM_SelectPlayerInRealGame), 
+		new MEventHandler<FormationEditor>(this, &FormationEditor::onSIM_SelectRefCanvasInRealGame));
 }
 void FormationEditor::Tick(f32 _fDeltaTime)
 {
-	if(m_Mode == EEditorMode_Edit)
+	if(IsEditor())
 	{
 		if(m_CurrentCanvas)
 			m_CurrentCanvas->Tick(_fDeltaTime);
 	}
-	else
+	else if(IsSimulating())
 	{
 		m_SimulatedCanvas->Tick(_fDeltaTime);
+	}
+	else if(IsInRealGame())
+	{
+		m_RealGameCanvas->Tick(_fDeltaTime);
 	}
 }
 void FormationEditor::Draw()
 {
-	if(m_Mode == EEditorMode_Edit)
+	if(IsEditor())
 	{
 		if(m_CurrentCanvas)
 			m_CurrentCanvas->Draw();
 	}
-	else
+	else if(IsSimulating())
 	{
 		if(m_SimulatedRefCanvas)
 			m_SimulatedRefCanvas->DrawWithColor(D_Color(192, 192, 192));
 		m_SimulatedCanvas->Draw();
 	}
+	else if(IsInRealGame())
+	{
+		if(m_SimulatedRefCanvas)
+			m_SimulatedRefCanvas->DrawWithColor(D_Color(192, 192, 192));
+		m_RealGameCanvas->Draw();
+	}
 }
 void FormationEditor::Select(const Vec2& pos)
 {
-	if(m_Mode == EEditorMode_Edit)
+	if(IsEditor())
 	{
 		if(m_CurrentCanvas)
 		{
 			m_CurrentCanvas->Select(pos);
 		}
 	}
-	else
+	else if(IsSimulating())
 	{
 		m_SimulatedCanvas->Select(pos);
+	}
+	else if(IsInRealGame())
+	{
+		m_RealGameCanvas->Select(pos);
 	}
 }
 void FormationEditor::Move(const Vec2& pos)
 {
-	if(m_Mode == EEditorMode_Edit)
+	if(IsEditor())
 	{
 		if(m_CurrentCanvas)
 		{
 			m_CurrentCanvas->Move(pos);
 		}
 	}
-	else
+	else if(IsSimulating())
 	{
 		m_SimulatedCanvas->Move(pos);
+	}
+	else if(IsInRealGame())
+	{
+		m_RealGameCanvas->Move(pos);
 	}
 }
 void FormationEditor::Deselect(const Vec2& pos)
 {
-	if(m_Mode == EEditorMode_Edit)
+	if(IsEditor())
 	{
 		if(m_CurrentCanvas)
 		{
 			m_CurrentCanvas->Deselect(pos);
 		}
 	}
-	else
+	else if(IsSimulating())
 	{
 		m_SimulatedCanvas->Deselect(pos);
+	}
+	else if(IsInRealGame())
+	{
+		m_RealGameCanvas->Deselect(pos);
 	}
 }
 void FormationEditor::Delete()
 {
-	if(m_Mode == EEditorMode_Edit)
+	if(IsEditor())
 	{
 		if(m_CurrentCanvas)
 		{
@@ -915,7 +1112,7 @@ void FormationEditor::Delete()
 }
 void FormationEditor::AddElementPair()
 {
-	if(m_Mode == EEditorMode_Edit)
+	if(IsEditor())
 	{
 		if(m_CurrentCanvas)
 		{
@@ -947,8 +1144,61 @@ void FormationEditor::SetCurrentCanvas(u32 pitchType, u32 teamState, u32 pos)
 	}
 	m_CurrentCanvas = m_Canvases[pitchType][teamState][pos];
 }
+
+Bool FormationEditor::StartRealGame()
+{
+	D_CHECK(IsEditor());
+	m_Mode = EEditorMode_RealGame;
+	m_RealGameCanvas->Setup(m_RealGameInfo.As());
+
+	int nextIdx = 0;
+	for(int i = 0; i < 10; ++i)
+	{
+		if(m_RealGameInfo.As().m_Player[i].m_HasValidData)
+		{
+			if(m_RealGameInfo.As().m_Player[i].m_Team == kHOME_TEAM)
+			{
+				m_RefPlayerPositionInTB[nextIdx++] = m_RealGameInfo.As().m_Player[i].m_Pos;
+			}
+		}
+	}
+	for(int i = 0; i < 10; ++i)
+	{
+		if(m_RealGameInfo.As().m_Player[i].m_HasValidData)
+		{
+			if(m_RealGameInfo.As().m_Player[i].m_Team == kAWAY_TEAM)
+			{
+				m_RefPlayerPositionInTB[nextIdx++] = m_RealGameInfo.As().m_Player[i].m_Pos;
+			}
+		}
+	}
+
+	if(!m_RealGameInfo.As().m_IsLargePitch)
+	{
+		CoordinateInfo::sLength = kPithLenghNormal;
+		CoordinateInfo::sWidth = kPitchWidthNormal;
+	}
+	else
+	{
+		CoordinateInfo::sLength = kPithLenghLarge;
+		CoordinateInfo::sWidth = kPitchWidthLarge;
+	}
+	return true;
+}
+Bool FormationEditor::StopRealGame()
+{
+	D_CHECK(IsInRealGame());
+	m_RealGameCanvas->Stop();
+	m_Mode = EEditorMode_Edit;
+	m_SimulatedRefCanvas = NULL;
+
+	return true;
+}
+
 bool FormationEditor::StartSimulation(const FESimulatedCanvas::SimulatedSettings& setup)
 {	
+	D_CHECK(IsEditor());
+
 	if(!setup.m_AwayPlayerPosition.Size() && !setup.m_HomePlayerPosition.Size())
 		return false;
 
@@ -1067,14 +1317,12 @@ bool FormationEditor::StartSimulation(const FESimulatedCanvas::SimulatedSettings
 	m_Mode = EEditorMode_Simulation;
 	m_SimulatedCanvas->Setup(setup);
 
-	//notify start
-	m_InSimulatedMode = true;
-
 	return true;
 }
 bool FormationEditor::StopSimulation()
 {
-	m_InSimulatedMode = false;
+	D_CHECK(IsSimulating());
+
 	m_SimulatedCanvas->Stop();
 	m_Mode = EEditorMode_Edit;
 	m_SimulatedRefCanvas = NULL;
@@ -1163,15 +1411,56 @@ void FormationEditor::onSIM_SelectRefCanvas(const Event* _poEvent)
 	s32 playerID	= _poEvent->GetParam<s32>(2);
 	s32 teamID		= _poEvent->GetParam<s32>(3);
 
+	FEDebuggerInfo* pDebuggerInfo = g_poEngine->GetSceneMod()->GetSceneObject<FEDebuggerInfo>("FEDebuggerInfo");
 	if(teamID == kAWAY_TEAM)
 	{
 		teamState = (teamState == ETeamState_Attack ? ETeamState_Defend : ETeamState_Attack);
 	}
-	s32 posID		= m_RefPlayerPositionInTB[teamID == kHOME_TEAM ? playerID : playerID + FESimulatedPlayer::sHomePlayerCount].As();
-
-	m_SimulatedRefCanvas = m_Canvases[pitchList][teamState][posID];
+	s32 posID		= m_RefPlayerPositionInTB[playerID].As();
+	if(posID >= 0 && posID <= 14)
+	{
+		pDebuggerInfo->SetSelectedPosition(posID);
+		m_SimulatedRefCanvas = m_Canvases[pitchList][teamState][posID];
+	}
+	else
+	{
+		pDebuggerInfo->SetSelectedPosition(-1);
+		m_SimulatedRefCanvas = NULL;
+	}
 }
+void FormationEditor::onSIM_SelectRefCanvasInRealGame(const Event* _poEvent)
+{
+	FEDebuggerInfo* pDebuggerInfo = g_poEngine->GetSceneMod()->GetSceneObject<FEDebuggerInfo>("FEDebuggerInfo");
+	bool isGK = _poEvent->GetParam<Bool>(2);
+	if(!isGK)
+	{
+		s32 pitchList	= m_RealGameInfo.As().m_IsLargePitch ? EPitchType_Large : EPitchType_Normal;
+		s32 teamState	= m_RealGameInfo.As().m_IsHomeAttacking ? ETeamState_Attack : ETeamState_Defend;
+		s32 playerID	= _poEvent->GetParam<s32>(0);
+		s32 teamID		= _poEvent->GetParam<s32>(1);
 
+		if(teamID == kAWAY_TEAM)
+		{
+			teamState = (teamState == ETeamState_Attack ? ETeamState_Defend : ETeamState_Attack);
+		}
+		s32 posID		= m_RefPlayerPositionInTB[playerID].As();
+		if(posID >= 0 && posID <= 14)
+		{
+			pDebuggerInfo->SetSelectedPosition(posID);
+			m_SimulatedRefCanvas = m_Canvases[pitchList][teamState][posID];
+		}
+		else
+		{
+			pDebuggerInfo->SetSelectedPosition(-1);
+			m_SimulatedRefCanvas = NULL;
+		}
+	}
+	else
+	{
+		pDebuggerInfo->SetSelectedPosition(-1);
+		m_SimulatedRefCanvas = NULL;
+	}
+}
 //----------------------------------------------------------------
 #define kOneTurnTime 2.f
 
@@ -1245,7 +1534,7 @@ void FEDebuggerInfo::Draw()
 						  CoordinateInfo::sWidth / 2.f - (realPos % kGridWidth) * kWidthInterval);
 		Vec2 indicatorScreenPos = CoordinateInfo::WorldToScreen(indicatorPos);
 		Char indicator[4];
-		itoa(m_SelectedPosition, indicator, 10);
+		_itoa(m_SelectedPosition, indicator, 10);
 
 		D_Color clr = Math::Blend(D_Color(128, 128, 128), D_Color(255, 255, 255), Math::Clamp(m_Turn / kOneTurnTime, 0.f, 1.f));
 		g_poSROU->DrawStringEx(

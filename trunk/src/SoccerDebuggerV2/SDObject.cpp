@@ -320,7 +320,7 @@ void OPlayer::Draw()
 							OutClr, 1);
 	}
 	Char zNum[4];
-	itoa(m_ulNum, zNum, 10);
+	_itoa(m_ulNum, zNum, 10);
 	g_poSROU->DrawStringEx(kCANVAS_START_X + (vNewPos.x - vNewRadius) * kPIXEL_PER_METER, 
 						   kCANVAS_START_Y + (vNewPos.y - vNewRadius) * kPIXEL_PER_METER,
 						   2 * vNewRadius * kPIXEL_PER_METER, 

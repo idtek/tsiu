@@ -98,9 +98,11 @@ public:
 		ID_SELECTAWAYVIEW,
 		ID_SETHOMETEAMSTATE,
 		ID_OPENOUTPUTDIR,
+		ID_STARTSTOPREALGAME,
 	};
 private:
 	void onSIM_SelectPlayer(const Event* _poEvent);
+	void onSIM_SelectPlayerInRealGame(const Event* _poEvent);
 
 public:
 	long onCmdSendCommand(FXObject* sender, FXSelector sel, void* ptr);
@@ -114,6 +116,7 @@ public:
 	long onSelectAwayView(FXObject* sender, FXSelector sel, void* ptr);
 	long onSetHomeTeamState(FXObject* sender, FXSelector sel, void* ptr);
 	long onOpenOutputDir(FXObject* sender, FXSelector sel, void* ptr);
+	long onRealGameControl(FXObject* sender, FXSelector sel, void* ptr);
 
 	inline FXTable* GetTable(ETabIndex tab) const { return m_TabTable[tab];	}
 
@@ -127,6 +130,7 @@ public:
 	FXListBox*				m_TeamStateListBox;
 	FXListBox*				m_PositionListBox;
 	FXButton*				m_SimulatingBtn;
+	FXButton*				m_RealGameBtn;
 
 	FXTabBook*				m_PlayerTuningControlTabBook;
 	PlayerTuningControl*	m_PlayerTuningControl[10];
@@ -372,6 +376,7 @@ FXDEFMAP(MyCanvas) MyCanvasMap[]={
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_SELECTAWAYVIEW,		MyCanvas::onSelectAwayView),
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_SETHOMETEAMSTATE,		MyCanvas::onSetHomeTeamState),
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_OPENOUTPUTDIR,			MyCanvas::onOpenOutputDir),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_STARTSTOPREALGAME,		MyCanvas::onRealGameControl),
 };
 // ButtonApp implementation
 FXIMPLEMENT(MyCanvas, FXCanvas, MyCanvasMap, ARRAYNUMBER(MyCanvasMap))
@@ -521,6 +526,7 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	
 	FXMatrix* simulationmatrix = new FXMatrix(simOtherPart, 3, MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
 	m_SimulatingBtn = new FXButton(simulationmatrix, "Start Simulation", NULL, this, ID_STARTSTOPSIMULATION, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 95);
+	m_RealGameBtn = new FXButton(simulationmatrix, "Start Real Game", NULL, this, ID_STARTSTOPREALGAME, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 95);
 
 	FXVerticalFrame *poGroupV3	= new FXVerticalFrame(poSplitterV,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 0, 300);
 	m_PlayerTuningControlTabBook = new FXTabBook(poGroupV3, NULL, 0, PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_LEFT);
@@ -568,8 +574,11 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 
 	//Register Event
 	g_poEngine->GetEventMod()->RegisterHandler(
-		(EventType_t)(E_ET_SIM_SelectPlayer), 
+		(EventType_t)(E_ET_SIM_SelectPlayerInSimulating), 
 		new MEventHandler<MyCanvas>(this, &MyCanvas::onSIM_SelectPlayer));
+	g_poEngine->GetEventMod()->RegisterHandler(
+		(EventType_t)(E_ET_SIM_SelectPlayerInRealGame), 
+		new MEventHandler<MyCanvas>(this, &MyCanvas::onSIM_SelectPlayerInRealGame));
 }
 long MyCanvas::onKeyPress(FXObject* sender, FXSelector sel,void* ptr)
 {
@@ -802,6 +811,7 @@ long MyCanvas::onSimulationControl(FXObject* sender, FXSelector sel, void* ptr)
 			m_SimHomeTeamList[i]->enable();
 			m_SimAwayTeamList[i]->enable();
 		}
+		m_RealGameBtn->enable();
 	}
 	else
 	{
@@ -832,11 +842,37 @@ long MyCanvas::onSimulationControl(FXObject* sender, FXSelector sel, void* ptr)
 				m_SimHomeTeamList[i]->disable();
 				m_SimAwayTeamList[i]->disable();
 			}
+			m_RealGameBtn->disable();
 		} 
 		else
 		{
 			FXMessageBox::error(this,MBOX_OK,tr("Error"),tr("start simulation failed"));
 		}
+	}
+	return 1;
+}
+
+long MyCanvas::onRealGameControl(FXObject* sender, FXSelector sel, void* ptr)
+{
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+	if(pEditor->IsInRealGame())
+	{
+		m_RealGameBtn->setText("Start Real Game");
+		pEditor->StopRealGame();
+		MyEngine* pMyEngine = (MyEngine*)g_poEngine;
+		pMyEngine->UpdateCanvas();
+
+		m_SimulatingBtn->enable();
+	}
+	else
+	{
+		m_RealGameBtn->setText("Stop Real Game");
+		pEditor->StartRealGame();
+
+		m_SimulatingBtn->disable();
+
+		FEDebuggerInfo* pDebuggerInfo = g_poEngine->GetSceneMod()->GetSceneObject<FEDebuggerInfo>("FEDebuggerInfo");
+		pDebuggerInfo->SetSelectedPosition(-1);
 	}
 	return 1;
 }
@@ -863,6 +899,16 @@ void MyCanvas::onSIM_SelectPlayer(const Event* _poEvent)
 	evt.AddParam(playerID);
 	evt.AddParam(teamID);
 	g_poEngine->GetEventMod()->SendEvent(&evt);
+}
+void MyCanvas::onSIM_SelectPlayerInRealGame(const Event* _poEvent)
+{
+	bool isGK = _poEvent->GetParam<Bool>(2);
+	if(!isGK)
+	{
+		s32 playerID	= _poEvent->GetParam<s32>(0);
+		s32 teamID		= _poEvent->GetParam<s32>(1);
+		m_PlayerTuningControlTabBook->setCurrent(teamID == kHOME_TEAM ? HOME_TEAM_START + playerID - 1 : AWAY_TEAM_START + playerID - FESimulatedPlayer::sHomePlayerCount - 1);
+	}
 }
 //-------------------------------------------------------------------------------------------------------------------------
 
