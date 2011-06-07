@@ -12,6 +12,7 @@ namespace TsiU
 		s32		lParam;
 		u32		ulParam;
 		f32		fParam;
+		Bool	bParam;
 		void*	poParam;
 	};
 
@@ -23,6 +24,7 @@ namespace TsiU
 		virtual	operator s32()		const { return m_Param.lParam;	}
 		virtual	operator u32()		const { return m_Param.ulParam;	}
 		virtual	operator f32()		const { return m_Param.fParam;	}
+		virtual	operator Bool()		const { return m_Param.bParam;	}
 		virtual	operator void*()	const { return m_Param.poParam;	}
 
 		EventParamObject& operator = (const EventParamObject& _epo)

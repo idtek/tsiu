@@ -145,10 +145,9 @@ namespace TsiU
 			bool				operator >=(const T& val) const					{ return m_Value >= val;			}
 			bool				operator !() const								{ return !m_Value;					}
 
-			const T& As() const
-			{
-				return m_Value;
-			}
+			const T&	As() const	{ return m_Value;}
+			T&			AsRawData() { WRITABLE_FLAG_CHECK(); SetDirtyState(true); return m_Value;}
+
 			//Default Approach
 			virtual unsigned int GetSize() const
 			{

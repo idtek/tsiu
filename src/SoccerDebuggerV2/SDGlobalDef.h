@@ -33,7 +33,8 @@ extern char							g_zRootDir[MAX_PATH];
 
 
 enum{
-	E_ET_SIM_SelectPlayer = E_ET_User,
+	E_ET_SIM_SelectPlayerInSimulating = E_ET_User,
+	E_ET_SIM_SelectPlayerInRealGame,
 	E_ET_SIM_SelectRefCanvas,
 };
 

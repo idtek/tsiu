@@ -111,6 +111,19 @@ public:
 protected:
 	AI::RefValue<Vec2, AI::ERefValuFlag_Writable> m_RfPosition;
 };
+
+class FERealBall : public FEBall
+{
+public:
+	FERealBall();
+
+	virtual bool InBounds(const Vec2& checkPoint) const;
+	virtual void Tick(f32 _fDeltaTime);
+	virtual void Draw();
+
+protected:
+	AI::RefValue<Vec2, AI::ERefValuFlag_ReadOnly> m_RfPosition;
+};
 //----------------------------------------------------------------------------
 class FEPlayer : public FEEditableElement
 {
@@ -150,6 +163,17 @@ public:
 protected:
 	int m_Team;
 	AI::RefValue<Vec2, AI::ERefValuFlag_ReadOnly> m_RfPosition;
+};
+
+class FERealPlayer : public FESimulatedPlayer
+{
+public:
+	FERealPlayer(s32 id, int team, bool isGK);
+	virtual void Draw();
+	virtual void Select(const Vec2& pos); 
+
+private:
+	Bool m_bIsGK;
 };
 //----------------------------------------------------------------------------
 class FECanvas : public FEElement
@@ -212,7 +236,53 @@ public:
 	};
 	void Setup(const SimulatedSettings& setup);
 	void Stop();
-	void Move(const Vec2& pos);
+
+	virtual void Move(const Vec2& pos);
+	virtual void Create(){}
+	virtual void Tick(f32 _fDeltaTime);
+	virtual void Draw();
+	virtual void Select(const Vec2& pos);
+
+protected:
+	FESimulatedBall*		  m_SimBall;
+	Array<FEEditableElement*> m_Elements;
+};
+
+class FERealGameCanvas : public FECanvas
+{
+public:
+	struct RealGameInfo   
+	{
+		RealGameInfo()
+			: m_IsLargePitch(false)
+			, m_IsHomeAttacking(true)
+		{
+			for(int i = 0; i < 10; ++i)
+				m_Player[i] = PlayerInfo();
+		}
+		bool m_IsLargePitch;
+		bool m_IsHomeAttacking;
+		struct PlayerInfo
+		{
+			PlayerInfo()
+				: m_Pos(-1)
+				, m_HasValidData(false)
+				, m_Team(-1)
+				, m_IsGK(false)
+			{}
+			bool	m_HasValidData;
+			bool    m_IsGK;
+			int		m_Pos;
+			int		m_Team;
+		};
+		PlayerInfo m_Player[10];
+	};
+
+	FERealGameCanvas();
+	~FERealGameCanvas();
+
+	void Setup(const RealGameInfo& rgInfo);
+	void Stop();
 
 	virtual void Create(){}
 	virtual void Tick(f32 _fDeltaTime);
@@ -220,9 +290,9 @@ public:
 	virtual void Select(const Vec2& pos);
 
 private:
-	FESimulatedBall*		  m_SimBall;
 	Array<FEEditableElement*> m_Elements;
 };
+
 //----------------------------------------------------------------------------
 class FormationEditor : public FEElement
 {
@@ -230,7 +300,8 @@ class FormationEditor : public FEElement
 public:
 	enum{
 		EEditorMode_Edit,
-		EEditorMode_Simulation
+		EEditorMode_Simulation,
+		EEditorMode_RealGame
 	};
 	enum{
 		EPitchType_Normal,
@@ -242,7 +313,6 @@ public:
 		ETeamState_Defend,
 		ETeamState_Num,
 	};
-
 public:
 	FormationEditor();
 	~FormationEditor();
@@ -260,7 +330,10 @@ public:
 	virtual void Serialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 
-	Bool IsSimulating() const			{ return m_Mode == EEditorMode_Simulation;	}
+	Bool IsEditor() const				{ return m_Mode.As() == EEditorMode_Edit;		}
+	Bool IsSimulating() const			{ return m_Mode.As() == EEditorMode_Simulation;	}
+	Bool IsInRealGame() const			{ return m_Mode.As() == EEditorMode_RealGame;	}
+
 	void SetIsHomeAttacking(bool val)	{ m_IsHomeAttacking = val;	}
 
 	void Clear();
@@ -269,19 +342,24 @@ public:
 	void AddElementPair();
 	void SetCurrentCanvas(u32 pitchType, u32 teamState, u32 pos);
 
-private:
-	void onSIM_SelectRefCanvas(const Event* _poEvent);
+	Bool StartRealGame();
+	Bool StopRealGame();
 
 private:
-	u32					m_Mode;
+	void onSIM_SelectRefCanvas(const Event* _poEvent);
+	void onSIM_SelectRefCanvasInRealGame(const Event* _poEvent);
+
+private:
+	AI::RFInt			m_Mode;
 	FESimulatedCanvas*	m_SimulatedCanvas;
+	FERealGameCanvas*	m_RealGameCanvas;
 	FEEditorCanvas*		m_SimulatedRefCanvas;
 	FEEditorCanvas*		m_CurrentCanvas;
 	FEEditorCanvas*		m_Canvases[EPitchType_Num][ETeamState_Num][kMaxPositionCount]; 
 
-	AI::RFBool			m_InSimulatedMode;
-	AI::RFInt			m_RefPlayerPositionInTB[8];
+	AI::RFInt			m_RefPlayerPositionInTB[10];
 	AI::RFBool			m_IsHomeAttacking;
+	TsiU::AI::RefValue<FERealGameCanvas::RealGameInfo, TsiU::AI::ERefValuFlag_ReadOnly> m_RealGameInfo;
 };
 //----------------------------------------------------------------------------
 class FEDebuggerInfo : public DrawableObject
