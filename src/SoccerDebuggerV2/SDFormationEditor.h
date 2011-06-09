@@ -92,6 +92,7 @@ public:
 	virtual void Serialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 
+	void Resize(f32 ratioX, f32 ratioY);
 	void DrawWithColor(const D_Color& clr);
 
 protected:
@@ -141,6 +142,7 @@ public:
 	virtual void Serialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 	virtual void Deserialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
 
+	void Resize(f32 ratioX, f32 ratioY);
 	void DrawWithColor(const D_Color& clr);
 
 protected:
@@ -194,13 +196,15 @@ class FEEditorCanvas : public FECanvas
 		FEBall*		m_RefElement;
 		FEPlayer*	m_FormationElement;
 	};
-	typedef std::map<s32, ElementPair*>				ElementPairMap;
-	typedef std::map<s32, ElementPair*>::iterator	ElementPairMapIterator;
-	typedef std::map<s32, ElementPair*>::iterator	ElementPairMapConstIterator;
+	typedef std::map<s32, ElementPair*>					ElementPairMap;
+	typedef std::map<s32, ElementPair*>::iterator		ElementPairMapIterator;
+	typedef std::map<s32, ElementPair*>::const_iterator	ElementPairMapConstIterator;
 
 public:
 	FEEditorCanvas();
 	~FEEditorCanvas();
+
+	FEEditorCanvas& operator=(const FEEditorCanvas& rhs);
 
 	virtual void Create(){}
 		    void Create(f32 length, f32 width);
@@ -208,6 +212,8 @@ public:
 	virtual void Draw();
 	virtual void Select(const Vec2& pos);
 	virtual void Delete();
+
+	void Resize(f32 ratioX, f32 ratioY);
 
 	virtual void Export(File* _pFile, u32 pitchType, u32 teamState, u32 position);
 	virtual void Serialize(TiXmlDocument* _poXmlDoc, TiXmlElement* _poParent);
@@ -286,6 +292,10 @@ public:
 		ETeamState_Defend,
 		ETeamState_Num,
 	};
+	enum{
+		ECopyDirection_L2N,
+		ECopyDirection_N2L,
+	};
 public:
 	FormationEditor();
 	~FormationEditor();
@@ -318,7 +328,13 @@ public:
 	Bool StartRealGame(const RealGameInfo& rgInfo);
 	Bool StopRealGame();
 
+	void ShowRef(bool show, u32 pitchType, u32 teamState, u32 pos);
+
+	bool CanvasCopy(u32 dir, bool isAll = true, s32 teamState = -1, s32 pos = -1);
+
 private:
+	void CanvasCopySingle(FEEditorCanvas* to, const FEEditorCanvas* from);
+
 	void onSIM_SelectRefCanvas(const Event* _poEvent);
 	void onSIM_SelectRefCanvasInRealGame(const Event* _poEvent);
 
@@ -328,6 +344,7 @@ private:
 	FERealGameCanvas*	m_RealGameCanvas;
 	FEEditorCanvas*		m_SimulatedRefCanvas;
 	FEEditorCanvas*		m_CurrentCanvas;
+	FEEditorCanvas*		m_CurrentRefCanvas;
 	FEEditorCanvas*		m_Canvases[EPitchType_Num][ETeamState_Num][kMaxPositionCount]; 
 
 	AI::RFInt			m_RefPlayerPositionInTB[10];
