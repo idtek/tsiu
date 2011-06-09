@@ -44,8 +44,23 @@ struct NameType{
 	FXString name;
 	FXint	 type;
 };
-static const int kNumOfAIParameter = 12;
+//static const int kNumOfAIParameter = 12;
+enum{
+	IDX_FormationDensity,
+	IDX_SideAttack,		
+	IDX_DefensiveLine,	
+	IDX_Width,			
+	IDX_Mentality,		
+	IDX_Tempo,			
+	IDX_TimeWasting,	
+	IDX_FocusPassing,	
+	IDX_ClosingDown,	
+	IDX_TargetMan,		
+	IDX_PlayMaker,		
+	IDX_CounterAttack,	
 
+	kNumOfAIParameter
+};
 static const NameType kNameTypeOfAIParameter[kNumOfAIParameter] = {
 	{"FormationDensity",	EValueType_Smooth},
 	{"SideAttack",			EValueType_4},
@@ -103,6 +118,12 @@ public:
 private:
 	void onSIM_SelectPlayer(const Event* _poEvent);
 	void onSIM_SelectPlayerInRealGame(const Event* _poEvent);
+	void onAIParamUpdate(const Event* _poEvent);
+
+	void PlayerIDToPlayerAIParamControlID(int id, bool hasGK)
+	{
+		
+	}
 
 public:
 	long onCmdSendCommand(FXObject* sender, FXSelector sel, void* ptr);
@@ -141,6 +162,10 @@ public:
 	FXListBox*				m_SimTeamState;
 	FXListBox*				m_SimHomeTeamList[4];
 	FXListBox*				m_SimAwayTeamList[4];
+
+	TsiU::AI::RefValue<PlayerIndividualAIParam, TsiU::AI::ERefValuFlag_ReadOnly> m_PlayerIndividualAIParamToEditor;
+	TsiU::AI::RefValue<RealGameInfo, TsiU::AI::ERefValuFlag_ReadOnly> m_RealGameInfo;
+	TsiU::AI::RefValue<PlayerIndividualAIParam, TsiU::AI::ERefValuFlag_Writable> m_PlayerIndividualAIParamFromEditor;
 };
 
 class PlayerTuningControl : public FXCanvas
@@ -172,16 +197,6 @@ public:
 	};
 
 public:
-	void CopyFrom(const PlayerTuningControl& ptc)
-	{
-		for(int i = 0; i < kNumOfAIParameter; ++i)
-		{
-			m_SubController[i]->m_Slider->setValue(ptc.m_SubController[i]->m_Slider->getValue(), true);
-		}
-	}
-	long onReserved(FXObject* sender, FXSelector sel, void* ptr){ return 1;	}
-
-public:
 	struct AtomControlPair : public FXObject
 	{
 		FXDECLARE(AtomControlPair)
@@ -193,20 +208,15 @@ public:
 		};
 		AtomControlPair(){}
 
-		AtomControlPair(FXMatrix* matrix, const char* name, int type, int id)
+		AtomControlPair(FXMatrix* matrix, const char* name, int type, int id, int idx)
 			: m_Name(name)
 			, m_ValueType(type)
 			, m_SliderValue(0)
 			, m_Slider(NULL)
 			, m_TextField(NULL)
 			, m_id(id)
+			, m_idx(idx)
 		{
-			if(id >= 0)
-			{
-				FXString str;
-				str.format("Player_%d_%s", id, name);
-				m_RefValue.RegisterValue(str.text(), 0.f);
-			}
 			new FXLabel(matrix, m_Name.text(), NULL, JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_CENTER_Y);
 			m_SliderDataTarget.connect(m_SliderValue, this, AtomControlPair::ID_UPDATERFVALUE);
 			m_TextField = new FXTextField(matrix, 1, NULL, 0, FRAME_SUNKEN|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_FILL_ROW|LAYOUT_FIX_WIDTH, 0, 0, 40);
@@ -247,7 +257,7 @@ public:
 					for(int i = HOME_TEAM_START; i < HOME_TEAM_START + HOME_TEAM_NUM; ++i)
 					{
 						if(g_Canvas && g_Canvas->m_PlayerTuningControl[i])
-							g_Canvas->m_PlayerTuningControl[i]->CopyFrom(*g_Canvas->m_PlayerTuningControl[0]);
+							g_Canvas->m_PlayerTuningControl[i]->CopyFrom(this, m_idx);
 					}
 				}
 				else
@@ -255,7 +265,7 @@ public:
 					for(int i = AWAY_TEAM_START; i < AWAY_TEAM_START + AWAY_TEAM_NUM; ++i)
 					{
 						if(g_Canvas && g_Canvas->m_PlayerTuningControl[i])
-							g_Canvas->m_PlayerTuningControl[i]->CopyFrom(*g_Canvas->m_PlayerTuningControl[1]);
+							g_Canvas->m_PlayerTuningControl[i]->CopyFrom(this, m_idx);
 					}
 				}
 			}
@@ -308,11 +318,16 @@ public:
 					break;
 				}
 				m_TextField->setText(str);
-				m_RefValue = m_SliderValue;	
+
+				Event evt((EventType_t)E_ET_AIParamUpdate);
+				evt.AddParam(m_id);
+				evt.AddParam(m_idx);
+				evt.AddParam(m_SliderValue);
+				g_poEngine->GetEventMod()->SendEvent(&evt);
 			}
 			return 1;
 		}
-
+		FXint			m_idx;
 		FXint			m_id;
 		FXint			m_ValueType;
 		FXString		m_Name;
@@ -320,8 +335,46 @@ public:
 		FXint			m_SliderValue;
 		FXSlider*		m_Slider;
 		FXDataTarget	m_SliderDataTarget;
-		AI::RFInt		m_RefValue;
 	};
+
+public:
+	void InitFromData(const PlayerOtherAttributes& attr)
+	{
+		m_SubController[IDX_FormationDensity]->m_Slider->setValue(Math::Clamp((int)(attr.m_FormationDensity * 100), 0, 100), true);
+		m_SubController[IDX_SideAttack		]->m_Slider->setValue(attr.m_SideAttack, true);
+		m_SubController[IDX_DefensiveLine	]->m_Slider->setValue(attr.m_DefensiveLine, true);
+		m_SubController[IDX_Width			]->m_Slider->setValue(Math::Clamp((int)(attr.m_Width * 100), 0, 100), true);
+		m_SubController[IDX_Mentality		]->m_Slider->setValue(Math::Clamp((int)(attr.m_Mentality * 100), 0, 100), true);
+		m_SubController[IDX_Tempo			]->m_Slider->setValue(Math::Clamp((int)(attr.m_Tempo * 100), 0, 100), true);
+		m_SubController[IDX_TimeWasting		]->m_Slider->setValue(Math::Clamp((int)(attr.m_TimeWasting * 100), 0, 100), true);
+		m_SubController[IDX_FocusPassing	]->m_Slider->setValue(attr.m_FocusPassing, true);
+		m_SubController[IDX_ClosingDown		]->m_Slider->setValue(Math::Clamp((int)(attr.m_ClosingDown * 100), 0, 100), true);
+		m_SubController[IDX_TargetMan		]->m_Slider->setValue(attr.m_TargetMan ? 1 : 0, true);
+		m_SubController[IDX_PlayMaker		]->m_Slider->setValue(attr.m_Playmaker ? 1 : 0, true);
+		m_SubController[IDX_CounterAttack	]->m_Slider->setValue(attr.m_CounterAttack ? 1 : 0, true);
+	}
+	void ToData(PlayerOtherAttributes& attr)
+	{
+		attr.m_FormationDensity =  Math::Clamp((float)m_SubController[IDX_FormationDensity]->m_Slider->getValue()/100.f, 0.f, 1.f);
+		attr.m_SideAttack		=  m_SubController[IDX_SideAttack]->m_Slider->getValue();
+		attr.m_DefensiveLine	=  m_SubController[IDX_DefensiveLine]->m_Slider->getValue();
+		attr.m_Width			=  Math::Clamp((float)m_SubController[IDX_Width]->m_Slider->getValue()/100.f, 0.f, 1.f);
+		attr.m_Mentality		=  Math::Clamp((float)m_SubController[IDX_Mentality]->m_Slider->getValue()/100.f, 0.f, 1.f);
+		attr.m_Tempo			=  Math::Clamp((float)m_SubController[IDX_Tempo]->m_Slider->getValue()/100.f, 0.f, 1.f);
+		attr.m_TimeWasting		=  Math::Clamp((float)m_SubController[IDX_TimeWasting]->m_Slider->getValue()/100.f, 0.f, 1.f);
+		attr.m_FocusPassing		=  m_SubController[IDX_FocusPassing]->m_Slider->getValue();
+		attr.m_ClosingDown		=  Math::Clamp((float)m_SubController[IDX_ClosingDown]->m_Slider->getValue()/100.f, 0.f, 1.f);
+		attr.m_TargetMan		=  m_SubController[IDX_TargetMan]->m_Slider->getValue() ? true : false;
+		attr.m_Playmaker		=  m_SubController[IDX_PlayMaker]->m_Slider->getValue() ? true : false;
+		attr.m_CounterAttack	=  m_SubController[IDX_CounterAttack]->m_Slider->getValue() ? true : false;
+	}
+	void CopyFrom(const AtomControlPair* from, int whichSub)
+	{
+		D_CHECK(whichSub >= 0 && whichSub < kNumOfAIParameter);
+		m_SubController[whichSub]->m_Slider->setValue(from->m_Slider->getValue(), true);
+	}
+	long onReserved(FXObject* sender, FXSelector sel, void* ptr){ return 1;	}
+
 	int					m_id;
 	AtomControlPair*	m_SubController[kNumOfAIParameter];
 };
@@ -354,7 +407,7 @@ PlayerTuningControl::PlayerTuningControl(
 	FXMatrix* matrix = new FXMatrix(p, 12, MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
 	for(int i = 0; i < kNumOfAIParameter; ++i)
 	{
-		m_SubController[i] = new AtomControlPair(matrix, kNameTypeOfAIParameter[i].name.text(), kNameTypeOfAIParameter[i].type, id);
+		m_SubController[i] = new AtomControlPair(matrix, kNameTypeOfAIParameter[i].name.text(), kNameTypeOfAIParameter[i].type, id, i);
 	}
 }
 PlayerTuningControl::~PlayerTuningControl()
@@ -382,6 +435,9 @@ FXDEFMAP(MyCanvas) MyCanvasMap[]={
 FXIMPLEMENT(MyCanvas, FXCanvas, MyCanvasMap, ARRAYNUMBER(MyCanvasMap))
 
 MyCanvas::MyCanvas()
+	: m_PlayerIndividualAIParamToEditor("IndividualAIParamToEditor", PlayerIndividualAIParam())
+	, m_PlayerIndividualAIParamFromEditor("IndividualAIParamFromEditor", PlayerIndividualAIParam())
+	, m_RealGameInfo("RealGameInfo", RealGameInfo())
 {
 	flags |= FLAG_ENABLED;
 	m_CurrentCommand = -1;
@@ -396,6 +452,9 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 						 FX::FXint w, 
 						 FX::FXint h)
 						 :FXCanvas(p,tgt,sel,opts,x,y,w,h)
+						 , m_PlayerIndividualAIParamToEditor("IndividualAIParamToEditor", PlayerIndividualAIParam())
+						 , m_PlayerIndividualAIParamFromEditor("IndividualAIParamFromEditor", PlayerIndividualAIParam())
+						 , m_RealGameInfo("RealGameInfo", RealGameInfo())
 {
 	flags |= FLAG_ENABLED;
 	m_CurrentCommand = -1;
@@ -579,6 +638,9 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	g_poEngine->GetEventMod()->RegisterHandler(
 		(EventType_t)(E_ET_SIM_SelectPlayerInRealGame), 
 		new MEventHandler<MyCanvas>(this, &MyCanvas::onSIM_SelectPlayerInRealGame));
+	g_poEngine->GetEventMod()->RegisterHandler(
+		(EventType_t)(E_ET_AIParamUpdate), 
+		new MEventHandler<MyCanvas>(this, &MyCanvas::onAIParamUpdate));
 }
 long MyCanvas::onKeyPress(FXObject* sender, FXSelector sel,void* ptr)
 {
@@ -843,6 +905,25 @@ long MyCanvas::onSimulationControl(FXObject* sender, FXSelector sel, void* ptr)
 				m_SimAwayTeamList[i]->disable();
 			}
 			m_RealGameBtn->disable();
+
+			PlayerIndividualAIParam& param = m_PlayerIndividualAIParamFromEditor.AsRawData();
+			for(int i = 0; i < 10; ++i)
+			{
+				int playerid = -1;
+				if(i >= HOME_TEAM_START && i < HOME_TEAM_START + 4)
+				{
+					playerid = i - HOME_TEAM_START;
+				}
+				else if(i >= AWAY_TEAM_START && i < AWAY_TEAM_START + 4)
+				{
+					playerid = i - AWAY_TEAM_START + FESimulatedPlayer::sHomePlayerCount;
+				}
+				if(playerid >= 0 && playerid < 8)
+				{
+					PlayerOtherAttributes& attr = param.m_OtherAttributes[playerid];
+					m_PlayerTuningControl[i]->ToData(attr);
+				}
+			}
 		} 
 		else
 		{
@@ -866,9 +947,32 @@ long MyCanvas::onRealGameControl(FXObject* sender, FXSelector sel, void* ptr)
 	}
 	else
 	{
+		const RealGameInfo& rgInfo = m_RealGameInfo.As();
 		m_RealGameBtn->setText("Stop Real Game");
-		pEditor->StartRealGame();
+		pEditor->StartRealGame(rgInfo);
 
+		const PlayerIndividualAIParam& param = m_PlayerIndividualAIParamToEditor.As();
+		for(int i = 0; i < 10; ++i)
+		{
+			if(rgInfo.m_Player[i].m_HasValidData && !rgInfo.m_Player[i].m_IsGK)
+			{
+				const PlayerOtherAttributes& attr = param.m_OtherAttributes[i];
+				int idx;
+				if(rgInfo.m_Player[i].m_Team == kHOME_TEAM)
+				{
+					idx = rgInfo.m_Team[kHOME_TEAM].m_HasGK ? 
+						HOME_TEAM_START + i - 1 : 
+						HOME_TEAM_START + i;
+				}
+				else
+				{
+					idx = rgInfo.m_Team[kAWAY_TEAM].m_HasGK ? 
+						AWAY_TEAM_START + i - FESimulatedPlayer::sHomePlayerCount - 1 : 
+						AWAY_TEAM_START + i - FESimulatedPlayer::sHomePlayerCount;
+				}
+				m_PlayerTuningControl[idx]->InitFromData(attr);
+			}
+		}
 		m_SimulatingBtn->disable();
 
 		FEDebuggerInfo* pDebuggerInfo = g_poEngine->GetSceneMod()->GetSceneObject<FEDebuggerInfo>("FEDebuggerInfo");
@@ -893,7 +997,7 @@ void MyCanvas::onSIM_SelectPlayer(const Event* _poEvent)
 	s32 teamID		= _poEvent->GetParam<s32>(1);
 	m_PlayerTuningControlTabBook->setCurrent(teamID == kHOME_TEAM ? HOME_TEAM_START + playerID : AWAY_TEAM_START + playerID - FESimulatedPlayer::sHomePlayerCount);
 
-	Event evt((EventType_t)E_ET_SIM_SelectRefCanvas);
+	Event evt((EventType_t)E_ET_SIM_SelectRefCanvasInSimulating);
 	evt.AddParam(g_Canvas->m_SimPitchType->getCurrentItem());
 	evt.AddParam(g_Canvas->m_SimTeamState->getCurrentItem());
 	evt.AddParam(playerID);
@@ -908,6 +1012,81 @@ void MyCanvas::onSIM_SelectPlayerInRealGame(const Event* _poEvent)
 		s32 playerID	= _poEvent->GetParam<s32>(0);
 		s32 teamID		= _poEvent->GetParam<s32>(1);
 		m_PlayerTuningControlTabBook->setCurrent(teamID == kHOME_TEAM ? HOME_TEAM_START + playerID - 1 : AWAY_TEAM_START + playerID - FESimulatedPlayer::sHomePlayerCount - 1);
+
+		s32 pitchList	= m_RealGameInfo.As().m_IsLargePitch ? FormationEditor::EPitchType_Large : FormationEditor::EPitchType_Normal;
+		s32 teamState	= m_RealGameInfo.As().m_IsHomeAttacking ? FormationEditor::ETeamState_Attack : FormationEditor::ETeamState_Defend;
+
+		Event evt((EventType_t)E_ET_SIM_SelectRefCanvasInRealGame);
+		evt.AddParam(pitchList);
+		evt.AddParam(teamState);
+		evt.AddParam(playerID);
+		evt.AddParam(teamID);
+		g_poEngine->GetEventMod()->SendEvent(&evt);
+	}
+}
+void MyCanvas::onAIParamUpdate(const Event* _poEvent)
+{
+	s32 id	= _poEvent->GetParam<s32>(0);
+	s32 idx	= _poEvent->GetParam<s32>(1);
+	s32 val = _poEvent->GetParam<s32>(2);
+
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+
+	PlayerOtherAttributes* pOutAttr = NULL;
+	if(pEditor->IsInRealGame())
+	{
+		PlayerIndividualAIParam& param = m_PlayerIndividualAIParamFromEditor.AsRawData();
+		const RealGameInfo& rgInfo = m_RealGameInfo.As();
+		int playerid = -1;
+		if(id >= 0 && id < 4)
+		{
+			if(rgInfo.m_Team[kHOME_TEAM].m_HasGK)
+				playerid = id + 1;
+			else
+				playerid = id;
+		}
+		else if(id >= 4 && id < 4 + 4)
+		{
+			if(rgInfo.m_Team[kAWAY_TEAM].m_HasGK)
+				playerid = id - 4 + 1 + FESimulatedPlayer::sHomePlayerCount;
+			else
+				playerid = id - 4 + FESimulatedPlayer::sHomePlayerCount;
+		}
+		if(playerid >= 0 && playerid < 10)
+			pOutAttr = &param.m_OtherAttributes[playerid];
+	}
+	else if(pEditor->IsSimulating())
+	{
+		PlayerIndividualAIParam& param = m_PlayerIndividualAIParamFromEditor.AsRawData();
+		int playerid = -1;
+		if(id >= 0 && id < 4)
+		{
+			playerid = id;
+		}
+		else if(id >= 4 && id < 4 + 4)
+		{
+			playerid = id - 4 + FESimulatedPlayer::sHomePlayerCount;
+		}
+		if(playerid >= 0 && playerid < 10)
+			pOutAttr = &param.m_OtherAttributes[playerid];
+	}
+	if(pOutAttr)
+	{
+		switch(idx)
+		{
+		case IDX_FormationDensity:	{ pOutAttr->m_FormationDensity	= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
+		case IDX_SideAttack:		{ pOutAttr->m_SideAttack		= val; break; }
+		case IDX_DefensiveLine:		{ pOutAttr->m_DefensiveLine		= val; break; }
+		case IDX_Width:				{ pOutAttr->m_Width				= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
+		case IDX_Mentality:			{ pOutAttr->m_Mentality			= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
+		case IDX_Tempo:				{ pOutAttr->m_Tempo				= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
+		case IDX_TimeWasting:		{ pOutAttr->m_TimeWasting		= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
+		case IDX_FocusPassing:		{ pOutAttr->m_FocusPassing		= val; break; }
+		case IDX_ClosingDown:		{ pOutAttr->m_ClosingDown		= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
+		case IDX_TargetMan:			{ pOutAttr->m_TargetMan			= val ? true : false; break; }
+		case IDX_PlayMaker:			{ pOutAttr->m_Playmaker			= val ? true : false; break; }
+		case IDX_CounterAttack:		{ pOutAttr->m_CounterAttack		= val ? true : false; break; }
+		}
 	}
 }
 //-------------------------------------------------------------------------------------------------------------------------

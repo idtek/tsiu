@@ -35,7 +35,9 @@ extern char							g_zRootDir[MAX_PATH];
 enum{
 	E_ET_SIM_SelectPlayerInSimulating = E_ET_User,
 	E_ET_SIM_SelectPlayerInRealGame,
-	E_ET_SIM_SelectRefCanvas,
+	E_ET_SIM_SelectRefCanvasInSimulating,
+	E_ET_SIM_SelectRefCanvasInRealGame,
+	E_ET_AIParamUpdate,
 };
 
 //DrawValue;
@@ -50,6 +52,121 @@ enum{
 	EAppMode_None,
 	EAppMode_WatchMode,
 	EAppMode_FormationEditor
+};
+
+struct PlayerOtherAttributes
+{
+	enum{
+		EPlayRole_Keeper,
+		EPlayRole_Defend,
+		EPlayRole_Midfield,
+		EPlayRole_Forward
+	};
+
+	enum{
+		ESideAttack_Any,
+		ESideAttack_Left,
+		ESideAttack_Middle,
+		ESideAttack_Right,
+
+		ESideAttack_Num
+	};
+	enum{
+		EDefensiveLine_Front,
+		EDefensiveLine_Middle,
+		EDefensiveLine_Back,
+
+		EDefensiveLine_Num
+	};
+	enum{
+		EFocusPassing_Any,
+		EFocusPassing_Left,
+		EFocusPassing_Middle,
+		EFocusPassing_Right,
+
+		EFocusPassing_Num,
+	};
+
+public:
+	PlayerOtherAttributes()
+		: m_Height(0.f)
+		, m_Role(-1)
+		, m_PositionInTacticsBoard(-1)
+	{
+		ResetAIValue();
+	}
+
+	void ResetAIValue()
+	{
+		m_FormationDensity = 0.5f;
+		m_SideAttack = ESideAttack_Any;
+		m_DefensiveLine = EDefensiveLine_Middle;
+		m_Width = 0.5f;
+		m_Mentality = 0.5f;
+		m_Tempo = 0.5f;
+		m_TimeWasting = 0.5f;
+		m_FocusPassing = EFocusPassing_Any;
+		m_ClosingDown = 0.5f;
+		m_TargetMan = false;
+		m_Playmaker = false;
+		m_CounterAttack = false;
+	}
+
+	float	m_Height;
+	int		m_Role;
+	int		m_PositionInTacticsBoard;
+
+	float			m_FormationDensity;
+	unsigned int	m_SideAttack;
+	unsigned int	m_DefensiveLine;
+	float			m_Width;
+	float			m_Mentality;
+	float			m_Tempo;
+	float			m_TimeWasting;
+	unsigned int	m_FocusPassing;
+	float			m_ClosingDown;
+	bool			m_TargetMan;
+	bool			m_Playmaker;
+	bool			m_CounterAttack;
+};
+struct PlayerIndividualAIParam
+{
+	PlayerOtherAttributes m_OtherAttributes[10];
+};
+
+struct RealGameInfo   
+{
+	RealGameInfo()
+		: m_IsLargePitch(false)
+		, m_IsHomeAttacking(true)
+	{
+		for(int i = 0; i < 10; ++i)
+			m_Player[i] = PlayerInfo();
+	}
+	bool m_IsLargePitch;
+	bool m_IsHomeAttacking;
+	struct TeamInfo
+	{
+		TeamInfo()
+			:m_HasGK(false)
+		{}
+		bool m_HasGK;
+	};
+	TeamInfo m_Team[2];
+	struct PlayerInfo
+	{
+		PlayerInfo()
+			: m_Pos(-1)
+			, m_HasValidData(false)
+			, m_Team(-1)
+			, m_IsGK(false)
+		{}
+		bool	m_HasValidData;
+		bool    m_IsGK;
+		int		m_Pos;
+		int		m_Team;
+	};
+	PlayerInfo m_Player[10];
 };
 
 class MyEngine : public Engine
