@@ -182,6 +182,7 @@ public:
 
 	void	ChangeAppMode(u32 mode);
 	void	UpdateCanvas();
+	void	UpdateRefCanvas();
 	u32		GetAppMode()			const{ return m_AppMode;	}
 
 private:

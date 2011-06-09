@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 	libSettings.DefineMacro(E_LS_Has_GDI);
 	libSettings.DefineMacro(E_LS_Has_GUI);
 
-	g_poEngine = new MyEngine(g_WindowWidth, g_WindowHeight, "SoccerDebugger(SSO version) V2.4", g_bIsAlwaysOnTop);
+	g_poEngine = new MyEngine(g_WindowWidth, g_WindowHeight, "SoccerDebugger(SSO version) V2.5", g_bIsAlwaysOnTop);
 
 	D_CHECK(g_poEngine);
 

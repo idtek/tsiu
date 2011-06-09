@@ -43,6 +43,7 @@ enum{
 struct NameType{
 	FXString name;
 	FXint	 type;
+	FXint	 defaultValue;
 };
 //static const int kNumOfAIParameter = 12;
 enum{
@@ -62,18 +63,18 @@ enum{
 	kNumOfAIParameter
 };
 static const NameType kNameTypeOfAIParameter[kNumOfAIParameter] = {
-	{"FormationDensity",	EValueType_Smooth},
-	{"SideAttack",			EValueType_4},
-	{"DefensiveLine",		EValueType_3},
-	{"Width",				EValueType_Smooth},
-	{"Mentality",			EValueType_Smooth},
-	{"Tempo",				EValueType_Smooth},
-	{"TimeWasting",			EValueType_Smooth},
-	{"FocusPassing",		EValueType_4},
-	{"ClosingDown",			EValueType_Smooth},
-	{"TargetMan",			EValueType_Boolean},
-	{"PlayMaker",			EValueType_Boolean},
-	{"CounterAttack",		EValueType_Boolean}
+	{"FormationDensity",	EValueType_Smooth,	50},
+	{"SideAttack",			EValueType_4,		0},
+	{"DefensiveLine",		EValueType_3,		1},
+	{"Width",				EValueType_Smooth,	50},
+	{"Mentality",			EValueType_Smooth,	50},
+	{"Tempo",				EValueType_Smooth,	50},
+	{"TimeWasting",			EValueType_Smooth,	50},
+	{"FocusPassing",		EValueType_4,		0},
+	{"ClosingDown",			EValueType_Smooth,	50},
+	{"TargetMan",			EValueType_Boolean,	0},
+	{"PlayMaker",			EValueType_Boolean,	0},
+	{"CounterAttack",		EValueType_Boolean,	0}
 };
 
 #define HOME_TEAM_ID	-1
@@ -114,16 +115,17 @@ public:
 		ID_SETHOMETEAMSTATE,
 		ID_OPENOUTPUTDIR,
 		ID_STARTSTOPREALGAME,
+		ID_SHOWREF,
+		ID_CHANGEREFCANVAS,
+		ID_COPYALLN2L,
+		ID_COPYALLL2N,
+		ID_COPYSINGLEN2L,
+		ID_COPYSINGLEL2N,
 	};
 private:
 	void onSIM_SelectPlayer(const Event* _poEvent);
 	void onSIM_SelectPlayerInRealGame(const Event* _poEvent);
 	void onAIParamUpdate(const Event* _poEvent);
-
-	void PlayerIDToPlayerAIParamControlID(int id, bool hasGK)
-	{
-		
-	}
 
 public:
 	long onCmdSendCommand(FXObject* sender, FXSelector sel, void* ptr);
@@ -138,6 +140,13 @@ public:
 	long onSetHomeTeamState(FXObject* sender, FXSelector sel, void* ptr);
 	long onOpenOutputDir(FXObject* sender, FXSelector sel, void* ptr);
 	long onRealGameControl(FXObject* sender, FXSelector sel, void* ptr);
+	long onShowRef(FXObject* sender, FXSelector sel, void* ptr);
+	long onChangeRefCanvas(FXObject* sender, FXSelector sel, void* ptr);
+
+	long onCopyAllL2N(FXObject* sender, FXSelector sel, void* ptr);
+	long onCopyAllN2L(FXObject* sender, FXSelector sel, void* ptr);
+	long onCopySingleL2N(FXObject* sender, FXSelector sel, void* ptr);
+	long onCopySingleN2L(FXObject* sender, FXSelector sel, void* ptr);
 
 	inline FXTable* GetTable(ETabIndex tab) const { return m_TabTable[tab];	}
 
@@ -150,8 +159,18 @@ public:
 	FXListBox*				m_PitchListBox;
 	FXListBox*				m_TeamStateListBox;
 	FXListBox*				m_PositionListBox;
+
+	FXListBox*				m_RefPitchListBox;
+	FXListBox*				m_RefTeamStateListBox;
+	FXListBox*				m_RefPositionListBox;
+
+	FXCheckButton*			m_ShowRefCheckBtn;
+
 	FXButton*				m_SimulatingBtn;
 	FXButton*				m_RealGameBtn;
+
+	FXListBox*				m_CopiedPos;
+	FXListBox*				m_CopiedTeamState;
 
 	FXTabBook*				m_PlayerTuningControlTabBook;
 	PlayerTuningControl*	m_PlayerTuningControl[10];
@@ -208,10 +227,10 @@ public:
 		};
 		AtomControlPair(){}
 
-		AtomControlPair(FXMatrix* matrix, const char* name, int type, int id, int idx)
+		AtomControlPair(FXMatrix* matrix, const char* name, int type, int id, int idx, int defaultVal)
 			: m_Name(name)
 			, m_ValueType(type)
-			, m_SliderValue(0)
+			, m_SliderValue(defaultVal)
 			, m_Slider(NULL)
 			, m_TextField(NULL)
 			, m_id(id)
@@ -407,7 +426,7 @@ PlayerTuningControl::PlayerTuningControl(
 	FXMatrix* matrix = new FXMatrix(p, 12, MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
 	for(int i = 0; i < kNumOfAIParameter; ++i)
 	{
-		m_SubController[i] = new AtomControlPair(matrix, kNameTypeOfAIParameter[i].name.text(), kNameTypeOfAIParameter[i].type, id, i);
+		m_SubController[i] = new AtomControlPair(matrix, kNameTypeOfAIParameter[i].name.text(), kNameTypeOfAIParameter[i].type, id, i, kNameTypeOfAIParameter[i].defaultValue);
 	}
 }
 PlayerTuningControl::~PlayerTuningControl()
@@ -430,6 +449,12 @@ FXDEFMAP(MyCanvas) MyCanvasMap[]={
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_SETHOMETEAMSTATE,		MyCanvas::onSetHomeTeamState),
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_OPENOUTPUTDIR,			MyCanvas::onOpenOutputDir),
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_STARTSTOPREALGAME,		MyCanvas::onRealGameControl),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_SHOWREF,				MyCanvas::onShowRef),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_CHANGEREFCANVAS,		MyCanvas::onChangeRefCanvas),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_COPYALLL2N,			MyCanvas::onCopyAllL2N),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_COPYALLN2L,			MyCanvas::onCopyAllN2L),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_COPYSINGLEL2N,			MyCanvas::onCopySingleL2N),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_COPYSINGLEN2L,			MyCanvas::onCopySingleN2L),
 };
 // ButtonApp implementation
 FXIMPLEMENT(MyCanvas, FXCanvas, MyCanvasMap, ARRAYNUMBER(MyCanvasMap))
@@ -512,7 +537,7 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	poTab->setTabOrientation(TAB_BOTTOM);
 	FXHorizontalFrame* poTableFrame = new FXHorizontalFrame(poTabBook, FRAME_THICK|FRAME_RAISED);
 	FXHorizontalFrame* poBoxframe = new FXHorizontalFrame(poTableFrame,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-	FXMatrix* mainnmatrix = new FXMatrix(poBoxframe, 5, MATRIX_BY_ROWS|LAYOUT_FILL_X);
+	FXMatrix* mainnmatrix = new FXMatrix(poBoxframe, 7, MATRIX_BY_ROWS|LAYOUT_FILL_X);
 
 	FXMatrix* dirmatrix = new FXMatrix(mainnmatrix, 3, MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
 	new FXLabel(dirmatrix, "Game Dir: ",NULL, JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_CENTER_Y);
@@ -539,8 +564,46 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	}
 	m_PositionListBox->setNumVisible(15);
 
+	m_RefPitchListBox = new FXListBox(filtermatrix, this, ID_CHANGEREFCANVAS, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	m_RefPitchListBox->appendItem("Normal");
+	m_RefPitchListBox->appendItem("Large");
+	m_RefPitchListBox->disable();
+	m_RefTeamStateListBox = new FXListBox(filtermatrix, this, ID_CHANGEREFCANVAS, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	m_RefTeamStateListBox->appendItem("Attack");
+	m_RefTeamStateListBox->appendItem("Defend");
+	m_RefTeamStateListBox->disable();
+	m_RefPositionListBox = new FXListBox(filtermatrix, this, ID_CHANGEREFCANVAS, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	for(int i = 0; i < 15; ++i)
+	{
+		m_RefPositionListBox->appendItem(FXStringFormat("%d", i));
+	}
+	m_RefPositionListBox->setNumVisible(15);
+	m_RefPositionListBox->disable();
+
 	FXCheckButton* checkBtn = new FXCheckButton(filtermatrix, "Away View", this, ID_SELECTAWAYVIEW);
 	checkBtn->setCheck(false, true);
+
+	m_ShowRefCheckBtn = new FXCheckButton(filtermatrix, "Show Reference", this, ID_SHOWREF);
+	m_ShowRefCheckBtn->setCheck(false, true);
+
+	new FXHorizontalSeparator(mainnmatrix, LAYOUT_SIDE_TOP|SEPARATOR_GROOVE|LAYOUT_FILL_X);
+
+	FXMatrix* copymatrix = new FXMatrix(mainnmatrix, 1, MATRIX_BY_ROWS|LAYOUT_FILL_X);
+	FXMatrix* copymatrix1 = new FXMatrix(copymatrix, 2, MATRIX_BY_ROWS|LAYOUT_FILL_X, 0, 0, 0, 0, 0);
+	new FXButton(copymatrix1, "All: L->N", NULL, this, ID_COPYALLL2N, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	new FXButton(copymatrix1, "All: N->L", NULL, this, ID_COPYALLN2L, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	FXMatrix* copymatrix2 = new FXMatrix(copymatrix, 4, MATRIX_BY_ROWS|LAYOUT_FILL_X, 0, 0, 0, 0, 0);
+	m_CopiedTeamState = new FXListBox(copymatrix2, NULL, 0, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	m_CopiedTeamState->appendItem("Attack");
+	m_CopiedTeamState->appendItem("Defend");
+	m_CopiedPos = new FXListBox(copymatrix2, NULL, 0, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	for(int i = 0; i < 15; ++i)
+	{
+		m_CopiedPos->appendItem(FXStringFormat("%d", i));
+	}
+	m_CopiedPos->setNumVisible(15);
+	new FXButton(copymatrix2, "Single: L->N", NULL, this, ID_COPYSINGLEL2N, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
+	new FXButton(copymatrix2, "Single: N->L", NULL, this, ID_COPYSINGLEN2L, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
 
 	new FXHorizontalSeparator(mainnmatrix, LAYOUT_SIDE_TOP|SEPARATOR_GROOVE|LAYOUT_FILL_X);
 	
@@ -726,8 +789,14 @@ long MyCanvas::onTabSelected(FXObject* sender, FXSelector sel,void* ptr)
 }
 long MyCanvas::onChangeCanvas(FXObject* sender, FXSelector sel, void* ptr)
 {
-	MyEngine* pMyEngine = (MyEngine*)g_poEngine;
-	pMyEngine->UpdateCanvas();
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+	if(pEditor->IsEditor())
+	{
+		MyEngine* pMyEngine = (MyEngine*)g_poEngine;
+		pMyEngine->UpdateCanvas();
+	}
+	m_RefPitchListBox->setCurrentItem(m_PitchListBox->getCurrentItem(), true);
+	m_RefTeamStateListBox->setCurrentItem(m_TeamStateListBox->getCurrentItem(), true);
 	
 	return 1;
 }
@@ -789,6 +858,7 @@ long MyCanvas::onLoadFormationData(FXObject* sender, FXSelector sel, void* ptr)
 		pEditor->Deserialize(pFormationDataFile, NULL);
 		MyEngine* pMyEngine = (MyEngine*)g_poEngine;
 		pMyEngine->UpdateCanvas();
+		pMyEngine->UpdateRefCanvas();
 		FXMessageBox::information(this,MBOX_OK,tr("Info"),tr("Load %s successfully"), file.text());
 		delete pFormationDataFile;
 
@@ -866,6 +936,7 @@ long MyCanvas::onSimulationControl(FXObject* sender, FXSelector sel, void* ptr)
 		pEditor->StopSimulation();
 		MyEngine* pMyEngine = (MyEngine*)g_poEngine;
 		pMyEngine->UpdateCanvas();
+		pMyEngine->UpdateRefCanvas();
 
 		m_SimPitchType->enable();
 		for(int i = 0; i < 4; ++i)
@@ -942,6 +1013,7 @@ long MyCanvas::onRealGameControl(FXObject* sender, FXSelector sel, void* ptr)
 		pEditor->StopRealGame();
 		MyEngine* pMyEngine = (MyEngine*)g_poEngine;
 		pMyEngine->UpdateCanvas();
+		pMyEngine->UpdateRefCanvas();
 
 		m_SimulatingBtn->enable();
 	}
@@ -998,8 +1070,8 @@ void MyCanvas::onSIM_SelectPlayer(const Event* _poEvent)
 	m_PlayerTuningControlTabBook->setCurrent(teamID == kHOME_TEAM ? HOME_TEAM_START + playerID : AWAY_TEAM_START + playerID - FESimulatedPlayer::sHomePlayerCount);
 
 	Event evt((EventType_t)E_ET_SIM_SelectRefCanvasInSimulating);
-	evt.AddParam(g_Canvas->m_SimPitchType->getCurrentItem());
-	evt.AddParam(g_Canvas->m_SimTeamState->getCurrentItem());
+	evt.AddParam(m_SimPitchType->getCurrentItem());
+	evt.AddParam(m_SimTeamState->getCurrentItem());
 	evt.AddParam(playerID);
 	evt.AddParam(teamID);
 	g_poEngine->GetEventMod()->SendEvent(&evt);
@@ -1088,6 +1160,116 @@ void MyCanvas::onAIParamUpdate(const Event* _poEvent)
 		case IDX_CounterAttack:		{ pOutAttr->m_CounterAttack		= val ? true : false; break; }
 		}
 	}
+}
+long MyCanvas::onShowRef(FXObject* sender, FXSelector sel, void* ptr)
+{
+	bool showRef = ((FXuval)ptr ? true : false);
+	
+	if(showRef)
+	{
+		//m_RefPitchListBox->enable();
+		m_RefTeamStateListBox->enable();
+		m_RefPositionListBox->enable();
+	}
+	else
+	{
+		//m_RefPitchListBox->disable();
+		m_RefTeamStateListBox->disable();
+		m_RefPositionListBox->disable();
+	}
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+	if(pEditor->IsEditor())
+	{
+		MyEngine* pMyEngine = (MyEngine*)g_poEngine;
+		pMyEngine->UpdateRefCanvas();
+	}
+
+	return 1;
+}
+long MyCanvas::onChangeRefCanvas(FXObject* sender, FXSelector sel, void* ptr)
+{
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+	if(pEditor->IsEditor())
+	{
+		MyEngine* pMyEngine = (MyEngine*)g_poEngine;
+		pMyEngine->UpdateRefCanvas();
+	}
+	return 1;
+}
+long MyCanvas::onCopyAllL2N(FXObject* sender, FXSelector sel, void* ptr)
+{
+	if( MBOX_CLICKED_NO == FXMessageBox::question(this,MBOX_YES_NO,tr("Copy Data"),tr("Copy all data from LARGE to NORMAL!!! Are you sure?"))) 
+		return 1;
+
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+	if(pEditor->CanvasCopy(FormationEditor::ECopyDirection_L2N))
+	{
+		FXMessageBox::information(this,MBOX_OK,tr("Info"),tr("Copy successfully"));
+	}
+	else
+	{
+		FXMessageBox::error(this,MBOX_OK,tr("Error"),tr("Copy failed"));
+	}
+
+	return 1;
+}
+long MyCanvas::onCopyAllN2L(FXObject* sender, FXSelector sel, void* ptr)
+{
+	if( MBOX_CLICKED_NO == FXMessageBox::question(this,MBOX_YES_NO,tr("Copy Data"),tr("Copy all data from NORMAL to LARGE!!! Are you sure?"))) 
+		return 1;
+
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+	if(pEditor->CanvasCopy(FormationEditor::ECopyDirection_N2L))
+	{
+		FXMessageBox::information(this,MBOX_OK,tr("Info"),tr("Copy successfully"));
+	}
+	else
+	{
+		FXMessageBox::error(this,MBOX_OK,tr("Error"),tr("Copy failed"));
+	}
+
+	return 1;
+}
+static const char* kTeamState[2] ={
+	"Attack", "Defend"
+};
+long MyCanvas::onCopySingleL2N(FXObject* sender, FXSelector sel, void* ptr)
+{
+	s32 teamState = m_CopiedTeamState->getCurrentItem();
+	s32	pos = m_CopiedPos->getCurrentItem();
+
+	if( MBOX_CLICKED_NO == FXMessageBox::question(this,MBOX_YES_NO,tr("Copy Data"),tr("Copy all data from LARGE to NORMAL: TeamState = %s, Position = %d!!! Are you sure?"), kTeamState[teamState], pos)) 
+		return 1;
+
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+	if(pEditor->CanvasCopy(FormationEditor::ECopyDirection_L2N, false, teamState, pos))
+	{
+		FXMessageBox::information(this,MBOX_OK,tr("Info"),tr("Copy successfully"));
+	}
+	else
+	{
+		FXMessageBox::error(this,MBOX_OK,tr("Error"),tr("Copy failed"));
+	}
+	return 1;
+}
+long MyCanvas::onCopySingleN2L(FXObject* sender, FXSelector sel, void* ptr)
+{
+	s32 teamState = m_CopiedTeamState->getCurrentItem();
+	s32	pos = m_CopiedPos->getCurrentItem();
+
+	if( MBOX_CLICKED_NO == FXMessageBox::question(this,MBOX_YES_NO,tr("Copy Data"),tr("Copy all data from NORMAL to LARGE: TeamState = %s, Position = %d!!! Are you sure?"), kTeamState[teamState], pos)) 
+		return 1;
+
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+	if(pEditor->CanvasCopy(FormationEditor::ECopyDirection_N2L, false, teamState, pos))
+	{
+		FXMessageBox::information(this,MBOX_OK,tr("Info"),tr("Copy successfully"));
+	}
+	else
+	{
+		FXMessageBox::error(this,MBOX_OK,tr("Error"),tr("Copy failed"));
+	}
+	return 1;
 }
 //-------------------------------------------------------------------------------------------------------------------------
 
@@ -1236,6 +1418,7 @@ void MyEngine::ChangeAppMode(u32 mode)
 			hideObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("TeamAway"));
 
 			UpdateCanvas();
+			UpdateRefCanvas();
 		}
 		else
 		{
@@ -1267,14 +1450,38 @@ void MyEngine::ChangeAppMode(u32 mode)
 void MyEngine::UpdateCanvas()
 {
 	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
-	int pitchList	= g_Canvas->m_PitchListBox->getCurrentItem();
-	int teamState	= g_Canvas->m_TeamStateListBox->getCurrentItem();
-	int position	= g_Canvas->m_PositionListBox->getCurrentItem();
+	if(pEditor->IsEditor())
+	{
+		int pitchList	= g_Canvas->m_PitchListBox->getCurrentItem();
+		int teamState	= g_Canvas->m_TeamStateListBox->getCurrentItem();
+		int position	= g_Canvas->m_PositionListBox->getCurrentItem();
 
-	pEditor->SetCurrentCanvas(pitchList, teamState, position);
+		pEditor->SetCurrentCanvas(pitchList, teamState, position);
 
-	FEDebuggerInfo* pDebuggerInfo = g_poEngine->GetSceneMod()->GetSceneObject<FEDebuggerInfo>("FEDebuggerInfo");
-	pDebuggerInfo->SetSelectedPosition(position);
+		FEDebuggerInfo* pDebuggerInfo = g_poEngine->GetSceneMod()->GetSceneObject<FEDebuggerInfo>("FEDebuggerInfo");
+		pDebuggerInfo->SetSelectedPosition(position);
+	}
+}
+
+void MyEngine::UpdateRefCanvas()
+{
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+
+	if(pEditor->IsEditor())
+	{
+		FXbool showRef = g_Canvas->m_ShowRefCheckBtn->getCheck();
+		u32 pitch = g_Canvas->m_RefPitchListBox->getCurrentItem();
+		u32	teamState = g_Canvas->m_RefTeamStateListBox->getCurrentItem();
+		u32 pos =  g_Canvas->m_RefPositionListBox->getCurrentItem();
+		if(showRef)
+		{
+			pEditor->ShowRef(true, pitch, teamState, pos);
+		}
+		else
+		{
+			pEditor->ShowRef(false, pitch, teamState, pos);
+		}
+	}
 }
 
 void MyEngine::DoUnInit()

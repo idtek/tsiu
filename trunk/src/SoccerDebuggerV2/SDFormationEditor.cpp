@@ -136,6 +136,11 @@ void FEBall::Draw()
 
 	DrawWithColor(bodyColor);
 }
+void FEBall::Resize(f32 ratioX, f32 ratioY)
+{
+	m_vPos.x *= ratioX;
+	m_vPos.y *= ratioY;
+}
 void FEBall::DrawWithColor(const D_Color& clr)
 {
 	D_Color bodyColor = clr;
@@ -320,6 +325,11 @@ void FEPlayer::Draw()
 		bodyColor = bodyColor / 1.5f;
 
 	DrawWithColor(bodyColor);
+}
+void FEPlayer::Resize(f32 ratioX, f32 ratioY)
+{
+	m_vPos.x *= ratioX;
+	m_vPos.y *= ratioY;
 }
 void FEPlayer::DrawWithColor(const D_Color& clr)
 {
@@ -553,6 +563,32 @@ FEEditorCanvas::~FEEditorCanvas()
 	}
 	m_Elements.clear();
 }
+FEEditorCanvas& FEEditorCanvas::operator=(const FEEditorCanvas& rhs)
+{
+	ElementPairMapIterator it = m_Elements.begin();
+	while(it != m_Elements.end())
+	{
+		ElementPair* ePair = (*it).second;
+		D_SafeDelete(ePair);
+		++it;
+	}
+	m_Elements.clear();
+
+	ElementPairMapConstIterator cit = rhs.m_Elements.begin();
+	while(cit != rhs.m_Elements.end())
+	{
+		const ElementPair* ePair = (*cit).second;
+		ElementPair* pNewPair  = new ElementPair;
+		pNewPair->m_RefElement = new FEBall(*ePair->m_RefElement);
+		pNewPair->m_FormationElement = new FEPlayer(*ePair->m_FormationElement);
+		m_Elements.insert(std::pair<s32, ElementPair*>(pNewPair->m_RefElement->GetID(), pNewPair));
+
+		++cit;
+	}
+	m_NextID = rhs.m_NextID;
+
+	return *this;
+}
 void FEEditorCanvas::Create(f32 length, f32 width)
 {
 	ElementPair* pNewPair = new ElementPair;
@@ -655,6 +691,18 @@ void FEEditorCanvas::Delete()
 
 			m_SelectedElement = NULL;
 		}
+	}
+}
+void FEEditorCanvas::Resize(f32 ratioX, f32 ratioY)
+{
+	ElementPairMapIterator it = m_Elements.begin();
+	while(it != m_Elements.end())
+	{
+		ElementPair* ePair = (*it).second;
+		ePair->m_RefElement->Resize(ratioX, ratioY);
+		ePair->m_FormationElement->Resize(ratioX, ratioY);
+
+		++it;
 	}
 }
 void FEEditorCanvas::AddElementPair(const Vec2& pos)
@@ -950,6 +998,7 @@ FormationEditor::FormationEditor()
 	, m_Mode("Mode", EEditorMode_Edit)
 	, m_IsHomeAttacking("InHomeAttacking", false)
 	, m_SimulatedRefCanvas(NULL)
+	, m_CurrentRefCanvas(NULL)
 {
 	for(s32 i = 0; i < EPitchType_Num; ++i)
 	{
@@ -1029,6 +1078,9 @@ void FormationEditor::Draw()
 {
 	if(IsEditor())
 	{
+		if(m_CurrentRefCanvas)
+			m_CurrentRefCanvas->DrawWithColor(D_Color(192, 192, 192));
+
 		if(m_CurrentCanvas)
 			m_CurrentCanvas->Draw();
 	}
@@ -1142,6 +1194,37 @@ void FormationEditor::SetCurrentCanvas(u32 pitchType, u32 teamState, u32 pos)
 		CoordinateInfo::sWidth = kPitchWidthLarge;
 	}
 	m_CurrentCanvas = m_Canvases[pitchType][teamState][pos];
+}
+
+void FormationEditor::ShowRef(bool show, u32 pitchType, u32 teamState, u32 pos)
+{
+	if(!show)
+	{
+		m_CurrentRefCanvas = NULL;
+	}
+	else
+	{
+		if(pitchType != EPitchType_Normal && pitchType != EPitchType_Large)
+			return;
+
+		if(teamState != ETeamState_Attack && teamState != ETeamState_Defend)
+			return;
+
+		if(pos < 0 || pos >= kMaxPositionCount)
+			return;
+
+		if(pitchType == EPitchType_Normal)
+		{
+			CoordinateInfo::sLength = kPithLenghNormal;
+			CoordinateInfo::sWidth = kPitchWidthNormal;
+		}
+		else
+		{
+			CoordinateInfo::sLength = kPithLenghLarge;
+			CoordinateInfo::sWidth = kPitchWidthLarge;
+		}
+		m_CurrentRefCanvas = m_Canvases[pitchType][teamState][pos];
+	}
 }
 
 Bool FormationEditor::StartRealGame(const RealGameInfo& rgInfo)
@@ -1404,6 +1487,51 @@ void FormationEditor::Clear()
 	}
 }
 
+bool FormationEditor::CanvasCopy(u32 dir, bool isAll, s32 teamState, s32 pos)
+{
+	if(isAll)
+	{
+		for(s32 i = 0; i < ETeamState_Num; ++i)
+		{
+			for(s32 j = 0; j < kMaxPositionCount; ++j)
+			{
+				if(dir == ECopyDirection_L2N)
+				{
+					CanvasCopySingle(m_Canvases[EPitchType_Normal][i][j], m_Canvases[EPitchType_Large][i][j]);
+					m_Canvases[EPitchType_Normal][i][j]->Resize(kPithLenghNormal / kPithLenghLarge, kPitchWidthNormal / kPitchWidthLarge);
+				}
+				else
+				{
+					CanvasCopySingle(m_Canvases[EPitchType_Large][i][j], m_Canvases[EPitchType_Normal][i][j]);
+					m_Canvases[EPitchType_Large][i][j]->Resize(kPithLenghLarge / kPithLenghNormal, kPitchWidthLarge / kPitchWidthNormal);
+				}
+			}
+		}
+	}
+	else
+	{
+		if(teamState != ETeamState_Attack && teamState != ETeamState_Defend)
+			return false;
+		if(pos < 0 || pos >= kMaxPositionCount)
+			return false;
+
+		if(dir == ECopyDirection_L2N)
+		{
+			CanvasCopySingle(m_Canvases[EPitchType_Normal][teamState][pos], m_Canvases[EPitchType_Large][teamState][pos]);
+			m_Canvases[EPitchType_Normal][teamState][pos]->Resize(kPithLenghNormal / kPithLenghLarge, kPitchWidthNormal / kPitchWidthLarge);
+		}
+		else
+		{
+			CanvasCopySingle(m_Canvases[EPitchType_Large][teamState][pos], m_Canvases[EPitchType_Normal][teamState][pos]);
+			m_Canvases[EPitchType_Large][teamState][pos]->Resize(kPithLenghLarge / kPithLenghNormal, kPitchWidthLarge / kPitchWidthNormal);
+		}
+	}
+	return true;
+}
+void FormationEditor::CanvasCopySingle(FEEditorCanvas* to, const FEEditorCanvas* from)
+{
+	*to = *from;
+}
 void FormationEditor::onSIM_SelectRefCanvas(const Event* _poEvent)
 {
 	s32 pitchList	= _poEvent->GetParam<s32>(0);
