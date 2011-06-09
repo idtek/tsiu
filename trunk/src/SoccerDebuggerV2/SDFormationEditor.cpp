@@ -869,7 +869,7 @@ FERealGameCanvas::~FERealGameCanvas()
 	m_Elements.Clear();
 }
 
-void FERealGameCanvas::Setup(const FERealGameCanvas::RealGameInfo& rgInfo)
+void FERealGameCanvas::Setup(const RealGameInfo& rgInfo)
 {
 	FEEditableElement* pNewElement = new FERealBall;
 	m_Elements.PushBack(pNewElement);
@@ -950,7 +950,6 @@ FormationEditor::FormationEditor()
 	, m_Mode("Mode", EEditorMode_Edit)
 	, m_IsHomeAttacking("InHomeAttacking", false)
 	, m_SimulatedRefCanvas(NULL)
-	, m_RealGameInfo("RealGameInfo", FERealGameCanvas::RealGameInfo())
 {
 	for(s32 i = 0; i < EPitchType_Num; ++i)
 	{
@@ -1003,11 +1002,11 @@ void FormationEditor::Create()
 	}
 
 	g_poEngine->GetEventMod()->RegisterHandler(
-		(EventType_t)(E_ET_SIM_SelectRefCanvas), 
+		(EventType_t)(E_ET_SIM_SelectRefCanvasInSimulating), 
 		new MEventHandler<FormationEditor>(this, &FormationEditor::onSIM_SelectRefCanvas));
 
 	g_poEngine->GetEventMod()->RegisterHandler(
-		(EventType_t)(E_ET_SIM_SelectPlayerInRealGame), 
+		(EventType_t)(E_ET_SIM_SelectRefCanvasInRealGame), 
 		new MEventHandler<FormationEditor>(this, &FormationEditor::onSIM_SelectRefCanvasInRealGame));
 }
 void FormationEditor::Tick(f32 _fDeltaTime)
@@ -1145,35 +1144,35 @@ void FormationEditor::SetCurrentCanvas(u32 pitchType, u32 teamState, u32 pos)
 	m_CurrentCanvas = m_Canvases[pitchType][teamState][pos];
 }
 
-Bool FormationEditor::StartRealGame()
+Bool FormationEditor::StartRealGame(const RealGameInfo& rgInfo)
 {
 	D_CHECK(IsEditor());
 	m_Mode = EEditorMode_RealGame;
-	m_RealGameCanvas->Setup(m_RealGameInfo.As());
+	m_RealGameCanvas->Setup(rgInfo);
 
 	int nextIdx = 0;
 	for(int i = 0; i < 10; ++i)
 	{
-		if(m_RealGameInfo.As().m_Player[i].m_HasValidData)
+		if(rgInfo.m_Player[i].m_HasValidData)
 		{
-			if(m_RealGameInfo.As().m_Player[i].m_Team == kHOME_TEAM)
+			if(rgInfo.m_Player[i].m_Team == kHOME_TEAM)
 			{
-				m_RefPlayerPositionInTB[nextIdx++] = m_RealGameInfo.As().m_Player[i].m_Pos;
+				m_RefPlayerPositionInTB[nextIdx++] = rgInfo.m_Player[i].m_Pos;
 			}
 		}
 	}
 	for(int i = 0; i < 10; ++i)
 	{
-		if(m_RealGameInfo.As().m_Player[i].m_HasValidData)
+		if(rgInfo.m_Player[i].m_HasValidData)
 		{
-			if(m_RealGameInfo.As().m_Player[i].m_Team == kAWAY_TEAM)
+			if(rgInfo.m_Player[i].m_Team == kAWAY_TEAM)
 			{
-				m_RefPlayerPositionInTB[nextIdx++] = m_RealGameInfo.As().m_Player[i].m_Pos;
+				m_RefPlayerPositionInTB[nextIdx++] = rgInfo.m_Player[i].m_Pos;
 			}
 		}
 	}
 
-	if(!m_RealGameInfo.As().m_IsLargePitch)
+	if(!rgInfo.m_IsLargePitch)
 	{
 		CoordinateInfo::sLength = kPithLenghNormal;
 		CoordinateInfo::sWidth = kPitchWidthNormal;
@@ -1243,6 +1242,7 @@ bool FormationEditor::StartSimulation(const FESimulatedCanvas::SimulatedSettings
 	ss <<	"end"																												<< "\r\n";	
 
 	ss <<	"MatchSetup['Setup'] = function(newGame)"																			<< "\r\n";	
+	ss <<		"\tnewGame.SetInputMode(InputMode.Normal);"																		<< "\r\n";	
 	for(int i = 0; i < setup.m_HomePlayerPosition.Size(); ++i)
 	{
 		ss <<	"\tGameLogic.ClearPlayerAI( MatchSetup.player" << i + 1 << " )"													<< "\r\n";	
@@ -1434,10 +1434,10 @@ void FormationEditor::onSIM_SelectRefCanvasInRealGame(const Event* _poEvent)
 	bool isGK = _poEvent->GetParam<Bool>(2);
 	if(!isGK)
 	{
-		s32 pitchList	= m_RealGameInfo.As().m_IsLargePitch ? EPitchType_Large : EPitchType_Normal;
-		s32 teamState	= m_RealGameInfo.As().m_IsHomeAttacking ? ETeamState_Attack : ETeamState_Defend;
-		s32 playerID	= _poEvent->GetParam<s32>(0);
-		s32 teamID		= _poEvent->GetParam<s32>(1);
+		s32 pitchList	= _poEvent->GetParam<s32>(0);
+		s32 teamState	= _poEvent->GetParam<s32>(1);
+		s32 playerID	= _poEvent->GetParam<s32>(2);
+		s32 teamID		= _poEvent->GetParam<s32>(3);
 
 		if(teamID == kAWAY_TEAM)
 		{

@@ -139,9 +139,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="tinyxml.lib"
+				AdditionalDependencies="tinyxml.lib libjpeg.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\ExternLibs\TinyXML\lib"
+				AdditionalLibraryDirectories="..\ExternLibs\TinyXML\lib;..\ExternLibs\libjpeg\lib;"
 				IgnoreDefaultLibraryNames="libcmt.lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"

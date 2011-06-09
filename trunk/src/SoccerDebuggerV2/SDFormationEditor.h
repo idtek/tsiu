@@ -251,33 +251,6 @@ protected:
 class FERealGameCanvas : public FECanvas
 {
 public:
-	struct RealGameInfo   
-	{
-		RealGameInfo()
-			: m_IsLargePitch(false)
-			, m_IsHomeAttacking(true)
-		{
-			for(int i = 0; i < 10; ++i)
-				m_Player[i] = PlayerInfo();
-		}
-		bool m_IsLargePitch;
-		bool m_IsHomeAttacking;
-		struct PlayerInfo
-		{
-			PlayerInfo()
-				: m_Pos(-1)
-				, m_HasValidData(false)
-				, m_Team(-1)
-				, m_IsGK(false)
-			{}
-			bool	m_HasValidData;
-			bool    m_IsGK;
-			int		m_Pos;
-			int		m_Team;
-		};
-		PlayerInfo m_Player[10];
-	};
-
 	FERealGameCanvas();
 	~FERealGameCanvas();
 
@@ -342,7 +315,7 @@ public:
 	void AddElementPair();
 	void SetCurrentCanvas(u32 pitchType, u32 teamState, u32 pos);
 
-	Bool StartRealGame();
+	Bool StartRealGame(const RealGameInfo& rgInfo);
 	Bool StopRealGame();
 
 private:
@@ -359,7 +332,6 @@ private:
 
 	AI::RFInt			m_RefPlayerPositionInTB[10];
 	AI::RFBool			m_IsHomeAttacking;
-	TsiU::AI::RefValue<FERealGameCanvas::RealGameInfo, TsiU::AI::ERefValuFlag_ReadOnly> m_RealGameInfo;
 };
 //----------------------------------------------------------------------------
 class FEDebuggerInfo : public DrawableObject
