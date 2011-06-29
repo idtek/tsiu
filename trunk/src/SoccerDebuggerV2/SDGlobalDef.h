@@ -99,11 +99,13 @@ public:
 	void ResetAIValue()
 	{
 		m_FormationDensity = 0.5f;
+		m_Attack = 0.5f;
+		m_Defend = 0.5f;
 		m_SideAttack = ESideAttack_Any;
 		m_DefensiveLine = EDefensiveLine_Middle;
 		m_Width = 0.5f;
-		m_Mentality = 0.5f;
-		m_Tempo = 0.5f;
+		m_Teamwork = 0.5f;
+		m_Security = 0.5f;
 		m_TimeWasting = 0.5f;
 		m_FocusPassing = EFocusPassing_Any;
 		m_ClosingDown = 0.5f;
@@ -117,11 +119,13 @@ public:
 	int		m_PositionInTacticsBoard;
 
 	float			m_FormationDensity;
+	float			m_Attack;
+	float			m_Defend;
 	unsigned int	m_SideAttack;
 	unsigned int	m_DefensiveLine;
 	float			m_Width;
-	float			m_Mentality;
-	float			m_Tempo;
+	float			m_Teamwork;
+	float			m_Security;
 	float			m_TimeWasting;
 	unsigned int	m_FocusPassing;
 	float			m_ClosingDown;
