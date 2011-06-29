@@ -1332,9 +1332,9 @@ bool FormationEditor::StartSimulation(const FESimulatedCanvas::SimulatedSettings
 		ss <<	"\tGameLogic.AddBehaviourModule(MatchSetup.player" << i + 1
 		   <<	", EBehaviourModule.EBehaviourModule_IDLE);"																	<< "\r\n";
 		ss <<	"\tGameLogic.AddBehaviourModule(MatchSetup.player" << i + 1
-		   <<	", EBehaviourModule.EBehaviourModule_OFF_BALL_ATTACK_ZONAL_POSITIONING);"										<< "\r\n";
+		   <<	", EBehaviourModule.EBehaviourModule_NEWAI_ATTACK_BASICFORMATION);"												<< "\r\n";
 		ss <<	"\tGameLogic.AddBehaviourModule(MatchSetup.player" << i + 1
-		   <<	", EBehaviourModule.EBehaviourModule_DEFENSIVE_MODULE_OUTFIELD);"												<< "\r\n";
+		   <<	", EBehaviourModule.EBehaviourModule_NEWAI_DEFEND_BASICFORMATION);"												<< "\r\n";
 	}
 	for(int i = 0; i < setup.m_AwayPlayerPosition.Size(); ++i)
 	{
@@ -1342,9 +1342,9 @@ bool FormationEditor::StartSimulation(const FESimulatedCanvas::SimulatedSettings
 		ss <<	"\tGameLogic.AddBehaviourModule(MatchSetup.player" << i + 1 + setup.m_HomePlayerPosition.Size()
 		   <<	", EBehaviourModule.EBehaviourModule_IDLE);"																	<< "\r\n";
 		ss <<	"\tGameLogic.AddBehaviourModule(MatchSetup.player" << i + 1 + setup.m_HomePlayerPosition.Size()
-		   <<	", EBehaviourModule.EBehaviourModule_OFF_BALL_ATTACK_ZONAL_POSITIONING);"										<< "\r\n";
+		   <<	", EBehaviourModule.EBehaviourModule_NEWAI_ATTACK_BASICFORMATION);"												<< "\r\n";
 		ss <<	"\tGameLogic.AddBehaviourModule(MatchSetup.player" << i + 1 + setup.m_HomePlayerPosition.Size()
-		   <<	", EBehaviourModule.EBehaviourModule_DEFENSIVE_MODULE_OUTFIELD);"												<< "\r\n";
+		   <<	", EBehaviourModule.EBehaviourModule_NEWAI_DEFEND_BASICFORMATION);"												<< "\r\n";
 	}
 	ss <<		"\tSequenceManager.PlaySequence( \"Camera.Side\" );"															<< "\r\n";	
 	ss <<		"\tSequenceManager.PlaySequence( \"Game.SinglePlayer\");"														<< "\r\n";	
@@ -1559,29 +1559,20 @@ void FormationEditor::onSIM_SelectRefCanvas(const Event* _poEvent)
 void FormationEditor::onSIM_SelectRefCanvasInRealGame(const Event* _poEvent)
 {
 	FEDebuggerInfo* pDebuggerInfo = g_poEngine->GetSceneMod()->GetSceneObject<FEDebuggerInfo>("FEDebuggerInfo");
-	bool isGK = _poEvent->GetParam<Bool>(2);
-	if(!isGK)
-	{
-		s32 pitchList	= _poEvent->GetParam<s32>(0);
-		s32 teamState	= _poEvent->GetParam<s32>(1);
-		s32 playerID	= _poEvent->GetParam<s32>(2);
-		s32 teamID		= _poEvent->GetParam<s32>(3);
+	s32 pitchList	= _poEvent->GetParam<s32>(0);
+	s32 teamState	= _poEvent->GetParam<s32>(1);
+	s32 playerID	= _poEvent->GetParam<s32>(2);
+	s32 teamID		= _poEvent->GetParam<s32>(3);
 
-		if(teamID == kAWAY_TEAM)
-		{
-			teamState = (teamState == ETeamState_Attack ? ETeamState_Defend : ETeamState_Attack);
-		}
-		s32 posID		= m_RefPlayerPositionInTB[playerID].As();
-		if(posID >= 0 && posID <= 14)
-		{
-			pDebuggerInfo->SetSelectedPosition(posID);
-			m_SimulatedRefCanvas = m_Canvases[pitchList][teamState][posID];
-		}
-		else
-		{
-			pDebuggerInfo->SetSelectedPosition(-1);
-			m_SimulatedRefCanvas = NULL;
-		}
+	if(teamID == kAWAY_TEAM)
+	{
+		teamState = (teamState == ETeamState_Attack ? ETeamState_Defend : ETeamState_Attack);
+	}
+	s32 posID		= m_RefPlayerPositionInTB[playerID].As();
+	if(posID >= 0 && posID <= 14)
+	{
+		pDebuggerInfo->SetSelectedPosition(posID);
+		m_SimulatedRefCanvas = m_Canvases[pitchList][teamState][posID];
 	}
 	else
 	{
@@ -1674,7 +1665,74 @@ void FEDebuggerInfo::Draw()
 			indicator, NULL, clr);
 	}
 }
+//----------------------------------------------------------------
+FEInfluenceMap::FEInfluenceMap()
+	: m_Grid("InfluenceMap", InnerMapGrid())
+	, m_iSizeOfWidth(0)
+	, m_iSizeOfLength(0)
+{
+}
+void FEInfluenceMap::Init(bool isBigPitch)
+{
+	if(isBigPitch)
+	{
+		m_iSizeOfWidth = 40;
+		m_iSizeOfLength = 60;
+	}
+	else
+	{
+		m_iSizeOfWidth = 30;
+		m_iSizeOfLength = 50;
+	}
+}
+void FEInfluenceMap::Create()
+{
+}
+void FEInfluenceMap::Tick(f32 _fDeltaTime)
+{
+	if(m_iSizeOfWidth == 0 && m_iSizeOfLength == 0)
+		return;
 
+	////memset(m_Grid.AsRawData().m_Map, 0, MAX_CELL_CNT);
+	//for(int i = 0; i < 50; ++i)
+	//{
+	//	int pos = rand() % (m_iSizeOfWidth * m_iSizeOfLength);
+	//	int value = rand() % 255;
+	//	m_Grid.AsRawData().m_Map[pos] = value;
+	//}
+}
+void FEInfluenceMap::Draw()
+{
+	if(m_iSizeOfWidth == 0 && m_iSizeOfLength == 0)
+	{
+		return;
+	}
+	for(int i = 0; i < MAX_CELL_CNT; ++i)
+	{
+		u8 mapValue = m_Grid.As().m_Map[i];
+		if(mapValue)
+		{	
+			u32 x = i % m_iSizeOfLength;
+			u32 y = i / m_iSizeOfLength;
+			D_Color clr;
+			if(mapValue >= 0x7f)
+				clr = Math::Blend(D_Color(0xff, 0xff, 00), D_Color(0xff, 0, 0), Math::Clamp((f32)(mapValue - 0x7f) / 0x7f, 0.f, 1.f));
+			else
+				clr = Math::Blend(D_Color(0, 0xff, 00), D_Color(0xff, 0xff, 0), Math::Clamp((f32)mapValue / 0x7f, 0.f, 1.f));
+
+			D_Color finalClr = Math::Blend(D_Color(141,198,63), clr, 0.5f);
+
+			Vec2 indicatorPos = Vec2(x * 1.f - CoordinateInfo::sLength / 2.f, CoordinateInfo::sWidth / 2.f - y * 1.f);
+			Vec2 indicatorScreenPos = CoordinateInfo::WorldToScreen(indicatorPos);
+			g_poSROU->DrawFillRectangle(
+				indicatorScreenPos.x, 
+				indicatorScreenPos.y,
+				1.f * CoordinateInfo::GetPixelPerMeter(), 
+				1.f * CoordinateInfo::GetPixelPerMeter(),
+				finalClr, finalClr);
+		}
+	}
+}
 //----------------------------------------------------------------
 void FEWindowMsgCallBack::OnMouseLDown(s32 x, s32 y)
 {

@@ -370,7 +370,29 @@ private:
 	bool  m_GoUp;
 	s32	  m_SelectedPosition;
 };
+//----------------------------------------------------------------------------
+#define MAX_CELL_CNT	2400
 
+class FEInfluenceMap : public DrawableObject
+{
+	struct InnerMapGrid
+	{
+		u8 m_Map[MAX_CELL_CNT];
+	};
+public:
+	FEInfluenceMap();
+
+	void Init(bool isBigPitch);
+
+	virtual void Create();
+	virtual void Tick(f32 _fDeltaTime);
+	virtual void Draw();
+	
+private:
+	u32 m_iSizeOfWidth;
+	u32 m_iSizeOfLength;
+	AI::RefValue<InnerMapGrid, AI::ERefValuFlag_ReadOnly> m_Grid;	
+};
 //----------------------------------------------------------------------------
 class FEWindowMsgCallBack : public RenderWindowMsgListener
 {

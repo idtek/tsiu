@@ -48,11 +48,13 @@ struct NameType{
 //static const int kNumOfAIParameter = 12;
 enum{
 	IDX_FormationDensity,
+	IDX_Attack,
+	IDX_Defend,
 	IDX_SideAttack,		
 	IDX_DefensiveLine,	
 	IDX_Width,			
-	IDX_Mentality,		
-	IDX_Tempo,			
+	IDX_Teamwork,		
+	IDX_Security,			
 	IDX_TimeWasting,	
 	IDX_FocusPassing,	
 	IDX_ClosingDown,	
@@ -64,11 +66,13 @@ enum{
 };
 static const NameType kNameTypeOfAIParameter[kNumOfAIParameter] = {
 	{"FormationDensity",	EValueType_Smooth,	50},
+	{"Attack",				EValueType_Smooth,	50},
+	{"Defend",				EValueType_Smooth,	50},
 	{"SideAttack",			EValueType_4,		0},
 	{"DefensiveLine",		EValueType_3,		1},
 	{"Width",				EValueType_Smooth,	50},
-	{"Mentality",			EValueType_Smooth,	50},
-	{"Tempo",				EValueType_Smooth,	50},
+	{"Teamwork",			EValueType_Smooth,	50},
+	{"Security",			EValueType_Smooth,	50},
 	{"TimeWasting",			EValueType_Smooth,	50},
 	{"FocusPassing",		EValueType_4,		0},
 	{"ClosingDown",			EValueType_Smooth,	50},
@@ -116,6 +120,7 @@ public:
 		ID_OPENOUTPUTDIR,
 		ID_STARTSTOPREALGAME,
 		ID_SHOWREF,
+		ID_SHOWIM,
 		ID_CHANGEREFCANVAS,
 		ID_COPYALLN2L,
 		ID_COPYALLL2N,
@@ -141,6 +146,7 @@ public:
 	long onOpenOutputDir(FXObject* sender, FXSelector sel, void* ptr);
 	long onRealGameControl(FXObject* sender, FXSelector sel, void* ptr);
 	long onShowRef(FXObject* sender, FXSelector sel, void* ptr);
+	long onShowInfluenceMap(FXObject* sender, FXSelector sel, void* ptr);
 	long onChangeRefCanvas(FXObject* sender, FXSelector sel, void* ptr);
 
 	long onCopyAllL2N(FXObject* sender, FXSelector sel, void* ptr);
@@ -165,6 +171,7 @@ public:
 	FXListBox*				m_RefPositionListBox;
 
 	FXCheckButton*			m_ShowRefCheckBtn;
+	FXCheckButton*			m_ShowInfluenceMap;
 
 	FXButton*				m_SimulatingBtn;
 	FXButton*				m_RealGameBtn;
@@ -360,11 +367,13 @@ public:
 	void InitFromData(const PlayerOtherAttributes& attr)
 	{
 		m_SubController[IDX_FormationDensity]->m_Slider->setValue(Math::Clamp((int)(attr.m_FormationDensity * 100), 0, 100), true);
+		m_SubController[IDX_Attack			]->m_Slider->setValue(Math::Clamp((int)(attr.m_Attack * 100), 0, 100), true);
+		m_SubController[IDX_Defend			]->m_Slider->setValue(Math::Clamp((int)(attr.m_Defend * 100), 0, 100), true);
 		m_SubController[IDX_SideAttack		]->m_Slider->setValue(attr.m_SideAttack, true);
 		m_SubController[IDX_DefensiveLine	]->m_Slider->setValue(attr.m_DefensiveLine, true);
 		m_SubController[IDX_Width			]->m_Slider->setValue(Math::Clamp((int)(attr.m_Width * 100), 0, 100), true);
-		m_SubController[IDX_Mentality		]->m_Slider->setValue(Math::Clamp((int)(attr.m_Mentality * 100), 0, 100), true);
-		m_SubController[IDX_Tempo			]->m_Slider->setValue(Math::Clamp((int)(attr.m_Tempo * 100), 0, 100), true);
+		m_SubController[IDX_Teamwork		]->m_Slider->setValue(Math::Clamp((int)(attr.m_Teamwork * 100), 0, 100), true);
+		m_SubController[IDX_Security		]->m_Slider->setValue(Math::Clamp((int)(attr.m_Security * 100), 0, 100), true);
 		m_SubController[IDX_TimeWasting		]->m_Slider->setValue(Math::Clamp((int)(attr.m_TimeWasting * 100), 0, 100), true);
 		m_SubController[IDX_FocusPassing	]->m_Slider->setValue(attr.m_FocusPassing, true);
 		m_SubController[IDX_ClosingDown		]->m_Slider->setValue(Math::Clamp((int)(attr.m_ClosingDown * 100), 0, 100), true);
@@ -375,11 +384,13 @@ public:
 	void ToData(PlayerOtherAttributes& attr)
 	{
 		attr.m_FormationDensity =  Math::Clamp((float)m_SubController[IDX_FormationDensity]->m_Slider->getValue()/100.f, 0.f, 1.f);
+		attr.m_Attack			=  Math::Clamp((float)m_SubController[IDX_Attack]->m_Slider->getValue()/100.f, 0.f, 1.f);
+		attr.m_Defend			=  Math::Clamp((float)m_SubController[IDX_Defend]->m_Slider->getValue()/100.f, 0.f, 1.f);
 		attr.m_SideAttack		=  m_SubController[IDX_SideAttack]->m_Slider->getValue();
 		attr.m_DefensiveLine	=  m_SubController[IDX_DefensiveLine]->m_Slider->getValue();
 		attr.m_Width			=  Math::Clamp((float)m_SubController[IDX_Width]->m_Slider->getValue()/100.f, 0.f, 1.f);
-		attr.m_Mentality		=  Math::Clamp((float)m_SubController[IDX_Mentality]->m_Slider->getValue()/100.f, 0.f, 1.f);
-		attr.m_Tempo			=  Math::Clamp((float)m_SubController[IDX_Tempo]->m_Slider->getValue()/100.f, 0.f, 1.f);
+		attr.m_Teamwork			=  Math::Clamp((float)m_SubController[IDX_Teamwork]->m_Slider->getValue()/100.f, 0.f, 1.f);
+		attr.m_Security			=  Math::Clamp((float)m_SubController[IDX_Security]->m_Slider->getValue()/100.f, 0.f, 1.f);
 		attr.m_TimeWasting		=  Math::Clamp((float)m_SubController[IDX_TimeWasting]->m_Slider->getValue()/100.f, 0.f, 1.f);
 		attr.m_FocusPassing		=  m_SubController[IDX_FocusPassing]->m_Slider->getValue();
 		attr.m_ClosingDown		=  Math::Clamp((float)m_SubController[IDX_ClosingDown]->m_Slider->getValue()/100.f, 0.f, 1.f);
@@ -423,7 +434,7 @@ PlayerTuningControl::PlayerTuningControl(
 {
 	flags |= FLAG_ENABLED;
 
-	FXMatrix* matrix = new FXMatrix(p, 12, MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
+	FXMatrix* matrix = new FXMatrix(p, 15, MATRIX_BY_COLUMNS|LAYOUT_FILL_X);
 	for(int i = 0; i < kNumOfAIParameter; ++i)
 	{
 		m_SubController[i] = new AtomControlPair(matrix, kNameTypeOfAIParameter[i].name.text(), kNameTypeOfAIParameter[i].type, id, i, kNameTypeOfAIParameter[i].defaultValue);
@@ -450,6 +461,7 @@ FXDEFMAP(MyCanvas) MyCanvasMap[]={
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_OPENOUTPUTDIR,			MyCanvas::onOpenOutputDir),
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_STARTSTOPREALGAME,		MyCanvas::onRealGameControl),
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_SHOWREF,				MyCanvas::onShowRef),
+	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_SHOWIM,				MyCanvas::onShowInfluenceMap),
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_CHANGEREFCANVAS,		MyCanvas::onChangeRefCanvas),
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_COPYALLL2N,			MyCanvas::onCopyAllL2N),
 	FXMAPFUNC(SEL_COMMAND,		MyCanvas::ID_COPYALLN2L,			MyCanvas::onCopyAllN2L),
@@ -616,6 +628,9 @@ MyCanvas::MyCanvas(FX::FXComposite *p,
 	m_SimTeamState = new FXListBox(simCommonPart, this, ID_SETHOMETEAMSTATE, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_X|LAYOUT_CENTER_Y|LAYOUT_FIX_WIDTH, 0, 0, 100);
 	m_SimTeamState->appendItem("Attack");
 	m_SimTeamState->appendItem("Defend");
+
+	m_ShowInfluenceMap = new FXCheckButton(simCommonPart, "Show InfMap", this, ID_SHOWIM);
+	m_ShowInfluenceMap->setCheck(false, true);
 
 	new FXVerticalSeparator(simPart, LAYOUT_SIDE_TOP|SEPARATOR_GROOVE|LAYOUT_FILL_Y);
 
@@ -945,6 +960,9 @@ long MyCanvas::onSimulationControl(FXObject* sender, FXSelector sel, void* ptr)
 			m_SimAwayTeamList[i]->enable();
 		}
 		m_RealGameBtn->enable();
+
+		FEInfluenceMap* pIM = g_poEngine->GetSceneMod()->GetSceneObject<FEInfluenceMap>("InfluenceMap");
+		pIM->RemoveControlFlag(E_OCF_Active | E_OCF_Show);
 	}
 	else
 	{
@@ -995,6 +1013,16 @@ long MyCanvas::onSimulationControl(FXObject* sender, FXSelector sel, void* ptr)
 					m_PlayerTuningControl[i]->ToData(attr);
 				}
 			}
+			FEInfluenceMap* pIM = g_poEngine->GetSceneMod()->GetSceneObject<FEInfluenceMap>("InfluenceMap");
+			pIM->Init(setup.m_PitchType == FormationEditor::EPitchType_Large);
+			if(m_ShowInfluenceMap->getCheck())
+			{
+				pIM->AddControlFlag(E_OCF_Active | E_OCF_Show);
+			}
+			else
+			{
+				pIM->RemoveControlFlag(E_OCF_Active | E_OCF_Show);
+			}
 		} 
 		else
 		{
@@ -1016,6 +1044,9 @@ long MyCanvas::onRealGameControl(FXObject* sender, FXSelector sel, void* ptr)
 		pMyEngine->UpdateRefCanvas();
 
 		m_SimulatingBtn->enable();
+
+		FEInfluenceMap* pIM = g_poEngine->GetSceneMod()->GetSceneObject<FEInfluenceMap>("InfluenceMap");
+		pIM->RemoveControlFlag(E_OCF_Active | E_OCF_Show);
 	}
 	else
 	{
@@ -1049,6 +1080,17 @@ long MyCanvas::onRealGameControl(FXObject* sender, FXSelector sel, void* ptr)
 
 		FEDebuggerInfo* pDebuggerInfo = g_poEngine->GetSceneMod()->GetSceneObject<FEDebuggerInfo>("FEDebuggerInfo");
 		pDebuggerInfo->SetSelectedPosition(-1);
+
+		FEInfluenceMap* pIM = g_poEngine->GetSceneMod()->GetSceneObject<FEInfluenceMap>("InfluenceMap");
+		pIM->Init(false);
+		if(m_ShowInfluenceMap->getCheck())
+		{
+			pIM->AddControlFlag(E_OCF_Active | E_OCF_Show);
+		}
+		else
+		{
+			pIM->RemoveControlFlag(E_OCF_Active | E_OCF_Show);
+		}
 	}
 	return 1;
 }
@@ -1147,11 +1189,13 @@ void MyCanvas::onAIParamUpdate(const Event* _poEvent)
 		switch(idx)
 		{
 		case IDX_FormationDensity:	{ pOutAttr->m_FormationDensity	= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
+		case IDX_Attack:			{ pOutAttr->m_Attack			= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
+		case IDX_Defend:			{ pOutAttr->m_Defend			= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
 		case IDX_SideAttack:		{ pOutAttr->m_SideAttack		= val; break; }
 		case IDX_DefensiveLine:		{ pOutAttr->m_DefensiveLine		= val; break; }
 		case IDX_Width:				{ pOutAttr->m_Width				= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
-		case IDX_Mentality:			{ pOutAttr->m_Mentality			= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
-		case IDX_Tempo:				{ pOutAttr->m_Tempo				= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
+		case IDX_Teamwork:			{ pOutAttr->m_Teamwork			= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
+		case IDX_Security:			{ pOutAttr->m_Security			= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
 		case IDX_TimeWasting:		{ pOutAttr->m_TimeWasting		= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
 		case IDX_FocusPassing:		{ pOutAttr->m_FocusPassing		= val; break; }
 		case IDX_ClosingDown:		{ pOutAttr->m_ClosingDown		= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
@@ -1184,6 +1228,24 @@ long MyCanvas::onShowRef(FXObject* sender, FXSelector sel, void* ptr)
 		pMyEngine->UpdateRefCanvas();
 	}
 
+	return 1;
+}
+long MyCanvas::onShowInfluenceMap(FXObject* sender, FXSelector sel, void* ptr)
+{
+	FormationEditor* pEditor = g_poEngine->GetSceneMod()->GetSceneObject<FormationEditor>("FormationEditor");
+	if(!pEditor->IsEditor())
+	{
+		bool showInfluenceMap = ((FXuval)ptr ? true : false);
+		FEInfluenceMap* pIM = g_poEngine->GetSceneMod()->GetSceneObject<FEInfluenceMap>("InfluenceMap");
+		if(showInfluenceMap)
+		{
+			pIM->AddControlFlag(E_OCF_Active | E_OCF_Show);
+		}
+		else
+		{
+			pIM->RemoveControlFlag(E_OCF_Active | E_OCF_Show);
+		}
+	}
 	return 1;
 }
 long MyCanvas::onChangeRefCanvas(FXObject* sender, FXSelector sel, void* ptr)
@@ -1384,15 +1446,22 @@ void MyEngine::DoInit()
 	//RenderWindowMsg::RegisterMsgListener(new SDWindowMsgCallBack);
 	
 	g_poEngine->GetSceneMod()->AddObject("RefValueUpdater", new ORefValueUpdater);
-	g_poEngine->GetSceneMod()->AddObject("FormationEditor", new FormationEditor);
-	g_poEngine->GetSceneMod()->AddObject("FEDebuggerInfo", new FEDebuggerInfo);
+	Object* pObj = new FormationEditor;
+	pObj->SetZOrder(EZOrder_Top + 1);
+	g_poEngine->GetSceneMod()->AddObject("FormationEditor", pObj);
+	pObj = new FEDebuggerInfo;
+	pObj->SetZOrder(EZOrder_Top + 2);
+	g_poEngine->GetSceneMod()->AddObject("FEDebuggerInfo", pObj);
+	pObj = new FEInfluenceMap;
+	pObj->SetZOrder(EZOrder_Top + 3);
+	g_poEngine->GetSceneMod()->AddObject("InfluenceMap", pObj);
 	g_poEngine->GetSceneMod()->AddObject("ZBall", new OBall);
 	g_poEngine->GetSceneMod()->AddObject("Parser", new OParser);
 	g_poEngine->GetSceneMod()->AddObject("TeamHome", new OTeam(kHOME_TEAM));
 	g_poEngine->GetSceneMod()->AddObject("TeamAway", new OTeam(kAWAY_TEAM));
-	Object* pField = new OField;
-	pField->SetZOrder(EZOrder_Bottom);
-	g_poEngine->GetSceneMod()->AddObject("Field", pField);
+	pObj = new OField;
+	pObj->SetZOrder(EZOrder_Bottom);
+	g_poEngine->GetSceneMod()->AddObject("Field", pObj);
 	g_poEngine->GetSceneMod()->AddObject("Watch", new OWatch);
 
 	g_hRecv = BEGINTHREADEX(0,0,RecvUDPPack,0,0,0);
@@ -1412,6 +1481,7 @@ void MyEngine::ChangeAppMode(u32 mode)
 			showObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("RefValueUpdater"));
 			showObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("FormationEditor"));
 			showObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("FEDebuggerInfo"));
+			showObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("InfluenceMap"));
 
 			hideObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("ZBall"));
 			hideObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("TeamHome"));
@@ -1425,6 +1495,7 @@ void MyEngine::ChangeAppMode(u32 mode)
 			hideObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("RefValueUpdater"));
 			hideObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("FormationEditor"));
 			hideObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("FEDebuggerInfo"));
+			hideObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("InfluenceMap"));
 
 			showObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("ZBall"));
 			showObj.PushBack(g_poEngine->GetSceneMod()->GetSceneObject<Object>("TeamHome"));
