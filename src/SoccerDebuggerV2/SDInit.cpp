@@ -38,6 +38,7 @@ enum{
 	EValueType_Smooth,
 	EValueType_3,
 	EValueType_4,
+	EValueType_5,
 	EValueType_Boolean,
 };
 struct NameType{
@@ -47,6 +48,7 @@ struct NameType{
 };
 //static const int kNumOfAIParameter = 12;
 enum{
+	IDX_Rank,
 	IDX_FormationDensity,
 	IDX_Attack,
 	IDX_Defend,
@@ -65,6 +67,7 @@ enum{
 	kNumOfAIParameter
 };
 static const NameType kNameTypeOfAIParameter[kNumOfAIParameter] = {
+	{"Rank",				EValueType_5,		2},
 	{"FormationDensity",	EValueType_Smooth,	50},
 	{"Attack",				EValueType_Smooth,	50},
 	{"Defend",				EValueType_Smooth,	50},
@@ -245,7 +248,7 @@ public:
 		{
 			new FXLabel(matrix, m_Name.text(), NULL, JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_CENTER_Y);
 			m_SliderDataTarget.connect(m_SliderValue, this, AtomControlPair::ID_UPDATERFVALUE);
-			m_TextField = new FXTextField(matrix, 1, NULL, 0, FRAME_SUNKEN|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_FILL_ROW|LAYOUT_FIX_WIDTH, 0, 0, 40);
+			m_TextField = new FXTextField(matrix, 1, NULL, 0, FRAME_SUNKEN|FRAME_THICK|LAYOUT_CENTER_Y|LAYOUT_FILL_ROW|LAYOUT_FIX_WIDTH, 0, 0, 65);
 			m_Slider = new FXSlider(matrix, &m_SliderDataTarget, FXDataTarget::ID_VALUE, LAYOUT_CENTER_Y|LAYOUT_FILL_ROW|LAYOUT_FIX_WIDTH, 0, 0, 100);
 			switch(type)
 			{
@@ -263,6 +266,10 @@ public:
 				break;
 			case EValueType_Boolean:
 				m_Slider->setRange(0, 1);
+				m_Slider->setIncrement(1);
+				break;
+			case EValueType_5:
+				m_Slider->setRange(0, 4);
 				m_Slider->setIncrement(1);
 				break;
 			}
@@ -339,6 +346,21 @@ public:
 						}
 						break;
 					}
+				case EValueType_5:
+					{
+						static const char* kRank[] = {
+							"Monkey", "Child", "Adult", "Professional", "SuperMan"
+						};
+						if(m_Name == "Rank")
+						{
+							str.format("%s", kRank[m_SliderValue]);
+						}
+						else
+						{
+							D_CHECK(0);
+						}
+						break;
+					}
 				default:
 					str.format("%d", m_SliderValue);
 					break;
@@ -366,6 +388,7 @@ public:
 public:
 	void InitFromData(const PlayerOtherAttributes& attr)
 	{
+		m_SubController[IDX_Rank			]->m_Slider->setValue(attr.m_Rank, true);
 		m_SubController[IDX_FormationDensity]->m_Slider->setValue(Math::Clamp((int)(attr.m_FormationDensity * 100), 0, 100), true);
 		m_SubController[IDX_Attack			]->m_Slider->setValue(Math::Clamp((int)(attr.m_Attack * 100), 0, 100), true);
 		m_SubController[IDX_Defend			]->m_Slider->setValue(Math::Clamp((int)(attr.m_Defend * 100), 0, 100), true);
@@ -383,6 +406,7 @@ public:
 	}
 	void ToData(PlayerOtherAttributes& attr)
 	{
+		attr.m_Rank				=  m_SubController[IDX_Rank]->m_Slider->getValue();
 		attr.m_FormationDensity =  Math::Clamp((float)m_SubController[IDX_FormationDensity]->m_Slider->getValue()/100.f, 0.f, 1.f);
 		attr.m_Attack			=  Math::Clamp((float)m_SubController[IDX_Attack]->m_Slider->getValue()/100.f, 0.f, 1.f);
 		attr.m_Defend			=  Math::Clamp((float)m_SubController[IDX_Defend]->m_Slider->getValue()/100.f, 0.f, 1.f);
@@ -1082,7 +1106,7 @@ long MyCanvas::onRealGameControl(FXObject* sender, FXSelector sel, void* ptr)
 		pDebuggerInfo->SetSelectedPosition(-1);
 
 		FEInfluenceMap* pIM = g_poEngine->GetSceneMod()->GetSceneObject<FEInfluenceMap>("InfluenceMap");
-		pIM->Init(false);
+		pIM->Init(rgInfo.m_IsLargePitch);
 		if(m_ShowInfluenceMap->getCheck())
 		{
 			pIM->AddControlFlag(E_OCF_Active | E_OCF_Show);
@@ -1188,6 +1212,7 @@ void MyCanvas::onAIParamUpdate(const Event* _poEvent)
 	{
 		switch(idx)
 		{
+		case IDX_Rank:				{ pOutAttr->m_Rank				= val; break; }
 		case IDX_FormationDensity:	{ pOutAttr->m_FormationDensity	= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
 		case IDX_Attack:			{ pOutAttr->m_Attack			= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
 		case IDX_Defend:			{ pOutAttr->m_Defend			= Math::Clamp((float)val/100.f, 0.f, 1.f); break; }
