@@ -86,6 +86,15 @@ struct PlayerOtherAttributes
 
 		EFocusPassing_Num,
 	};
+	enum{
+		ERank_Monkey,
+		ERank_Child,
+		ERank_Adult,
+		ERank_Professional,
+		ERank_SuperMan,
+
+		ERank_Num,
+	};
 
 public:
 	PlayerOtherAttributes()
@@ -98,6 +107,7 @@ public:
 
 	void ResetAIValue()
 	{
+		m_Rank = ERank_Adult;
 		m_FormationDensity = 0.5f;
 		m_Attack = 0.5f;
 		m_Defend = 0.5f;
@@ -118,6 +128,7 @@ public:
 	int		m_Role;
 	int		m_PositionInTacticsBoard;
 
+	int				m_Rank;
 	float			m_FormationDensity;
 	float			m_Attack;
 	float			m_Defend;
