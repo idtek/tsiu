@@ -4,9 +4,9 @@
 Engine*	g_poEngine	= NULL;
 SimpleRenderObjectUtility*	g_poSROU = NULL;
 //---------------------------------------------------------------------------------------------
-#define WRITABLE_APP
+#define APP_ONE
 
-#ifdef WRITABLE_APP
+#ifdef APP_ONE
 class TestObject : public DrawableObject
 {
 public:
@@ -78,7 +78,7 @@ class TestWindowMsgCallBack : public RenderWindowMsgListener
 public:
 	virtual void OnMouseLDrag(s32 x, s32 y, s32 relX, s32 relY)
 	{
-#ifdef WRITABLE_APP
+#ifdef APP_ONE
 		TestObject* pObj = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<TestObject>("TestObject");
 		pObj->SetNewXY(x, y);
 #endif
