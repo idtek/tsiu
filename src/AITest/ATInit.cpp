@@ -4,7 +4,7 @@
 Engine*	g_poEngine	= NULL;
 SimpleRenderObjectUtility*	g_poSROU = NULL;
 //---------------------------------------------------------------------------------------------
-#define APP_ONE
+//#define APP_ONE
 
 #ifdef APP_ONE
 class TestObject : public DrawableObject
@@ -25,6 +25,7 @@ public:
 	}
 	virtual void Draw()
 	{
+		g_poSROU->DrawString(0, 0, "Holding left mouse button and move the cursor", D_Color(255, 255, 255));
 		g_poSROU->DrawFillCircle((f32)m_cX.As(), (f32)m_cY.As(), 10, D_Color(0, 255, 0), D_Color(0, 255, 0));
 	}
 	void SetNewXY(int x, int y)
