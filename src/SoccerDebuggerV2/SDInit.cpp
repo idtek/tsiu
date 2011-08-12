@@ -815,14 +815,17 @@ long MyCanvas::onTabSelected(FXObject* sender, FXSelector sel,void* ptr)
 	MyEngine* pMyEngine = (MyEngine*)g_poEngine;
 	pMyEngine->ChangeAppMode(current == E_Tab_FormationEditor ? EAppMode_FormationEditor : EAppMode_WatchMode);
 	
-	if(g_bFirstEntry)
+	if(current == E_Tab_FormationEditor)
 	{
-		long ret = onLoadFormationData(sender, sel, ptr);
-		if(ret == 2)
+		if(g_bFirstEntry)
 		{
-			FXMessageBox::warning(this, MBOX_OK, tr("Warning"),tr("Use default formation data!!!!!!"));
+			long ret = onLoadFormationData(sender, sel, ptr);
+			if(ret == 2)
+			{
+				FXMessageBox::warning(this, MBOX_OK, tr("Warning"),tr("Use default formation data!!!!!!"));
+			}
+			g_bFirstEntry = false;
 		}
-		g_bFirstEntry = false;
 	}
 	return 1;
 }
