@@ -384,6 +384,10 @@
 				Name="inc"
 				>
 				<File
+					RelativePath="..\TLibMain\TUtility_AnyData.h"
+					>
+				</File>
+				<File
 					RelativePath="..\tlibmain\TUtility_Array.h"
 					>
 				</File>
@@ -896,6 +900,10 @@
 				Name="inc"
 				>
 				<File
+					RelativePath="..\TLibMain\TAI_BevTree.h"
+					>
+				</File>
+				<File
 					RelativePath="..\TLibMain\TAI_Header.h"
 					>
 				</File>
@@ -911,6 +919,10 @@
 			<Filter
 				Name="src"
 				>
+				<File
+					RelativePath="..\TLibMain\TAI_BevTree.cpp"
+					>
+				</File>
 				<File
 					RelativePath="..\TLibMain\TAI_RefValue.cpp"
 					>
