@@ -5,23 +5,10 @@
 #include "TUtility_AnyData.h"
 
 namespace TsiU{
-
-	class Object;
-
 	namespace AI{namespace BehaviorTree{
 
 	#define k_BLimited_MaxChildNodeCnt              16
 	#define k_BLimited_InvalidChildNodeIndex        k_BLimited_MaxChildNodeCnt
-
-	enum E_BehaviourNodeType
-	{
-		k_BNT_None,
-		k_BNT_Terminal,
-		k_BNT_Sequence,
-		k_BNT_Selector,
-		k_BNT_Parallel,
-		k_BNT_Loop,
-	};
 
 	enum E_ParallelFinishCondition
 	{
@@ -33,8 +20,7 @@ namespace TsiU{
 	{
 		k_BRS_Executing					= 0,
 		k_BRS_Finish					= 1,
-		k_BRS_ERROR_PreconditionFailed  = -1,
-		k_BRS_ERROR_Transition			= -2,
+		k_BRS_ERROR_Transition			= -1,
 	};
 
 	enum E_TerminalNodeStaus
@@ -46,7 +32,6 @@ namespace TsiU{
 
 	typedef AnyData BevNodeInputParam;
 	typedef AnyData BevNodeOutputParam;
-	typedef Object Entity;
 
 	//-------------------------------------------------------------------------------------------------------------------------------------
 	class BevNodePrecondition
@@ -149,7 +134,7 @@ namespace TsiU{
 	class BevNode
 	{
 	public:
-		BevNode(const E_BehaviourNodeType& _type, Entity* _o_Owner, BevNode* _o_ParentNode, BevNodePrecondition* _o_NodeScript = NULL)
+		BevNode(BevNode* _o_ParentNode, BevNodePrecondition* _o_NodeScript = NULL)
 			: mul_ChildNodeCount(0)
 			, mz_DebugName("UNNAMED")
 			, mo_ActiveNode(NULL)
@@ -159,8 +144,6 @@ namespace TsiU{
 			for(int i = 0; i < k_BLimited_MaxChildNodeCnt; ++i)
 				mao_ChildNodeList[i] = NULL;
 
-			_SetNodeType(_type);
-			_SetOwner(_o_Owner);
 			_SetParentNode(_o_ParentNode);
 			SetNodePrecondition(_o_NodeScript);
 		}
@@ -244,14 +227,6 @@ namespace TsiU{
 			return k_BRS_Finish;
 		}
 	protected:
-		void _SetNodeType(E_BehaviourNodeType _e_NodeType)
-		{
-			mui_NodeType = _e_NodeType;
-		}
-		void _SetOwner(Entity* _o_Owner)
-		{
-			mo_Owner = _o_Owner;
-		}
 		void _SetParentNode(BevNode* _o_ParentNode)
 		{
 			mo_ParentNode = _o_ParentNode;
@@ -261,13 +236,11 @@ namespace TsiU{
 			return _ui_Index >= 0 && _ui_Index < mul_ChildNodeCount;
 		}
 	protected:
-		E_BehaviourNodeType     mui_NodeType;
 		BevNode*                mao_ChildNodeList[k_BLimited_MaxChildNodeCnt];
 		u32						mul_ChildNodeCount;
 		BevNode*                mo_ParentNode;
 		BevNode*                mo_ActiveNode;
 		BevNode*				mo_LastActiveNode;
-		Entity*				    mo_Owner;
 		BevNodePrecondition*    mo_NodePrecondition;
 		std::string				mz_DebugName;
 	};
@@ -275,8 +248,8 @@ namespace TsiU{
 	class BevNodePrioritySelector : public BevNode
 	{
 	public:
-		BevNodePrioritySelector(Entity* _o_Owner, BevNode* _o_ParentNode, BevNodePrecondition* _o_NodePrecondition = NULL)
-			: BevNode(k_BNT_Selector, _o_Owner, _o_ParentNode, _o_NodePrecondition)
+		BevNodePrioritySelector(BevNode* _o_ParentNode, BevNodePrecondition* _o_NodePrecondition = NULL)
+			: BevNode(_o_ParentNode, _o_NodePrecondition)
 			, mui_LastSelectIndex(k_BLimited_InvalidChildNodeIndex)
 			, mui_CurrentSelectIndex(k_BLimited_InvalidChildNodeIndex)
 		{}
@@ -292,8 +265,8 @@ namespace TsiU{
 	class BevNodeNonePrioritySelector : public BevNodePrioritySelector
 	{
 	public:
-		BevNodeNonePrioritySelector(Entity* _o_Owner, BevNode* _o_ParentNode, BevNodePrecondition* _o_NodePrecondition = NULL)
-			: BevNodePrioritySelector(_o_Owner, _o_ParentNode, _o_NodePrecondition)
+		BevNodeNonePrioritySelector(BevNode* _o_ParentNode, BevNodePrecondition* _o_NodePrecondition = NULL)
+			: BevNodePrioritySelector(_o_ParentNode, _o_NodePrecondition)
 		{}
 		virtual bool _DoEvaluate(const BevNodeInputParam& input);
 	};
@@ -301,8 +274,8 @@ namespace TsiU{
 	class BevNodeSequence : public BevNode
 	{
 	public:
-		BevNodeSequence(Entity* _o_Owner, BevNode* _o_ParentNode, BevNodePrecondition* _o_NodePrecondition = NULL)
-			: BevNode(k_BNT_Sequence, _o_Owner, _o_ParentNode, _o_NodePrecondition)
+		BevNodeSequence(BevNode* _o_ParentNode, BevNodePrecondition* _o_NodePrecondition = NULL)
+			: BevNode(_o_ParentNode, _o_NodePrecondition)
 			, mui_CurrentNodeIndex(k_BLimited_InvalidChildNodeIndex)
 		{}
 		virtual bool _DoEvaluate(const BevNodeInputParam& input);
@@ -316,8 +289,8 @@ namespace TsiU{
 	class BevNodeTerminal : public BevNode
 	{
 	public:
-		BevNodeTerminal(Entity* _o_Owner, BevNode* _o_ParentNode, BevNodePrecondition* _o_NodePrecondition = NULL)
-			: BevNode(k_BNT_Terminal, _o_Owner, _o_ParentNode, _o_NodePrecondition)
+		BevNodeTerminal(BevNode* _o_ParentNode, BevNodePrecondition* _o_NodePrecondition = NULL)
+			: BevNode(_o_ParentNode, _o_NodePrecondition)
 			, me_Status(k_TNS_Ready)
 			, mb_NeedExit(false)
 		{}
@@ -337,8 +310,8 @@ namespace TsiU{
 	class BevNodeParallel : public BevNode
 	{
 	public:
-		BevNodeParallel(Entity* _o_Owner, BevNode* _o_ParentNode, BevNodePrecondition* _o_NodePrecondition = NULL)
-			: BevNode(k_BNT_Parallel, _o_Owner, _o_ParentNode, _o_NodePrecondition)
+		BevNodeParallel(BevNode* _o_ParentNode, BevNodePrecondition* _o_NodePrecondition = NULL)
+			: BevNode(_o_ParentNode, _o_NodePrecondition)
 			, me_FinishCondition(k_PFC_OR)
 		{
 			for(unsigned int i = 0; i < k_BLimited_MaxChildNodeCnt; ++i)
@@ -361,8 +334,8 @@ namespace TsiU{
 		static const int kInfiniteLoop = -1;
 
 	public:
-		BevNodeLoop(Entity* _o_Owner, BevNode* _o_ParentNode, BevNodePrecondition* _o_NodePrecondition = NULL, int _i_LoopCnt = kInfiniteLoop)
-			: BevNode(k_BNT_Loop, _o_Owner, _o_ParentNode, _o_NodePrecondition)
+		BevNodeLoop(BevNode* _o_ParentNode, BevNodePrecondition* _o_NodePrecondition = NULL, int _i_LoopCnt = kInfiniteLoop)
+			: BevNode(_o_ParentNode, _o_NodePrecondition)
 			, mi_LoopCount(_i_LoopCnt)
 			, mi_CurrentCount(0)
 		{}
@@ -378,41 +351,41 @@ namespace TsiU{
 	class BevNodeFactory
 	{
 	public:
-		static BevNode& oCreateParallelNode(Entity* _o_Owner, BevNode* _o_Parent, E_ParallelFinishCondition _e_Condition, const char* _debugName)
+		static BevNode& oCreateParallelNode(BevNode* _o_Parent, E_ParallelFinishCondition _e_Condition, const char* _debugName)
 		{
-			BevNodeParallel* pReturn = new BevNodeParallel(_o_Owner, _o_Parent);
+			BevNodeParallel* pReturn = new BevNodeParallel(_o_Parent);
 			pReturn->SetFinishCondition(_e_Condition);
 			oCreateNodeCommon(pReturn, _o_Parent, _debugName);
 			return (*pReturn);
 		}
-		static BevNode& oCreatePrioritySelectorNode(Entity* _o_Owner, BevNode* _o_Parent, const char* _debugName)
+		static BevNode& oCreatePrioritySelectorNode(BevNode* _o_Parent, const char* _debugName)
 		{
-			BevNodePrioritySelector* pReturn = new BevNodePrioritySelector(_o_Owner, _o_Parent);
+			BevNodePrioritySelector* pReturn = new BevNodePrioritySelector(_o_Parent);
 			oCreateNodeCommon(pReturn, _o_Parent, _debugName);
 			return (*pReturn);
 		}
-		static BevNode& oCreateNonePrioritySelectorNode(Entity* _o_Owner, BevNode* _o_Parent, const char* _debugName)
+		static BevNode& oCreateNonePrioritySelectorNode(BevNode* _o_Parent, const char* _debugName)
 		{
-			BevNodeNonePrioritySelector* pReturn = new BevNodeNonePrioritySelector(_o_Owner, _o_Parent);
+			BevNodeNonePrioritySelector* pReturn = new BevNodeNonePrioritySelector(_o_Parent);
 			oCreateNodeCommon(pReturn, _o_Parent, _debugName);
 			return (*pReturn);
 		}
-		static BevNode& oCreateSequenceNode(Entity* _o_Owner, BevNode* _o_Parent, const char* _debugName)
+		static BevNode& oCreateSequenceNode(BevNode* _o_Parent, const char* _debugName)
 		{
-			BevNodeSequence* pReturn = new BevNodeSequence(_o_Owner, _o_Parent);
+			BevNodeSequence* pReturn = new BevNodeSequence(_o_Parent);
 			oCreateNodeCommon(pReturn, _o_Parent, _debugName);
 			return (*pReturn);
 		}
-		static BevNode& oCreateLoopNode(Entity* _o_Owner, BevNode* _o_Parent, const char* _debugName, int _i_LoopCount)
+		static BevNode& oCreateLoopNode(BevNode* _o_Parent, const char* _debugName, int _i_LoopCount)
 		{
-			BevNodeLoop* pReturn = new BevNodeLoop(_o_Owner, _o_Parent, NULL, _i_LoopCount);
+			BevNodeLoop* pReturn = new BevNodeLoop(_o_Parent, NULL, _i_LoopCount);
 			oCreateNodeCommon(pReturn, _o_Parent, _debugName);
 			return (*pReturn);
 		}
 		template<typename T>
-		static BevNode& oCreateTeminalNode(Entity* _o_Owner, BevNode* _o_Parent, const char* _debugName)
+		static BevNode& oCreateTeminalNode(BevNode* _o_Parent, const char* _debugName)
 		{
-			BevNodeTerminal* pReturn = new T(_o_Owner, _o_Parent);
+			BevNodeTerminal* pReturn = new T(_o_Parent);
 			oCreateNodeCommon(pReturn, _o_Parent, _debugName);
 			return (*pReturn);
 		}
