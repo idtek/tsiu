@@ -76,8 +76,8 @@ public:
 class NOD_MoveTo : public BevNodeTerminal
 {
 public:
-	NOD_MoveTo(Object* _o_Owner, BevNode* _o_ParentNode)
-		:BevNodeTerminal(_o_Owner, _o_ParentNode)
+	NOD_MoveTo(BevNode* _o_ParentNode)
+		:BevNodeTerminal(_o_ParentNode)
 	{}
 protected:
 	virtual BevRunningStatus _DoExecute(const BevNodeInputParam& input, BevNodeOutputParam& output)	
@@ -109,8 +109,8 @@ protected:
 class NOD_TurnTo : public BevNodeTerminal
 {
 public:
-	NOD_TurnTo(Object* _o_Owner, BevNode* _o_ParentNode)
-		:BevNodeTerminal(_o_Owner, _o_ParentNode)
+	NOD_TurnTo(BevNode* _o_ParentNode)
+		:BevNodeTerminal(_o_ParentNode)
 	{}
 protected:
 	virtual BevRunningStatus _DoExecute(const BevNodeInputParam& input, BevNodeOutputParam& output)	
@@ -141,7 +141,7 @@ protected:
 			Vec3 vA(curFacing.x, curFacing.y, 0);
 			Vec3 vB(dir.x, dir.y, 0);
 			Vec3 vC = vA.CrossProduct(vB);
-			
+
 			f32 angleToTurn = Math::Min(timeStep * 3.f, angle);
 			if(vC.z < 0)
 				angleToTurn = -angleToTurn;
@@ -156,8 +156,8 @@ protected:
 class NOD_Idle : public BevNodeTerminal
 {
 public:
-	NOD_Idle(Object* _o_Owner, BevNode* _o_ParentNode)
-		:BevNodeTerminal(_o_Owner, _o_ParentNode)
+	NOD_Idle(BevNode* _o_ParentNode)
+		:BevNodeTerminal(_o_ParentNode)
 	{}
 protected:
 	virtual void _DoEnter(const BevNodeInputParam& input)
@@ -185,8 +185,8 @@ private:
 class NOD_Breathe : public BevNodeTerminal
 {
 public:
-	NOD_Breathe(Object* _o_Owner, BevNode* _o_ParentNode)
-		:BevNodeTerminal(_o_Owner, _o_ParentNode)
+	NOD_Breathe(BevNode* _o_ParentNode)
+		:BevNodeTerminal(_o_ParentNode)
 	{}
 protected:
 	virtual BevRunningStatus _DoExecute(const BevNodeInputParam& input, BevNodeOutputParam& output)	
@@ -232,11 +232,11 @@ public:
 	{
 		//init bev tree
 		BevNode& ret = 
-			BevNodeFactory::oCreatePrioritySelectorNode(this, NULL, "root");
-				BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(this, &ret, "move to")
-					.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
-				BevNodeFactory::oCreateTeminalNode<NOD_Idle>(this, &ret, "idle")
-					.SetNodePrecondition(new BevNodePreconditionTRUE());
+			BevNodeFactory::oCreatePrioritySelectorNode(NULL, "root");
+		BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(&ret, "move to")
+			.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
+		BevNodeFactory::oCreateTeminalNode<NOD_Idle>(&ret, "idle")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
 		m_BevTreeRoot = &ret;
 	}
 	virtual void Tick(f32 _fDeltaTime)
@@ -274,17 +274,17 @@ public:
 
 		g_poSROU->DrawFillCircle((f32)m_BevTreeInputData.m_TargetPosition2D.x, (f32)m_BevTreeInputData.m_TargetPosition2D.y, 15, D_Color(128, 128, 128), D_Color(128, 128, 128));
 		g_poSROU->DrawLine((f32)m_BevTreeInputData.m_TargetPosition2D.x, (f32)m_BevTreeInputData.m_TargetPosition2D.y, 
-						   (f32)curPosition3D.x, (f32)curPosition3D.y,
-							D_Color(128, 128, 128), 1);
+			(f32)curPosition3D.x, (f32)curPosition3D.y,
+			D_Color(128, 128, 128), 1);
 		g_poSROU->DrawFillCircle((f32)curPosition3D.x, (f32)curPosition3D.y, m_BodySize, m_BodyColor, m_BodyColor);
 
 		//draw debug info
 		const BevNode* activeNode = m_BevTreeRoot->oGetLastActiveNode();
 		if(activeNode)
-			g_poSROU->DrawString(0, 0, activeNode->GetDebugName(), D_Color(255, 255, 255));
+			g_poSROU->DrawString(3, 0, activeNode->GetDebugName(), D_Color(255, 255, 255));
 		else
-			g_poSROU->DrawString(0, 0, "No Active Node", D_Color(255, 255, 255));
-		g_poSROU->DrawString(0, 550, GetInfo(), D_Color(255, 255, 255));
+			g_poSROU->DrawString(3, 0, "No Active Node", D_Color(255, 255, 255));
+		g_poSROU->DrawString(3, 550, GetInfo(), D_Color(255, 255, 255));
 	}
 	virtual const char* GetInfo(){
 		return "Example1: priority selector(mouse click to next sample)";
@@ -303,15 +303,15 @@ protected:
 	virtual void Create()
 	{
 		//init bev tree
-		BevNode& ret =	BevNodeFactory::oCreatePrioritySelectorNode(this, NULL, "root");
-			BevNode& p =	BevNodeFactory::oCreateParallelNode(this, &ret, k_PFC_OR, "parallel")
-								.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
-								BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(this, &p, "move to")
-									.SetNodePrecondition(new BevNodePreconditionTRUE());
-								BevNodeFactory::oCreateTeminalNode<NOD_Breathe>(this, &p,"breathing")
-									.SetNodePrecondition(new BevNodePreconditionTRUE());
-							BevNodeFactory::oCreateTeminalNode<NOD_Idle>(this, &ret, "idle")
-								.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNode& ret =	BevNodeFactory::oCreatePrioritySelectorNode(NULL, "root");
+		BevNode& p =	BevNodeFactory::oCreateParallelNode(&ret, k_PFC_OR, "parallel")
+			.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
+		BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(&p, "move to")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNodeFactory::oCreateTeminalNode<NOD_Breathe>(&p,"breathing")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNodeFactory::oCreateTeminalNode<NOD_Idle>(&ret, "idle")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
 		m_BevTreeRoot = &ret;
 	}
 	virtual const char* GetInfo(){
@@ -330,18 +330,18 @@ protected:
 	virtual void Create()
 	{
 		//init bev tree
-		BevNode& ret =	BevNodeFactory::oCreatePrioritySelectorNode(this, NULL, "root");
-			BevNode& p =	BevNodeFactory::oCreateParallelNode(this, &ret, k_PFC_OR, "parallel")
-								.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
-				BevNode& sq =	BevNodeFactory::oCreateSequenceNode(this, &p, "sequence");
-									BevNodeFactory::oCreateTeminalNode<NOD_TurnTo>(this, &sq, "turn to")
-										.SetNodePrecondition(new BevNodePreconditionTRUE());
-									BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(this, &sq, "move to")
-										.SetNodePrecondition(new CON_HasFacedToTarget());
-								BevNodeFactory::oCreateTeminalNode<NOD_Breathe>(this, &p, "breathing")
-									.SetNodePrecondition(new BevNodePreconditionTRUE());
-							BevNodeFactory::oCreateTeminalNode<NOD_Idle>(this, &ret, "idle")
-								.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNode& ret =	BevNodeFactory::oCreatePrioritySelectorNode(NULL, "root");
+		BevNode& p =	BevNodeFactory::oCreateParallelNode(&ret, k_PFC_OR, "parallel")
+			.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
+		BevNode& sq =	BevNodeFactory::oCreateSequenceNode(&p, "sequence");
+		BevNodeFactory::oCreateTeminalNode<NOD_TurnTo>(&sq, "turn to")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(&sq, "move to")
+			.SetNodePrecondition(new CON_HasFacedToTarget());
+		BevNodeFactory::oCreateTeminalNode<NOD_Breathe>(&p, "breathing")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNodeFactory::oCreateTeminalNode<NOD_Idle>(&ret, "idle")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
 		m_BevTreeRoot = &ret;
 	}
 	virtual void Tick(f32 _fDeltaTime)
@@ -428,7 +428,7 @@ public:
 };
 //---------------------------------------------------------------------------------------------
 GameEngine::GameEngine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindow)
-	:Engine(_uiWidth, _uiHeight, _strTitle, _bIsWindow, 60)
+:Engine(_uiWidth, _uiHeight, _strTitle, _bIsWindow, 60)
 {
 }
 void GameEngine::DoInit()
