@@ -1,5 +1,6 @@
 #include "BTTGlobalDef.h"
 #include <time.h>
+#include "TAI_BevTree.h"
 
 //--------------------------------------------------------------------------------------------
 Engine*	g_poEngine	= NULL;
@@ -241,6 +242,14 @@ public:
 	}
 	virtual void Tick(f32 _fDeltaTime)
 	{
+		int width = 800;
+		int height = 600;
+		WinGDIRenderer* pRender = (WinGDIRenderer*)GameEngine::GetGameEngine()->GetRenderMod()->GetRenderer();
+		if(pRender && pRender->GetMainWindow())
+		{
+			width = pRender->GetWidth();
+			height = pRender->GetHeight();
+		}
 		//preparing data
 		m_BevTreeInputData.m_Owner = this;
 		m_BevTreeInputData.m_TimeStep = _fDeltaTime;
@@ -248,8 +257,8 @@ public:
 		m_TimeToFindNewTargetPos -= _fDeltaTime;
 		if(m_TimeToFindNewTargetPos <= 0)
 		{
-			m_BevTreeInputData.m_TargetPosition2D = Vec2(rand() % 500, rand() % 500);
-			m_TimeToFindNewTargetPos = 5;
+			m_BevTreeInputData.m_TargetPosition2D = Vec2(rand() % width, rand() % (height - 100));
+			m_TimeToFindNewTargetPos = rand() % 5 + 2;
 		}
 		m_BevTreeOutputdata.m_BodySize = m_BodySize;
 		m_BevTreeOutputdata.m_BodyColor = m_BodyColor;
@@ -279,12 +288,12 @@ public:
 		g_poSROU->DrawFillCircle((f32)curPosition3D.x, (f32)curPosition3D.y, m_BodySize, m_BodyColor, m_BodyColor);
 
 		//draw debug info
-		const BevNode* activeNode = m_BevTreeRoot->oGetLastActiveNode();
+		/*const BevNode* activeNode = m_BevTreeRoot->oGetLastActiveNode();
 		if(activeNode)
 			g_poSROU->DrawString(3, 0, activeNode->GetDebugName(), D_Color(255, 255, 255));
 		else
 			g_poSROU->DrawString(3, 0, "No Active Node", D_Color(255, 255, 255));
-		g_poSROU->DrawString(3, 550, GetInfo(), D_Color(255, 255, 255));
+		g_poSROU->DrawString(3, 550, GetInfo(), D_Color(255, 255, 255));*/
 	}
 	virtual const char* GetInfo(){
 		return "Example1: priority selector(mouse click to next sample)";
@@ -326,7 +335,7 @@ public:
 	{
 		m_Facing = Vec2(0, 1);
 	}
-protected:
+public:
 	virtual void Create()
 	{
 		//init bev tree
@@ -416,14 +425,68 @@ private:
 	s32 m_CurrentLevel;
 	DrawableObject* m_pCurrentObj;
 };
+class Level2 : public DrawableObject
+{
+public:
+	Level2()
+	{}
+	~Level2()
+	{}
+protected:
+	virtual void Create()
+	{
+		for(int i = 0; i < 10; ++i)
+		{
+			TestObject3* pObj = new TestObject3();
+			pObj->Create();
+			m_Objs.push_back(pObj);
+		}
+	}
+	virtual void Tick(f32 _fDeltaTime)
+	{
+		for(int i = 0; i < (int)m_Objs.size(); ++i)
+		{
+			m_Objs[i]->Tick(_fDeltaTime);
+		}
+	}
+	virtual void Draw()
+	{
+		for(int i = 0; i < (int)m_Objs.size(); ++i)
+		{
+			m_Objs[i]->Draw();
+		}
+		int height = 600;
+		WinGDIRenderer* pRender = (WinGDIRenderer*)GameEngine::GetGameEngine()->GetRenderMod()->GetRenderer();
+		if(pRender && pRender->GetMainWindow())
+		{
+			height = pRender->GetHeight();
+		}
+		char info[256] = {0};
+		sprintf_s(info, 256, "Total: %d (click to add 10 objects), Memory Used: %.2f KB", m_Objs.size(), GetMemUsed() / 1024.f);
+		g_poSROU->DrawString(3, height - 50, info, D_Color(255, 255, 255));
+	}
+public:
+	void AddObj()
+	{
+		for(int i = 0; i < 10; ++i)
+		{
+			TestObject3* pObj = new TestObject3();
+			pObj->Create();
+			m_Objs.push_back(pObj);
+		}
+	}
+
+private:
+	std::vector<TestObject3*> m_Objs;
+};
 //---------------------------------------------------------------------------------------------
 class TestWindowMsgCallBack : public RenderWindowMsgListener
 {
 public:
 	virtual void OnMouseLDown(s32 x, s32 y)
 	{
-		Level* pObj = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<Level>("Level");
-		pObj->ChangeLevel();
+		Level2* pObj = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<Level2>("Level2");
+		pObj->AddObj();
 	}
 };
 //---------------------------------------------------------------------------------------------
@@ -437,7 +500,7 @@ void GameEngine::DoInit()
 
 	RenderWindowMsg::RegisterMsgListener(new TestWindowMsgCallBack);
 	g_poSROU = new WinGDISimpleRenderObjectUtility((WinGDIRenderer*)GameEngine::GetGameEngine()->GetRenderMod()->GetRenderer());
-	GameEngine::GetGameEngine()->GetSceneMod()->AddObject("Level", new Level);
+	GameEngine::GetGameEngine()->GetSceneMod()->AddObject("Level2", new Level2);
 }
 void GameEngine::DoUnInit()
 {
