@@ -904,6 +904,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\TLibMain\TAI_BevTree2.h"
+					>
+				</File>
+				<File
 					RelativePath="..\TLibMain\TAI_Header.h"
 					>
 				</File>
@@ -922,6 +926,14 @@
 				<File
 					RelativePath="..\TLibMain\TAI_BevTree.cpp"
 					>
+					<FileConfiguration
+						Name="Release NoDX|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\TLibMain\TAI_RefValue.cpp"
