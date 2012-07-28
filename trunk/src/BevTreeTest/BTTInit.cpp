@@ -432,7 +432,7 @@ public:
 	virtual void OnMouseLDown(s32 x, s32 y)
 	{
 		Level* pObj = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<Level>("Level");
-		pObj->AddObj();
+		pObj->ChangeLevel();
 	}
 };
 //---------------------------------------------------------------------------------------------
