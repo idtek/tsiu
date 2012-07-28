@@ -927,13 +927,6 @@
 					RelativePath="..\TLibMain\TAI_BevTree.cpp"
 					>
 					<FileConfiguration
-						Name="Debug NoDX|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Release NoDX|Win32"
 						ExcludedFromBuild="true"
 						>
