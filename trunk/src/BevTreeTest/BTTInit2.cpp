@@ -1,13 +1,11 @@
 #include "BTTGlobalDef.h"
 #include <time.h>
-#include "TAI_BevTree2.h"
+#include "TAI_BevTree.h"
 
 //--------------------------------------------------------------------------------------------
 Engine*	g_poEngine	= NULL;
 SimpleRenderObjectUtility*	g_poSROU = NULL;
 //---------------------------------------------------------------------------------------------
-using namespace TsiU::AI::BehaviorTree;
-
 struct BevInputData 
 {
 	f32		m_TimeStep;
@@ -22,97 +20,76 @@ struct BevOutputData
 	Vec3	m_NextPosition;
 	Vec2	m_NextFacing;
 };
-//----------------------------------------------------------------------------------
-/*class TestTask : public Task
+
+using namespace TsiU::AI::BehaviorTree;
+
+class CON_HasReachedTarget : public BevNodePrecondition
 {
 public:
-	TestTask(Node* pNode)
-		:Task(pNode)
-	{}
-	virtual void OnInit(const BevNodeInputParam& inputParam)
+	virtual bool ExternalCondition(const BevNodeInputParam& input) const
 	{
-		D_Output("Test init\n");
-	}
-	virtual BevRunningStatus OnUpdate(const BevNodeInputParam& inputParam, BevNodeOutputParam& outputParam)
-	{
-		D_Output("Test update\n");
-		return k_BRS_Finish;
-	}
-	virtual void OnTerminate(const BevNodeInputParam& inputParam)
-	{
-		D_Output("Test terminate\n");
+		const BevInputData&  inputData	= input.GetRealDataType<BevInputData>();
+		Vec2 targetPoint2D = inputData.m_TargetPosition2D;
+		Vec3 curPosition3D = inputData.m_Owner->GetPosition();
+		Vec2 curPosition2D(curPosition3D.x, curPosition3D.y);
+		Vec2 dir = targetPoint2D - curPosition2D;
+		if(dir.LengthSq() < 0.5f)
+		{
+			return true;
+		}
+		return false;
 	}
 };
-class TestTask2 : public Task
+class CON_HasFacedToTarget : public BevNodePrecondition
 {
 public:
-	TestTask2(Node* pNode)
-		:Task(pNode)
-	{}
-	virtual void OnInit(const BevNodeInputParam& inputParam)
+	virtual bool ExternalCondition(const BevNodeInputParam& input) const
 	{
-		D_Output("Test2 init\n");
-	}
-	virtual BevRunningStatus OnUpdate(const BevNodeInputParam& inputParam, BevNodeOutputParam& outputParam)
-	{
-		const BevInputData& inputData = inputParam.GetRealDataType<BevInputData>();
-		if(inputData.m_ConditionValue != 2)
-			return k_BRS_Failure;
-
-		D_Output("Test2 update\n");
-		return k_BRS_Finish;
-	}
-	virtual void OnTerminate(const BevNodeInputParam& inputParam)
-	{
-		D_Output("Test2 terminate\n");
-	}
-};
-class TestTask3 : public Task
-{
-public:
-	TestTask3(Node* pNode)
-		:Task(pNode)
-	{}
-	virtual void OnInit(const BevNodeInputParam& inputParam)
-	{
-		D_Output("Test3 init\n");
-	}
-	virtual BevRunningStatus OnUpdate(const BevNodeInputParam& inputParam, BevNodeOutputParam& outputParam)
-	{
-		const BevInputData& inputData = inputParam.GetRealDataType<BevInputData>();
-		if(inputData.m_ConditionValue != 3)
-			return k_BRS_Failure;
-
-		D_Output("Test3 update\n");
-		return k_BRS_Finish;
-	}
-	virtual void OnTerminate(const BevNodeInputParam& inputParam)
-	{
-		D_Output("Test3 terminate\n");
-	}
-};
-
-DEF_TERMINATE_NODE(Test,  TestTask);
-DEF_TERMINATE_NODE(Test2, TestTask2);
-DEF_TERMINATE_NODE(Test3, TestTask3);*/
-//----------------------------------------------------------------------------------
-// Behavior task
-class TASK_MoveTo : public Task
-{
-public:
-	TASK_MoveTo(Node* pNode)
-		:Task(pNode)
-	{}
-	virtual void OnInit(const BevNodeInputParam& inputParam)
-	{
-	}
-	virtual BevRunningStatus OnUpdate(const BevNodeInputParam& inputParam, BevNodeOutputParam& outputParam)
-	{
-		const BevInputData& inputData = inputParam.GetRealDataType<BevInputData>();
-		BevOutputData& outputData = outputParam.GetRealDataType<BevOutputData>();
+		const BevInputData& inputData = input.GetRealDataType<BevInputData>();
 		f32 timeStep = inputData.m_TimeStep;
 		Vec2 targetPoint2D = inputData.m_TargetPosition2D;
 		Vec3 curPosition3D = inputData.m_Owner->GetPosition();
+		Vec2 curPosition2D(curPosition3D.x, curPosition3D.y);
+		Vec2 dir = targetPoint2D - curPosition2D;
+		if(Math::IsZero(dir.LengthSq()))
+		{
+			return true;
+		}
+		else
+		{
+			Vec2 curFacing = inputData.m_CurrentFacing;
+			dir.Nomalize();
+			f32 dotValue = dir.DotProduct(curFacing);
+			f32 angle = Math::ACos(Math::Clamp<f32>(dotValue, -1.f, 1.f));
+			if(angle < 0.1f)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		return false;
+	}
+};
+
+class NOD_MoveTo : public BevNodeTerminal
+{
+public:
+	NOD_MoveTo(BevNode* _o_ParentNode)
+		:BevNodeTerminal(_o_ParentNode)
+	{}
+protected:
+	virtual BevRunningStatus _DoExecute(const BevNodeInputParam& input, BevNodeOutputParam& output)	
+	{
+		const BevInputData& inputData = input.GetRealDataType<BevInputData>();
+		BevOutputData& outputData = output.GetRealDataType<BevOutputData>();
+
+		f32 timeStep = inputData.m_TimeStep;
+		Vec2 targetPoint2D = inputData.m_TargetPosition2D;
+		Vec3 curPosition3D = inputData.m_Owner->GetPosition();
+
 		Vec2 curPosition2D(curPosition3D.x, curPosition3D.y);
 		Vec2 dir = targetPoint2D - curPosition2D;
 		if(dir.LengthSq() < 2.f)
@@ -122,38 +99,25 @@ public:
 		}
 		else
 		{
-			Vec2 curFacing = inputData.m_CurrentFacing;
 			dir.Nomalize();
-			f32 dotValue = dir.DotProduct(curFacing);
-			f32 angle = Math::ACos(Math::Clamp<f32>(dotValue, -1.f, 1.f));
-			if(angle >= 0.1f)
-			{
-				return k_BRS_Failure;
-			}
 			Vec2 nextPos2D = curPosition2D + dir * timeStep * 100.f;
 			outputData.m_NextPosition = Vec3(nextPos2D.x, nextPos2D.y, 0);
 		}
 		return k_BRS_Executing;
 	}
-	virtual void OnTerminate(const BevNodeInputParam& inputParam)
-	{
-	}
 };
-DEF_TERMINATE_NODE(MoveTo, TASK_MoveTo);
 
-class TASK_TurnTo : public Task
+class NOD_TurnTo : public BevNodeTerminal
 {
 public:
-	TASK_TurnTo(Node* pNode)
-		:Task(pNode)
+	NOD_TurnTo(BevNode* _o_ParentNode)
+		:BevNodeTerminal(_o_ParentNode)
 	{}
-	virtual void OnInit(const BevNodeInputParam& inputParam)
+protected:
+	virtual BevRunningStatus _DoExecute(const BevNodeInputParam& input, BevNodeOutputParam& output)	
 	{
-	}
-	virtual BevRunningStatus OnUpdate(const BevNodeInputParam& inputParam, BevNodeOutputParam& outputParam)
-	{
-		const BevInputData& inputData = inputParam.GetRealDataType<BevInputData>();
-		BevOutputData& outputData = outputParam.GetRealDataType<BevOutputData>();
+		const BevInputData& inputData = input.GetRealDataType<BevInputData>();
+		BevOutputData& outputData = output.GetRealDataType<BevOutputData>();
 
 		f32 timeStep = inputData.m_TimeStep;
 		Vec2 targetPoint2D = inputData.m_TargetPosition2D;
@@ -162,7 +126,7 @@ public:
 		Vec2 dir = targetPoint2D - curPosition2D;
 		if(Math::IsZero(dir.LengthSq()))
 		{
-			return k_BRS_Failure;
+			return k_BRS_Finish;
 		}
 		else
 		{
@@ -178,7 +142,7 @@ public:
 			Vec3 vA(curFacing.x, curFacing.y, 0);
 			Vec3 vB(dir.x, dir.y, 0);
 			Vec3 vC = vA.CrossProduct(vB);
-
+			
 			f32 angleToTurn = Math::Min(timeStep * 3.f, angle);
 			if(vC.z < 0)
 				angleToTurn = -angleToTurn;
@@ -188,26 +152,48 @@ public:
 		}
 		return k_BRS_Executing;
 	}
-	virtual void OnTerminate(const BevNodeInputParam& inputParam)
-	{
-	}
 };
-DEF_TERMINATE_NODE(TurnTo, TASK_TurnTo);
 
-class TASK_Breathe : public Task
+class NOD_Idle : public BevNodeTerminal
 {
 public:
-	TASK_Breathe(Node* pNode)
-		:Task(pNode)
+	NOD_Idle(BevNode* _o_ParentNode)
+		:BevNodeTerminal(_o_ParentNode)
 	{}
-	virtual void OnInit(const BevNodeInputParam& inputParam)
+protected:
+	virtual void _DoEnter(const BevNodeInputParam& input)
 	{
-		m_IsIncreasing = true;
+		m_WaitingTime = 0.5f;
 	}
-	virtual BevRunningStatus OnUpdate(const BevNodeInputParam& inputParam, BevNodeOutputParam& outputParam)
+	virtual BevRunningStatus _DoExecute(const BevNodeInputParam& input, BevNodeOutputParam& output)	
 	{
-		const BevInputData& inputData = inputParam.GetRealDataType<BevInputData>();
-		BevOutputData& outputData = outputParam.GetRealDataType<BevOutputData>();
+		const BevInputData& inputData = input.GetRealDataType<BevInputData>();
+		BevOutputData& outputData = output.GetRealDataType<BevOutputData>();
+
+		f32 timeStep = inputData.m_TimeStep;
+		m_WaitingTime -= timeStep;
+		if(m_WaitingTime < 0)
+		{
+			outputData.m_BodyColor = D_Color(rand() % 256, rand() % 256, rand() % 256);
+			return k_BRS_Finish;
+		}
+		return k_BRS_Executing;
+	}
+private:
+	float m_WaitingTime;
+};
+
+class NOD_Breathe : public BevNodeTerminal
+{
+public:
+	NOD_Breathe(BevNode* _o_ParentNode)
+		:BevNodeTerminal(_o_ParentNode)
+	{}
+protected:
+	virtual BevRunningStatus _DoExecute(const BevNodeInputParam& input, BevNodeOutputParam& output)	
+	{
+		const BevInputData& inputData = input.GetRealDataType<BevInputData>();
+		BevOutputData& outputData = output.GetRealDataType<BevOutputData>();
 
 		f32 timeStep = inputData.m_TimeStep;
 		if(m_IsIncreasing)
@@ -228,80 +214,31 @@ public:
 		}
 		return k_BRS_Executing;
 	}
-	virtual void OnTerminate(const BevNodeInputParam& inputParam)
-	{
-	}
 private:
 	bool m_IsIncreasing;
 };
-DEF_TERMINATE_NODE(Breathe, TASK_Breathe);
 
-class TASK_Idle : public Task
-{
-public:
-	TASK_Idle(Node* pNode)
-		:Task(pNode)
-	{}
-	virtual void OnInit(const BevNodeInputParam& inputParam)
-	{
-		m_WaitingTime = 0.5f;
-	}
-	virtual BevRunningStatus OnUpdate(const BevNodeInputParam& inputParam, BevNodeOutputParam& outputParam)
-	{
-		const BevInputData& inputData = inputParam.GetRealDataType<BevInputData>();
-		BevOutputData& outputData = outputParam.GetRealDataType<BevOutputData>();
-
-		f32 timeStep = inputData.m_TimeStep;
-		m_WaitingTime -= timeStep;
-		if(m_WaitingTime < 0)
-		{
-			outputData.m_BodyColor = D_Color(rand() % 256, rand() % 256, rand() % 256);
-			return k_BRS_Finish;
-		}
-		return k_BRS_Executing;
-	}
-	virtual void OnTerminate(const BevNodeInputParam& inputParam)
-	{
-	}
-private:
-	float m_WaitingTime;
-};
-DEF_TERMINATE_NODE(Idle, TASK_Idle);
-//----------------------------------------------------------------------------------
 class TestObject : public DrawableObject
 {
-	static Node* sBevTree;
-
 public:
 	TestObject()
+		: m_BevTreeRoot(NULL)
 	{
 		SetPosition(0,0,0);
 		m_BodyColor = D_Color(0, 255, 0);
 		m_BodySize = 10;
 		m_TimeToFindNewTargetPos = -1;
-		m_Facing = Vec2(0, 1);
 	}	
-	~TestObject()
-	{
-		m_BevTreeRoot.Uninstall();
-		D_SafeDelete(sBevTree);
-	}
 	virtual void Create()
 	{
-		if(!sBevTree)
-		{
-			CompositeNode* pSe = new CompositeNode_Sequence();
-				pSe->AddChild(CREATE_TERMINATE_NODE(TurnTo));
-				pSe->AddChild(CREATE_TERMINATE_NODE(MoveTo));
-			CompositeNode* pPa = new CompositeNode_Parallel();
-				pPa->AddChild(pSe);
-				pPa->AddChild(CREATE_TERMINATE_NODE(Breathe));
-			CompositeNode* pRo = new CompositeNode_Selector();
-				pRo->AddChild(pPa);
-				pRo->AddChild(CREATE_TERMINATE_NODE(Idle));
-			sBevTree = pRo;
-		}
-		m_BevTreeRoot.Install(*sBevTree);
+		//init bev tree
+		BevNode& ret = 
+			BevNodeFactory::oCreatePrioritySelectorNode(NULL, "root");
+				BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(&ret, "move to")
+					.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
+				BevNodeFactory::oCreateTeminalNode<NOD_Idle>(&ret, "idle")
+					.SetNodePrecondition(new BevNodePreconditionTRUE());
+		m_BevTreeRoot = &ret;
 	}
 	virtual void Tick(f32 _fDeltaTime)
 	{
@@ -313,12 +250,9 @@ public:
 			width = pRender->GetWidth();
 			height = pRender->GetHeight();
 		}
-
 		//preparing data
 		m_BevTreeInputData.m_Owner = this;
 		m_BevTreeInputData.m_TimeStep = _fDeltaTime;
-		m_BevTreeInputData.m_CurrentFacing = m_Facing;
-		m_BevTreeOutputdata.m_NextFacing = m_Facing;
 
 		m_TimeToFindNewTargetPos -= _fDeltaTime;
 		if(m_TimeToFindNewTargetPos <= 0)
@@ -333,14 +267,15 @@ public:
 		//tick behavior tree
 		BevNodeInputParam input(&m_BevTreeInputData);
 		BevNodeOutputParam output(&m_BevTreeOutputdata);
-
-		m_BevTreeRoot.Update(input, output);
+		if(m_BevTreeRoot->Evaluate(input))
+		{
+			m_BevTreeRoot->Tick(input, output);
+		}
 
 		//update object
 		m_BodySize = m_BevTreeOutputdata.m_BodySize;
 		m_BodyColor = m_BevTreeOutputdata.m_BodyColor;
 		SetPosition(m_BevTreeOutputdata.m_NextPosition);
-		m_Facing = m_BevTreeOutputdata.m_NextFacing;
 	}
 	virtual void Draw()
 	{
@@ -348,23 +283,88 @@ public:
 
 		g_poSROU->DrawFillCircle((f32)m_BevTreeInputData.m_TargetPosition2D.x, (f32)m_BevTreeInputData.m_TargetPosition2D.y, 15, D_Color(128, 128, 128), D_Color(128, 128, 128));
 		g_poSROU->DrawLine((f32)m_BevTreeInputData.m_TargetPosition2D.x, (f32)m_BevTreeInputData.m_TargetPosition2D.y, 
-			(f32)curPosition3D.x, (f32)curPosition3D.y,
-			D_Color(128, 128, 128), 1);
+						   (f32)curPosition3D.x, (f32)curPosition3D.y,
+							D_Color(128, 128, 128), 1);
 		g_poSROU->DrawFillCircle((f32)curPosition3D.x, (f32)curPosition3D.y, m_BodySize, m_BodyColor, m_BodyColor);
-		Vec3 nosePosition3D = curPosition3D + Vec3(m_Facing.x, m_Facing.y, 0) * 20;
-		g_poSROU->DrawLine((f32)curPosition3D.x, (f32)curPosition3D.y, (f32)nosePosition3D.x, (f32)nosePosition3D.y, m_BodyColor, 1);
+	}
+	virtual const char* GetInfo(){
+		return "Example1: priority selector(mouse click to next sample)";
 	}
 protected:
-	Vec2			m_Facing;
 	D_Color			m_BodyColor;
 	float			m_BodySize;
-	Behavior	m_BevTreeRoot;
+	BevNode*		m_BevTreeRoot;
 	BevInputData	m_BevTreeInputData;
 	BevOutputData	m_BevTreeOutputdata;
 	float			m_TimeToFindNewTargetPos;
 };
-Node* TestObject::sBevTree(0);
-
+class TestObject2 : public TestObject
+{
+protected:
+	virtual void Create()
+	{
+		//init bev tree
+		BevNode& ret =	BevNodeFactory::oCreatePrioritySelectorNode(NULL, "root");
+			BevNode& p =	BevNodeFactory::oCreateParallelNode(&ret, k_PFC_OR, "parallel")
+								.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
+								BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(&p, "move to")
+									.SetNodePrecondition(new BevNodePreconditionTRUE());
+								BevNodeFactory::oCreateTeminalNode<NOD_Breathe>(&p,"breathing")
+									.SetNodePrecondition(new BevNodePreconditionTRUE());
+							BevNodeFactory::oCreateTeminalNode<NOD_Idle>(&ret, "idle")
+								.SetNodePrecondition(new BevNodePreconditionTRUE());
+		m_BevTreeRoot = &ret;
+	}
+	virtual const char* GetInfo(){
+		return "Example2: priority selector & parallel(mouse click to next sample)";
+	}
+};
+class TestObject3 : public TestObject
+{
+public:
+	TestObject3()
+		: TestObject()
+	{
+		m_Facing = Vec2(0, 1);
+	}
+public:
+	virtual void Create()
+	{
+		//init bev tree
+		BevNode& ret =	BevNodeFactory::oCreatePrioritySelectorNode(NULL, "root");
+			BevNode& p =	BevNodeFactory::oCreateParallelNode(&ret, k_PFC_OR, "parallel")
+								.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
+				BevNode& sq =	BevNodeFactory::oCreateSequenceNode(&p, "sequence");
+									BevNodeFactory::oCreateTeminalNode<NOD_TurnTo>(&sq, "turn to")
+										.SetNodePrecondition(new BevNodePreconditionTRUE());
+									BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(&sq, "move to")
+										.SetNodePrecondition(new CON_HasFacedToTarget());
+								BevNodeFactory::oCreateTeminalNode<NOD_Breathe>(&p, "breathing")
+									.SetNodePrecondition(new BevNodePreconditionTRUE());
+							BevNodeFactory::oCreateTeminalNode<NOD_Idle>(&ret, "idle")
+								.SetNodePrecondition(new BevNodePreconditionTRUE());
+		m_BevTreeRoot = &ret;
+	}
+	virtual void Tick(f32 _fDeltaTime)
+	{
+		m_BevTreeInputData.m_CurrentFacing = m_Facing;
+		m_BevTreeOutputdata.m_NextFacing = m_Facing;
+		TestObject::Tick(_fDeltaTime);
+		m_Facing = m_BevTreeOutputdata.m_NextFacing;
+	}
+	virtual void Draw()
+	{
+		TestObject::Draw();
+		Vec3 curPosition3D = GetPosition();
+		Vec3 nosePosition3D = curPosition3D + Vec3(m_Facing.x, m_Facing.y, 0) * 20;
+		g_poSROU->DrawLine((f32)curPosition3D.x, (f32)curPosition3D.y, (f32)nosePosition3D.x, (f32)nosePosition3D.y, m_BodyColor, 1);
+	}
+	virtual const char* GetInfo(){
+		return "Example3: priority selector & parallel & sequence(mouse click to next sample)";
+	}
+protected:
+	Vec2 m_Facing;
+};
 class Level : public DrawableObject
 {
 public:
@@ -377,7 +377,7 @@ protected:
 	{
 		for(int i = 0; i < 10; ++i)
 		{
-			TestObject* pObj = new TestObject();
+			TestObject3* pObj = new TestObject3();
 			pObj->Create();
 			m_Objs.push_back(pObj);
 		}
@@ -410,16 +410,15 @@ public:
 	{
 		for(int i = 0; i < 10; ++i)
 		{
-			TestObject* pObj = new TestObject();
+			TestObject3* pObj = new TestObject3();
 			pObj->Create();
 			m_Objs.push_back(pObj);
 		}
 	}
 
 private:
-	std::vector<TestObject*> m_Objs;
+	std::vector<TestObject3*> m_Objs;
 };
-
 //---------------------------------------------------------------------------------------------
 class TestWindowMsgCallBack : public RenderWindowMsgListener
 {
@@ -432,7 +431,7 @@ public:
 };
 //---------------------------------------------------------------------------------------------
 GameEngine::GameEngine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindow)
-:Engine(_uiWidth, _uiHeight, _strTitle, _bIsWindow, 60)
+	:Engine(_uiWidth, _uiHeight, _strTitle, _bIsWindow, 60)
 {
 }
 void GameEngine::DoInit()
