@@ -142,7 +142,7 @@ protected:
 			Vec3 vA(curFacing.x, curFacing.y, 0);
 			Vec3 vB(dir.x, dir.y, 0);
 			Vec3 vC = vA.CrossProduct(vB);
-			
+
 			f32 angleToTurn = Math::Min(timeStep * 3.f, angle);
 			if(vC.z < 0)
 				angleToTurn = -angleToTurn;
@@ -234,10 +234,10 @@ public:
 		//init bev tree
 		BevNode& ret = 
 			BevNodeFactory::oCreatePrioritySelectorNode(NULL, "root");
-				BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(&ret, "move to")
-					.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
-				BevNodeFactory::oCreateTeminalNode<NOD_Idle>(&ret, "idle")
-					.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(&ret, "move to")
+			.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
+		BevNodeFactory::oCreateTeminalNode<NOD_Idle>(&ret, "idle")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
 		m_BevTreeRoot = &ret;
 	}
 	virtual void Tick(f32 _fDeltaTime)
@@ -283,17 +283,17 @@ public:
 
 		g_poSROU->DrawFillCircle((f32)m_BevTreeInputData.m_TargetPosition2D.x, (f32)m_BevTreeInputData.m_TargetPosition2D.y, 15, D_Color(128, 128, 128), D_Color(128, 128, 128));
 		g_poSROU->DrawLine((f32)m_BevTreeInputData.m_TargetPosition2D.x, (f32)m_BevTreeInputData.m_TargetPosition2D.y, 
-						   (f32)curPosition3D.x, (f32)curPosition3D.y,
-							D_Color(128, 128, 128), 1);
+			(f32)curPosition3D.x, (f32)curPosition3D.y,
+			D_Color(128, 128, 128), 1);
 		g_poSROU->DrawFillCircle((f32)curPosition3D.x, (f32)curPosition3D.y, m_BodySize, m_BodyColor, m_BodyColor);
 
 		//draw debug info
-		/*const BevNode* activeNode = m_BevTreeRoot->oGetLastActiveNode();
+		const BevNode* activeNode = m_BevTreeRoot->oGetLastActiveNode();
 		if(activeNode)
-			g_poSROU->DrawString(3, 0, activeNode->GetDebugName(), D_Color(255, 255, 255));
+		g_poSROU->DrawString(3, 0, activeNode->GetDebugName(), D_Color(255, 255, 255));
 		else
-			g_poSROU->DrawString(3, 0, "No Active Node", D_Color(255, 255, 255));
-		g_poSROU->DrawString(3, 550, GetInfo(), D_Color(255, 255, 255));*/
+		g_poSROU->DrawString(3, 0, "No Active Node", D_Color(255, 255, 255));
+		g_poSROU->DrawString(3, 550, GetInfo(), D_Color(255, 255, 255));
 	}
 	virtual const char* GetInfo(){
 		return "Example1: priority selector(mouse click to next sample)";
@@ -313,14 +313,14 @@ protected:
 	{
 		//init bev tree
 		BevNode& ret =	BevNodeFactory::oCreatePrioritySelectorNode(NULL, "root");
-			BevNode& p =	BevNodeFactory::oCreateParallelNode(&ret, k_PFC_OR, "parallel")
-								.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
-								BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(&p, "move to")
-									.SetNodePrecondition(new BevNodePreconditionTRUE());
-								BevNodeFactory::oCreateTeminalNode<NOD_Breathe>(&p,"breathing")
-									.SetNodePrecondition(new BevNodePreconditionTRUE());
-							BevNodeFactory::oCreateTeminalNode<NOD_Idle>(&ret, "idle")
-								.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNode& p =	BevNodeFactory::oCreateParallelNode(&ret, k_PFC_OR, "parallel")
+			.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
+		BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(&p, "move to")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNodeFactory::oCreateTeminalNode<NOD_Breathe>(&p,"breathing")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNodeFactory::oCreateTeminalNode<NOD_Idle>(&ret, "idle")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
 		m_BevTreeRoot = &ret;
 	}
 	virtual const char* GetInfo(){
@@ -340,17 +340,17 @@ public:
 	{
 		//init bev tree
 		BevNode& ret =	BevNodeFactory::oCreatePrioritySelectorNode(NULL, "root");
-			BevNode& p =	BevNodeFactory::oCreateParallelNode(&ret, k_PFC_OR, "parallel")
-								.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
-				BevNode& sq =	BevNodeFactory::oCreateSequenceNode(&p, "sequence");
-									BevNodeFactory::oCreateTeminalNode<NOD_TurnTo>(&sq, "turn to")
-										.SetNodePrecondition(new BevNodePreconditionTRUE());
-									BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(&sq, "move to")
-										.SetNodePrecondition(new CON_HasFacedToTarget());
-								BevNodeFactory::oCreateTeminalNode<NOD_Breathe>(&p, "breathing")
-									.SetNodePrecondition(new BevNodePreconditionTRUE());
-							BevNodeFactory::oCreateTeminalNode<NOD_Idle>(&ret, "idle")
-								.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNode& p =	BevNodeFactory::oCreateParallelNode(&ret, k_PFC_OR, "parallel")
+			.SetNodePrecondition(new BevNodePreconditionNOT(new CON_HasReachedTarget()));
+		BevNode& sq =	BevNodeFactory::oCreateSequenceNode(&p, "sequence");
+		BevNodeFactory::oCreateTeminalNode<NOD_TurnTo>(&sq, "turn to")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNodeFactory::oCreateTeminalNode<NOD_MoveTo>(&sq, "move to")
+			.SetNodePrecondition(new CON_HasFacedToTarget());
+		BevNodeFactory::oCreateTeminalNode<NOD_Breathe>(&p, "breathing")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
+		BevNodeFactory::oCreateTeminalNode<NOD_Idle>(&ret, "idle")
+			.SetNodePrecondition(new BevNodePreconditionTRUE());
 		m_BevTreeRoot = &ret;
 	}
 	virtual void Tick(f32 _fDeltaTime)
@@ -425,73 +425,19 @@ private:
 	s32 m_CurrentLevel;
 	DrawableObject* m_pCurrentObj;
 };
-class Level2 : public DrawableObject
-{
-public:
-	Level2()
-	{}
-	~Level2()
-	{}
-protected:
-	virtual void Create()
-	{
-		for(int i = 0; i < 10; ++i)
-		{
-			TestObject3* pObj = new TestObject3();
-			pObj->Create();
-			m_Objs.push_back(pObj);
-		}
-	}
-	virtual void Tick(f32 _fDeltaTime)
-	{
-		for(int i = 0; i < (int)m_Objs.size(); ++i)
-		{
-			m_Objs[i]->Tick(_fDeltaTime);
-		}
-	}
-	virtual void Draw()
-	{
-		for(int i = 0; i < (int)m_Objs.size(); ++i)
-		{
-			m_Objs[i]->Draw();
-		}
-		int height = 600;
-		WinGDIRenderer* pRender = (WinGDIRenderer*)GameEngine::GetGameEngine()->GetRenderMod()->GetRenderer();
-		if(pRender && pRender->GetMainWindow())
-		{
-			height = pRender->GetHeight();
-		}
-		char info[256] = {0};
-		sprintf_s(info, 256, "Total: %d (click to add 10 objects), Memory Used: %.2f KB", m_Objs.size(), GetMemUsed() / 1024.f);
-		g_poSROU->DrawString(3, height - 50, info, D_Color(255, 255, 255));
-	}
-public:
-	void AddObj()
-	{
-		for(int i = 0; i < 10; ++i)
-		{
-			TestObject3* pObj = new TestObject3();
-			pObj->Create();
-			m_Objs.push_back(pObj);
-		}
-	}
-
-private:
-	std::vector<TestObject3*> m_Objs;
-};
 //---------------------------------------------------------------------------------------------
 class TestWindowMsgCallBack : public RenderWindowMsgListener
 {
 public:
 	virtual void OnMouseLDown(s32 x, s32 y)
 	{
-		Level2* pObj = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<Level2>("Level2");
+		Level* pObj = GameEngine::GetGameEngine()->GetSceneMod()->GetSceneObject<Level>("Level");
 		pObj->AddObj();
 	}
 };
 //---------------------------------------------------------------------------------------------
 GameEngine::GameEngine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindow)
-	:Engine(_uiWidth, _uiHeight, _strTitle, _bIsWindow, 60)
+:Engine(_uiWidth, _uiHeight, _strTitle, _bIsWindow, 60)
 {
 }
 void GameEngine::DoInit()
@@ -500,7 +446,7 @@ void GameEngine::DoInit()
 
 	RenderWindowMsg::RegisterMsgListener(new TestWindowMsgCallBack);
 	g_poSROU = new WinGDISimpleRenderObjectUtility((WinGDIRenderer*)GameEngine::GetGameEngine()->GetRenderMod()->GetRenderer());
-	GameEngine::GetGameEngine()->GetSceneMod()->AddObject("Level2", new Level2);
+	GameEngine::GetGameEngine()->GetSceneMod()->AddObject("Level", new Level);
 }
 void GameEngine::DoUnInit()
 {
