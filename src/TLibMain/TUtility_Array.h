@@ -23,6 +23,7 @@ namespace TsiU
 
 		void PushBack(const T& item);
 		void PopBack();
+		void RemoveAt(unsigned int idx);
 
 		void Dump();
 
@@ -150,6 +151,35 @@ namespace TsiU
 	void Array<T>::Dump()
 	{
 		D_DebugOut("Size = %d, Capacity = %d\n", m_Size, m_Capacity);
+	}
+
+	template<typename T>
+	void Array<T>::RemoveAt(unsigned int idx)
+	{
+		D_CHECK( idx < m_Size );
+		int newSize = m_Size - 1;
+		if(newSize == 0)
+		{
+			Clear();
+		}
+		else
+		{
+			int newCapacity = (m_Capacity > newSize * 2) ? m_Capacity / 2 : m_Capacity;
+			T* newItems = new T[newCapacity];
+			D_CHECK(newItems);
+			int newIdx = 0;
+			for( u32 i = 0; i < m_Size; ++i )
+			{
+				if(i == idx)
+					continue;
+				newItems[newIdx++] = m_Items[i];
+			}
+			if( m_Items )
+				delete[] m_Items;
+			m_Items = newItems;
+			m_Capacity = newCapacity;
+			m_Size = newSize;
+		}
 	}
 }
 

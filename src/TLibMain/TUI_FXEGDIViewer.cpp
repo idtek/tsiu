@@ -124,6 +124,8 @@ namespace TsiU
 	}
 	long FXEGDIViewer::onKeyDown(FXObject* sender, FXSelector sel, void *ptr)
 	{
+		if(target && target->tryHandle(this,FXSEL(SEL_KEYPRESS,message),ptr))
+			return 1;
 		FXEvent* event=(FXEvent*)ptr;
 		for(s32 i = 0 ; i < m_poMsgCallBack.Size(); ++i)
 			m_poMsgCallBack[i]->OnKeyDown(event->code, 0);
@@ -131,6 +133,8 @@ namespace TsiU
 	}
 	long FXEGDIViewer::onKeyUp(FXObject* sender, FXSelector sel, void *ptr)
 	{
+		if(target && target->tryHandle(this,FXSEL(SEL_KEYRELEASE,message),ptr))
+			return 1;
 		FXEvent* event=(FXEvent*)ptr;
 		for(s32 i = 0 ; i < m_poMsgCallBack.Size(); ++i)
 			m_poMsgCallBack[i]->OnKeyUp(event->code, 0);

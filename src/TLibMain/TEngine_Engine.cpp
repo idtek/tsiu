@@ -25,6 +25,7 @@ namespace TsiU
 	Engine* poGetEngine(){ D_CHECK(__g_Root); return __g_Root; };
 
 	Engine::Engine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindow, s32 _iRateLock)
+		: m_BackgroundColor()
 	{
 		m_poClockModule = NULL;
 		m_poSceneModule = NULL;
@@ -126,6 +127,11 @@ namespace TsiU
 		return true;
 	}
 
+	void Engine::SetBackgroundColor(const D_Color& clr)
+	{
+		m_BackgroundColor = clr;
+	}
+
 	void Engine::MainLoop()
 	{
 		while(1)
@@ -160,7 +166,7 @@ namespace TsiU
 			// Begin Draw
 			if(poRenderer)
 			{
-				poRenderer->Clear(D_Color(0,0,0), E_ClearFlagTarget | E_ClearFlagZBuffer);
+				poRenderer->Clear(m_BackgroundColor, E_ClearFlagTarget | E_ClearFlagZBuffer);
 				if(poRenderer->BeginFrame())
 				{
 					if(m_poSceneModule)
