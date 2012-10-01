@@ -1,7 +1,7 @@
 #ifndef __TENGINE_ENGINE__
 #define __TENGINE_ENGINE__
 
-
+#include "TRender_Color.h"
 
 namespace TsiU
 {
@@ -22,6 +22,8 @@ namespace TsiU
 	public:
 		Engine(u32 _uiWidth, u32 _uiHeight, const Char* _strTitle, Bool _bIsWindow, s32 _iRateLock = 60);
 		virtual ~Engine();
+
+		void SetBackgroundColor(const D_Color& clr);
 
 		Bool Init();
 		void MainLoop();
@@ -53,6 +55,7 @@ namespace TsiU
 //#ifdef TLIB_DEBUG
 		DebugConsole*		m_poDebugConsole;
 //#endif
+		D_Color m_BackgroundColor;
 		Bool m_bQuitEngine;
 		s32	 m_iRateLock;
 	};
